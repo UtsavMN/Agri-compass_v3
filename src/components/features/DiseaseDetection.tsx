@@ -112,7 +112,7 @@ export function DiseaseDetection() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-none">
+      <Card className="bg-gradient-to-br from-leaf-600 to-leaf-700 text-white border-none">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl">
             <Sparkles className="h-6 w-6" />
@@ -254,7 +254,7 @@ export function DiseaseDetection() {
                     className="space-y-4"
                   >
                     {/* Detection Result */}
-                    <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+                    <Card className="bg-gradient-to-br from-leaf-50 to-leaf-100 border-leaf-200">
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div>

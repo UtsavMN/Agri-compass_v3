@@ -117,7 +117,7 @@ export function DistrictSearch({
 
     return parts.map((part, i) =>
       regex.test(part) ? (
-        <mark key={i} className="bg-yellow-200 text-gray-900 font-semibold">
+        <mark key={i} className="bg-leaf-200 text-leaf-900 font-semibold">
           {part}
         </mark>
       ) : (

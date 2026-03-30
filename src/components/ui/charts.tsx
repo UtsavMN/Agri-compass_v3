@@ -39,7 +39,7 @@ const CHART_COLORS = [
   '#16a34a', // leaf-600
   '#22c55e', // leaf-500
   '#0ea5e9', // sky-500
-  '#eab308', // earth-500
+  '#22c55e', // earth-500
   '#f97316', // orange-500
   '#8b5cf6', // purple-500
 ];

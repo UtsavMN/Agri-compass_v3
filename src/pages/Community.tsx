@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext'
+import { useDistrictContext } from '@/contexts/DistrictContext'
 import { PostsAPI, Post } from '@/lib/api/posts'
 import { UploadAPI } from '@/lib/api/upload'
 import Layout from '@/components/Layout'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { PostCard } from '@/components/ui/post-card'
 import { useToast } from '@/hooks/use-toast'
@@ -18,12 +21,19 @@ import { useDropzone } from 'react-dropzone'
 export default function Community() {
   const { user } = useAuth()
   const { toast } = useToast()
+  const navigate = useNavigate()
+  const { selectedDistrict } = useDistrictContext()
+
   const [posts, setPosts] = useState<Post[]>([])
   const [newPostContent, setNewPostContent] = useState('')
   const [isCreatingPost, setIsCreatingPost] = useState(false)
   const [mediaFiles, setMediaFiles] = useState<File[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isFetchingPosts, setIsFetchingPosts] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const [filterDate, setFilterDate] = useState('')
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
@@ -56,6 +66,108 @@ export default function Community() {
       setIsFetchingPosts(false)
     }
   }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedQuery(searchQuery.trim())
+    }, 300)
+
+    return () => window.clearTimeout(timer)
+  }, [searchQuery])
+
+  const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')
+
+  const highlightMatch = (text: string, query: string, caseSensitive = false) => {
+    if (!query.trim()) return text
+
+    const regex = new RegExp(`(${escapeRegExp(query)})`, caseSensitive ? '' : 'i')
+    const parts = text.split(regex)
+
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <mark key={index} className="bg-leaf-200 text-leaf-900 font-semibold">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    )
+  }
+
+  const filterByDate = (post: Post) => {
+    if (!filterDate) return true
+    const postDate = new Date(post.created_at)
+    return postDate.toISOString().slice(0, 10) === filterDate
+  }
+
+  const suggestedAccounts = useMemo(() => {
+    if (!debouncedQuery) return []
+
+    const results = posts.filter(post => post.user.username.includes(debouncedQuery))
+    const uniqueUsers = new Map<string, Post>()
+    results.forEach(post => {
+      if (!uniqueUsers.has(post.user.username)) {
+        uniqueUsers.set(post.user.username, post)
+      }
+    })
+
+    return Array.from(uniqueUsers.values()).slice(0, 5)
+  }, [posts, debouncedQuery])
+
+  const suggestedPosts = useMemo(() => {
+    if (!debouncedQuery) return []
+    const query = debouncedQuery.toLowerCase()
+
+    return posts
+      .filter(post => filterByDate(post))
+      .filter(post => (post.body || post.content || '').toLowerCase().includes(query))
+      .slice(0, 5)
+  }, [posts, debouncedQuery, filterDate])
+
+  const filteredPosts = useMemo(() => {
+    const query = debouncedQuery.toLowerCase()
+
+    return posts
+      .filter(post => {
+        if (selectedDistrict) {
+          return post.location?.toLowerCase().includes(selectedDistrict.toLowerCase())
+        }
+        return true
+      })
+      .filter(post => {
+        if (!query) return true
+        return (post.body || post.content || '').toLowerCase().includes(query)
+      })
+      .filter(filterByDate)
+  }, [posts, selectedDistrict, debouncedQuery, filterDate])
+
+  const handleSelectAccount = (username: string) => {
+    setSearchQuery('')
+    setSuggestionsOpen(false)
+    navigate('/profile')
+  }
+
+  const handleSelectPost = (postId: string) => {
+    setSearchQuery('')
+    setSuggestionsOpen(false)
+    navigate(`/post/${postId}`)
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value)
+    setSuggestionsOpen(true)
+  }
+
+  const handleDateChange = (value: string) => {
+    setFilterDate(value)
+    setSuggestionsOpen(true)
+  }
+
+  const currentDistrictBanner = selectedDistrict
+    ? `Showing community posts for ${selectedDistrict}`
+    : 'No district selected globally. Choose a district in Weather or Dashboard to auto-apply filters.'
+
+  const showSuggestions = suggestionsOpen && Boolean(debouncedQuery)
 
   const handleCreatePost = async () => {
     if (!newPostContent.trim() && mediaFiles.length === 0) return
@@ -157,16 +269,85 @@ export default function Community() {
   return (
     <Layout>
       <div className="container mx-auto py-8 relative">
-        <Card className="mb-8">
+        <Card className="mb-8 community-gradient">
           <div className="p-4">
             <Button
               onClick={() => setIsCreatingPost(true)}
-              className="w-full flex items-center gap-2"
+              className="w-full flex items-center gap-2 dark:bg-black dark:hover:bg-black/80 dark:text-white border dark:border-slate-800 transition"
             >
               <Plus className="h-4 w-4" />
               Create a new post
             </Button>
           </div>
+        </Card>
+
+        <Card className="mb-6 p-4 community-gradient">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-foreground dark:text-slate-200">Community search</label>
+              <Input
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search usernames (case-sensitive) or post keywords"
+                className="mt-2 dark:bg-black dark:text-white dark:border-slate-700 dark:placeholder:text-slate-400"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-foreground dark:text-slate-200">Date filter (DD/MM/YYYY)</label>
+              <Input
+                type="date"
+                value={filterDate}
+                onChange={(e) => handleDateChange(e.target.value)}
+                className="mt-2 dark:bg-black dark:text-white dark:border-slate-700 [color-scheme:light_dark]"
+              />
+            </div>
+          </div>
+
+          <p className="text-sm text-foreground/80 dark:text-slate-300 mt-3">{currentDistrictBanner}</p>
+
+          {showSuggestions && (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+              {suggestedAccounts.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-slate-700">Accounts</p>
+                  <div className="mt-2 space-y-2">
+                    {suggestedAccounts.map((post) => (
+                      <button
+                        key={post.user.username}
+                        type="button"
+                        onClick={() => handleSelectAccount(post.user.username)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-left transition hover:bg-leaf-50"
+                      >
+                        <span className="font-medium text-slate-900">@{highlightMatch(post.user.username, debouncedQuery, true)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {suggestedPosts.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">Posts</p>
+                  <div className="mt-2 space-y-2">
+                    {suggestedPosts.map((post) => (
+                      <button
+                        key={post.id}
+                        type="button"
+                        onClick={() => handleSelectPost(post.id)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-left transition hover:bg-leaf-50"
+                      >
+                        <p className="font-medium text-slate-900">
+                          {highlightMatch(post.body || post.content || '', debouncedQuery)}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {suggestedAccounts.length === 0 && suggestedPosts.length === 0 && (
+                <p className="text-sm text-slate-500">No matching accounts or posts found for "{debouncedQuery}".</p>
+              )}
+            </div>
+          )}
         </Card>
 
         <Dialog open={isCreatingPost} onOpenChange={setIsCreatingPost}>
@@ -213,10 +394,10 @@ export default function Community() {
         <ScrollReveal direction="up" delay={0.1}>
           {isFetchingPosts ? (
             <PostListSkeleton />
-          ) : posts.length > 0 ? (
+          ) : filteredPosts.length > 0 ? (
             <StaggerContainer staggerDelay={0.05}>
               <div className="grid gap-4">
-                {posts.map((post) => (
+                {filteredPosts.map((post) => (
                   <StaggerItem key={post.id}>
                     <div className="card-mobile">
                       <PostCard
@@ -248,7 +429,11 @@ export default function Community() {
               </div>
             </StaggerContainer>
           ) : (
-            <LottieEmptyState message="No posts yet. Be the first to share something!" />
+            <LottieEmptyState message={
+              posts.length === 0
+                ? 'No posts yet. Be the first to share something!'
+                : 'No community posts match your search or selected date.'
+            } />
           )}
         </ScrollReveal>
 

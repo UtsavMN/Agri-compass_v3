@@ -134,6 +134,16 @@ export class PostsAPI {
     }
   }
 
+  // GET /api/posts/:id - Get a single post by ID
+  static async getPostById(postId: string): Promise<Post> {
+    try {
+      return await apiGet(`/api/posts/${postId}`)
+    } catch (error) {
+      console.error('Error fetching post by id:', error)
+      throw error
+    }
+  }
+
   // GET /api/notifications - Get user notifications
   static async getNotifications(userId: string): Promise<Notification[]> {
     try {

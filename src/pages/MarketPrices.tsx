@@ -215,10 +215,10 @@ export default function MarketPrices() {
                           </CardHeader>
                           <CardContent className="space-y-3 pt-2">
                             <div className="grid grid-cols-2 gap-3">
-                              <div className="bg-amber-50 rounded-lg p-3 text-center">
-                                <p className="text-xs text-amber-600 font-medium">Investment</p>
-                                <p className="text-sm font-bold text-amber-800">{formatINR(crop.investmentPerAcre)}</p>
-                                <p className="text-[10px] text-amber-500">per acre</p>
+                              <div className="bg-earth-50 rounded-lg p-3 text-center">
+                                <p className="text-xs text-earth-600 font-medium">Investment</p>
+                                <p className="text-sm font-bold text-earth-800">{formatINR(crop.investmentPerAcre)}</p>
+                                <p className="text-[10px] text-earth-500">per acre</p>
                               </div>
                               <div className="bg-green-50 rounded-lg p-3 text-center">
                                 <p className="text-xs text-green-600 font-medium">Expected Return</p>

@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDistrictContext } from '@/contexts/DistrictContext';
 import { apiGet } from '@/lib/httpClient';
 import { cropRecommender } from '@/lib/ai/cropRecommender';
 import { weatherAdvisor } from '@/lib/ai/weatherAdvisor';
@@ -49,6 +50,7 @@ interface WeatherData {
 
 export default function EnhancedDashboard() {
   const { user, profile } = useAuth();
+  const { selectedDistrict: selectedDistrictContext, setSelectedDistrict: setGlobalDistrict } = useDistrictContext();
   const navigate = useNavigate();
   
   // State
@@ -77,7 +79,7 @@ export default function EnhancedDashboard() {
     threshold: 0.3,
     keys: ['district', 'recommended_crops', 'soil_type'],
     limit: 32, // Show all districts
-    initialDistrict: profile?.location || '',
+    initialDistrict: selectedDistrictContext || profile?.location || '',
   });
 
   // Load districts from CSV
@@ -104,6 +106,18 @@ export default function EnhancedDashboard() {
       loadDistrictData();
     }
   }, [selectedDistrict]);
+
+  useEffect(() => {
+    if (selectedDistrictContext && selectedDistrictContext !== selectedDistrict) {
+      setSelectedDistrict(selectedDistrictContext);
+    }
+  }, [selectedDistrictContext, selectedDistrict, setSelectedDistrict]);
+
+  useEffect(() => {
+    if (selectedDistrict && selectedDistrict !== selectedDistrictContext) {
+      setGlobalDistrict(selectedDistrict);
+    }
+  }, [selectedDistrict, selectedDistrictContext, setGlobalDistrict]);
 
   const initializeDashboard = async () => {
     try {

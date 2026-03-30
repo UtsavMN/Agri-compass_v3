@@ -63,14 +63,14 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
       theme === 'dark'
-        ? 'bg-slate-900 text-white'
-        : 'bg-gradient-to-br from-leaf-50 via-blue-50 to-emerald-50'
+        ? 'bg-surface text-white'
+        : 'bg-surface-alt text-body'
     }`}>
       <ScrollReveal>
         <nav className={`glass-effect border-b transition-colors duration-300 ${
           theme === 'dark'
-            ? 'border-slate-700 bg-slate-900/80'
-            : 'border-leaf-100 bg-white/80'
+            ? 'border-surface bg-surface-alt'
+            : 'border-surface bg-surface'
         } sticky top-0 z-50 shadow-soft`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
@@ -101,8 +101,8 @@ export default function Layout({ children }: LayoutProps) {
                           isActive
                             ? 'btn-primary'
                             : theme === 'dark'
-                              ? 'hover:bg-slate-700 text-slate-300'
-                              : 'hover:bg-leaf-50'
+                                ? 'hover:bg-surface-alt text-secondary'
+                                : 'hover:bg-surface-soft'
                         }`}
                       >
                         <Icon className="h-4 w-4 mr-2" />
@@ -120,7 +120,7 @@ export default function Layout({ children }: LayoutProps) {
                   size="icon"
                   onClick={toggleLanguage}
                   className={`rounded-full transition-all duration-200 mobile-touch-target ${
-                    theme === 'dark' ? 'hover:bg-slate-700' : 'hover:bg-leaf-50'
+                    theme === 'dark' ? 'hover:bg-surface-alt' : 'hover:bg-surface-soft'
                   }`}
                   title={t('common.languageToggle')}
                 >
@@ -134,15 +134,15 @@ export default function Layout({ children }: LayoutProps) {
                   onClick={toggleTheme}
                   className={`rounded-full transition-all duration-300 mobile-touch-target border-2 ${
                     theme === 'dark'
-                      ? 'hover:bg-slate-700 border-slate-600 hover:border-slate-500'
-                      : 'hover:bg-leaf-50 border-leaf-200 hover:border-leaf-300'
+                      ? 'hover:bg-surface-alt border-surface'
+                      : 'hover:bg-surface-soft border-surface'
                   }`}
                   title={theme === 'dark' ? t('common.switchToLight') : t('common.switchToDark')}
                 >
                   {theme === 'dark' ? (
-                    <Sun className="h-5 w-5 text-yellow-400 animate-pulse-soft" />
+                    <Sun className="h-5 w-5 text-leaf-300 animate-pulse-soft" />
                   ) : (
-                    <Moon className="h-5 w-5 text-slate-600 animate-bounce-gentle" />
+                    <Moon className="h-5 w-5 text-leaf-700 animate-bounce-gentle" />
                   )}
                 </Button>
 
@@ -160,7 +160,7 @@ export default function Layout({ children }: LayoutProps) {
                           <p className="text-sm font-medium">
                             {profile?.full_name || profile?.username || 'User'}
                           </p>
-                          <p className="text-xs text-gray-500">{user.email}</p>
+                          <p className="text-xs text-secondary">{user.email}</p>
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
@@ -175,7 +175,7 @@ export default function Layout({ children }: LayoutProps) {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Button onClick={() => navigate('/auth')} className="bg-green-600 hover:bg-green-700 text-white">
+                  <Button onClick={() => navigate('/auth')} className="btn-primary">
                     Sign In
                   </Button>
                 )}
@@ -210,12 +210,10 @@ export default function Layout({ children }: LayoutProps) {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className={`fixed right-0 top-0 h-full w-80 ${
-                theme === 'dark' ? 'bg-slate-900' : 'bg-white'
-              } shadow-xl`}
+              className="fixed right-0 top-0 h-full w-80 bg-surface shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center justify-between p-4 border-b border-surface">
                 <h2 className="text-lg font-semibold">{t('nav.community')}</h2>
                 <Button
                   variant="ghost"
@@ -238,8 +236,8 @@ export default function Layout({ children }: LayoutProps) {
                         isActive
                           ? 'btn-primary'
                           : theme === 'dark'
-                            ? 'hover:bg-slate-700 text-slate-300'
-                            : 'hover:bg-leaf-50'
+                            ? 'hover:bg-surface-alt text-secondary'
+                            : 'hover:bg-surface-soft'
                       }`}
                       onClick={() => {
                         navigate(item.path);

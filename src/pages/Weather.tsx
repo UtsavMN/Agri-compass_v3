@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDistrictContext } from '@/contexts/DistrictContext';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,7 +20,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 export default function Weather() {
   const { profile } = useAuth();
   const { toast } = useToast();
-  const [selectedDistrict, setSelectedDistrict] = useState(profile?.location || '');
+  const { selectedDistrict, setSelectedDistrict } = useDistrictContext();
   const [districts, setDistricts] = useState<string[]>([]);
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,6 +28,12 @@ export default function Weather() {
   useEffect(() => {
     loadDistricts();
   }, []);
+
+  useEffect(() => {
+    if (!selectedDistrict && profile?.location) {
+      setSelectedDistrict(profile.location);
+    }
+  }, [profile?.location, selectedDistrict, setSelectedDistrict]);
 
   useEffect(() => {
     if (selectedDistrict) {

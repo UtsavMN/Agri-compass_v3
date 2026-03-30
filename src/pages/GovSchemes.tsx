@@ -77,7 +77,7 @@ export default function GovSchemes() {
       'Organic Farming': 'bg-emerald-100 text-emerald-800',
       'Sustainability': 'bg-teal-100 text-teal-800',
       'Energy': 'bg-yellow-100 text-yellow-800',
-      'Soil Management': 'bg-amber-100 text-amber-800',
+      'Soil Management': 'bg-earth-100 text-earth-800',
     };
     return colors[category] || 'bg-gray-100 text-gray-800';
   };
