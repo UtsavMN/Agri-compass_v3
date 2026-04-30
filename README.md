@@ -1,64 +1,95 @@
-# Agri Compass v2 - 🌾 Intelligent Farming Solutions
+# 🌱 Agri-Compass 
 
-Agri Compass v2 is a modern, full-stack agricultural decision-support system designed for farmers in India, specifically tailored for Karnataka. It leverages Spring Boot for the backend and Vite/React for a high-performance, interactive frontend.
+Agri-Compass is a comprehensive platform built to empower farmers with real-time market prices, weather forecasts, government scheme information, and AI-driven agricultural advisory. It leverages modern web technologies to provide an accessible, responsive, and data-rich experience.
 
-## 🏗️ Architecture
+## 🚀 Tech Stack
 
-- **Frontend**: Vite + React + TypeScript + Tailwind CSS + Framer Motion.
-- **Backend**: Spring Boot 3.2+ (Java 17).
-- **Database**: SQLite (Local file `agricompass.db` in the backend directory).
-- **AI/External APIs**:
-  - **Gemini AI**: Powering the "Air Agent" assistant.
-  - **OpenWeatherMap**: Live weather forecasts and advisories.
-  - **Data.gov.in**: Real-time mandi price tracking.
+### Frontend
+- **Framework:** React 18 with Vite
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS + Radix UI components
+- **State Management:** Zustand + React Query
+- **Routing:** React Router v7
+- **Authentication:** Clerk React
+- **Hosting:** Vercel (Target)
+
+### Backend
+- **Framework:** Spring Boot 3 (Java 17)
+- **Build Tool:** Maven
+- **Database:** SQLite (local) / Turso (production)
+- **Authentication:** Clerk (OAuth2 Resource Server)
+- **External Services:** Gmail SMTP (email notifications)
+
+## ✨ Features
+- **AI Chatbot Advisory:** Powered by Gemini AI for contextual farming advice.
+- **Market & Mandi Prices:** Live integrations with Data.gov.in.
+- **Real-Time Weather:** Hyper-local forecasts powered by OpenWeather.
+- **Auth & Security:** Secure JWT-based authentication via Clerk.
+- **Responsive Design:** Mobile-first, fully responsive UI.
+
+## 📁 Folder Structure
+
+```text
+Agri-compass_v3/
+├── agri-compass-api/      # Spring Boot Backend Code
+│   ├── src/main/java/     # Controllers, Services, Entities, Repositories
+│   ├── src/main/resources/# application.properties, database configs
+│   ├── mvnw / mvnw.cmd    # Maven Wrapper Scripts
+│   └── pom.xml            # Maven Dependencies
+├── public/                # Static assets for Frontend
+├── src/                   # React Frontend Code
+│   ├── components/        # Reusable UI components
+│   ├── pages/             # Route-level components
+│   ├── lib/               # Utilities and API clients
+│   └── store/             # Zustand state stores
+├── .env.example           # Example environment variables
+├── setup.sh               # Quick setup script for Mac/Linux
+├── setup.bat              # Quick setup script for Windows
+├── README.md              # Project Overview
+└── SETUP.md               # Detailed Setup Guide
+```
+
+## 🔐 Secrets Handling
+**Never commit your API keys.** The repository uses `.env` files to manage secrets securely. 
+1. Copy `.env.example` to `.env`.
+2. Fill in the values. The `.env` file is ignored by git (`.gitignore`).
+3. For the backend, `application.properties` reads variables dynamically (e.g., `${GEMINI_API_KEY}`).
+
+## 🛠️ Setup Instructions (Quick Start)
+For a highly detailed, step-by-step guide on generating keys and troubleshooting, please see the **[SETUP.md](SETUP.md)**.
+
+### Prerequisites
+- **Java 17** installed and added to PATH.
+- **Node.js** (v18+) installed.
+
+### Automated Setup
+We provide automated scripts to install dependencies and run both the frontend and backend simultaneously.
+
+**Windows:**
+```cmd
+setup.bat
+```
+
+**Linux / Mac:**
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+## 📡 API Endpoints Overview
+
+The application relies on several external APIs to provide core functionality:
+- **Gemini API:** Used for the AI Chatbot and summarizing agricultural news.
+- **OpenWeather API:** Used to fetch current weather conditions and forecasts based on user coordinates.
+- **Data.gov.in API:** Used to fetch mandi prices and government agricultural schemes.
+- **Gmail SMTP:** Used by the backend to send transactional emails (e.g., password reset, welcome emails).
+
+## ⚠️ Error Prevention & Troubleshooting
+
+- **`Failed to fetch` or `Network Error` in Frontend:** Ensure the Spring Boot backend is running on port 8080.
+- **`Web server failed to start. Port 8080 was already in use.`:** Kill the existing process on port 8080 (`npx kill-port 8080` or via Task Manager).
+- **Maven/Java Errors:** Ensure you are using specifically **Java 17**. You can check via `java -version`.
+- **Missing Data (Weather/Market):** Check your `.env` file to ensure `OPENWEATHER_API_KEY` and `DATA_GOV_API_KEY` are populated correctly.
 
 ---
-
-## 🚀 Getting Started
-
-### 1. Backend Setup (Spring Boot)
-
-The backend is located in the `agri-compass-api` directory.
-
-1.  **JDK**: Ensure you have **Java 17** installed.
-2.  **Maven**: You can use your global Maven or the one provided in the `apache-maven-3.9.6` folder.
-3.  **Configure API Keys**:
-    - Open `agri-compass-api/src/main/resources/application.properties`.
-    - Provide your keys for:
-      - `gemini.api.keys` (Get from [Google AI Studio](https://aistudio.google.com/))
-      - `datagov.api.key` (Get from [Data.gov.in](https://www.data.gov.in/))
-      - `openweather.api.key` (Get from [OpenWeatherMap](https://openweathermap.org/api))
-4.  **Run**:
-    ```bash
-    mvn spring-boot:run
-    ```
-    *The database will auto-seed with crop economics data on first run.*
-
-### 2. Frontend Setup (Vite)
-
-1.  **Install**:
-    ```bash
-    npm install
-    ```
-2.  **Environment**:
-    - Create a `.env` file in the root directory.
-    - Add: `VITE_API_URL=http://localhost:8080`
-3.  **Run**:
-    ```bash
-    npm run dev
-    ```
-
----
-
-## 📖 Handover Notes
-
-- **Database**: The current state of the database is tracked in `agri-compass-api/agricompass.db`.
-- **Authentication**: Currently uses a mock/developer user flow in `AuthContext.tsx` while transitioning away from Supabase/Clerk.
-- **Features**: All features (AI Agent, Weather, Market Prices, Community) are connected to the Spring Boot API.
-
-## ✨ Key Features
-
-- **Air Agent**: Voice-enabled AI assistant for agricultural queries.
-- **Disease Detection**: AI-powered analysis of crop health.
-- **Live Market Prices**: Real-time tracking of commodity rates across mandis.
-- **Hyper-Local Weather**: Targeted forecasts for Karnataka districts with actionable advisories.
+*Built by Utsav & Aniruddh.*

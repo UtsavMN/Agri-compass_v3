@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./agri-compass-api
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_URL=${DB_URL:-jdbc:sqlite:/app/agri.db}
+    volumes:
+      - ./agri-compass-api/agri.db:/app/agri.db # Persist local SQLite database
+
+  frontend:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    env_file:
+      - .env
+    command: >
+      sh -c "npm install && npm run dev -- --host 0.0.0.0"
