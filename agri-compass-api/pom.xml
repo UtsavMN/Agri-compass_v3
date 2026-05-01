@@ -122,7 +122,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-          <mainClass>com.agricompass.api.AgriCompassApiApplication</mainClass>
+          <mainClass>com.agricompass.AgriCompassApiApplication</mainClass>
           <excludes>
             <exclude>
               <groupId>org.projectlombok</groupId>
