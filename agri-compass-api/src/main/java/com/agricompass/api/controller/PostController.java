@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping({"/api/posts", "/api/community"})
 @RequiredArgsConstructor
 public class PostController {
 

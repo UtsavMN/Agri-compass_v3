@@ -7,10 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/api")
 public class DataController {
 
     // GET /api/schemes
-    @GetMapping("/api/schemes")
+    @GetMapping("/schemes")
     public ResponseEntity<List<Map<String, Object>>> getSchemes() {
         return ResponseEntity.ok(List.of(
             Map.of(
