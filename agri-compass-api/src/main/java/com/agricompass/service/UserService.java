@@ -89,6 +89,19 @@ public class UserService {
                 user.setEmail(email);
                 userRepository.save(user);
             }
+            
+            // Check if profile exists for existing user (self-healing)
+            if (!userProfileRepository.existsById(clerkId)) {
+                UserProfile profile = UserProfile.builder()
+                        .id(clerkId)
+                        .user(user)
+                        .username(username)
+                        .email(user.getEmail())
+                        .fullName(jwt.getClaimAsString("name"))
+                        .avatarUrl(jwt.getClaimAsString("picture"))
+                        .build();
+                userProfileRepository.save(profile);
+            }
         } else {
             // Create new user
             user = User.builder()

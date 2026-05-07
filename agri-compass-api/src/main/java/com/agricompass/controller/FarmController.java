@@ -40,7 +40,28 @@ public class FarmController {
             .areaAcres(body.get("area_acres") != null ? Double.parseDouble(body.get("area_acres").toString()) : null)
             .soilType((String) body.get("soil_type"))
             .irrigationType((String) body.get("irrigation_type"))
+            .currentCrop((String) body.get("current_crop"))
             .build();
+        return ResponseEntity.ok(farmRepository.save(farm));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Farm> updateFarm(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        String userId = userService.syncUser(null).getId();
+        Farm farm = farmRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Farm not found"));
+
+        if (!farm.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        if (body.containsKey("name")) farm.setName((String) body.get("name"));
+        if (body.containsKey("location")) farm.setLocation((String) body.get("location"));
+        if (body.containsKey("area_acres")) farm.setAreaAcres(Double.parseDouble(body.get("area_acres").toString()));
+        if (body.containsKey("soil_type")) farm.setSoilType((String) body.get("soil_type"));
+        if (body.containsKey("irrigation_type")) farm.setIrrigationType((String) body.get("irrigation_type"));
+        if (body.containsKey("current_crop")) farm.setCurrentCrop((String) body.get("current_crop"));
+
         return ResponseEntity.ok(farmRepository.save(farm));
     }
 

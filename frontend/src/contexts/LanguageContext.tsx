@@ -14,6 +14,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const { i18n, t } = useTranslation();
+  const [attempts, setAttempts] = useState(0);
   const [language, setLanguageState] = useState<Language>(() => {
     // Check localStorage first
     const stored = localStorage.getItem('language');
@@ -34,13 +35,23 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.lang = language;
 
     // Trigger Google Translate
-    setTimeout(() => {
+    const triggerGoogleTranslate = () => {
       const selectField = document.querySelector('.goog-te-combo') as HTMLSelectElement;
       if (selectField) {
-        selectField.value = language === 'kn' ? 'kn' : 'en';
-        selectField.dispatchEvent(new Event('change'));
+        if (selectField.value !== language) {
+          selectField.value = language;
+          selectField.dispatchEvent(new Event('change'));
+        }
+      } else if (attempts < 10) {
+        // Retry if the widget hasn't loaded yet
+        setTimeout(() => {
+          setAttempts(a => a + 1);
+          triggerGoogleTranslate();
+        }, 500);
       }
-    }, 500);
+    };
+
+    triggerGoogleTranslate();
 
   }, [language, i18n]);
 

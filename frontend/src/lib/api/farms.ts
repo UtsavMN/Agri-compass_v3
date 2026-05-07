@@ -1,5 +1,4 @@
-// API endpoints for farms management
-import { apiGet, apiPost, apiDelete } from '../httpClient'
+import { apiGet, apiPost, apiDelete, apiPut } from '../httpClient'
 import { UploadAPI } from './upload'
 
 export interface Farm {
@@ -10,6 +9,7 @@ export interface Farm {
   area_acres: number
   soil_type: string | null
   irrigation_type: string | null
+  current_crop: string | null
   created_at: string
   duration_days?: number
   images?: string[]
@@ -58,11 +58,22 @@ export class FarmsAPI {
     area_acres: number
     soil_type?: string
     irrigation_type?: string
+    current_crop?: string
   }): Promise<Farm> {
     try {
       return await apiPost('/api/farms', farmData)
     } catch (error) {
       console.error('Error creating farm:', error)
+      throw error
+    }
+  }
+
+  // PUT /api/farms/:id - Update farm details
+  static async updateFarm(farmId: string, farmData: Partial<Farm>): Promise<Farm> {
+    try {
+      return await apiPut(`/api/farms/${farmId}`, farmData)
+    } catch (error) {
+      console.error('Error updating farm:', error)
       throw error
     }
   }

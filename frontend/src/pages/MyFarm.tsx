@@ -17,6 +17,7 @@ import { motion } from 'framer-motion';
 import { useDistrictContext } from '@/contexts/DistrictContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Plus, Sprout, MapPin, Ruler, Droplet, Trash2, Cloud, Thermometer, Wind, CloudRain, Shield, Activity, Database, Clock } from 'lucide-react';
+import FertilizerAnalysisModule from '@/components/features/FertilizerAnalysisModule';
 
 interface Farm {
   id: string;
@@ -30,6 +31,8 @@ interface Farm {
   irrigation_type?: string | null; // Fallback
   createdAt: string;
   created_at?: string; // Fallback
+  currentCrop: string | null;
+  current_crop?: string | null;
 }
 
 interface WeatherData {
@@ -66,12 +69,15 @@ export default function MyFarm() {
   const [districtData, setDistrictData] = useState<any[]>([]);
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [cropRecommendations, setCropRecommendations] = useState<CropRecommendation[]>([]);
+  const [selectedFarmForAnalysis, setSelectedFarmForAnalysis] = useState<Farm | null>(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     location: '',
     area_acres: '',
     soil_type: '',
     irrigation_type: '',
+    current_crop: '',
   });
 
   useEffect(() => {
@@ -166,6 +172,7 @@ export default function MyFarm() {
         area_acres: areaAcres,
         soil_type: formData.soil_type || 'General',
         irrigation_type: formData.irrigation_type || 'Standard',
+        current_crop: formData.current_crop || 'Rice',
       });
 
       toast({
@@ -180,6 +187,7 @@ export default function MyFarm() {
         area_acres: '',
         soil_type: '',
         irrigation_type: '',
+        current_crop: '',
       });
       loadFarms();
     } catch (error) {
@@ -304,6 +312,19 @@ export default function MyFarm() {
                         className="bg-earth-main border-earth-border focus:border-gold-400 text-gold-100 rounded-xl h-11"
                         required
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Current Crop Protocol</Label>
+                      <Select value={formData.current_crop} onValueChange={(v) => setFormData({ ...formData, current_crop: v })}>
+                        <SelectTrigger className="bg-earth-main border-earth-border text-gold-100 rounded-xl h-11">
+                          <SelectValue placeholder="Target Crop" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-earth-elevated border-earth-border">
+                          {['Rice', 'Maize', 'Tomato', 'Wheat', 'Cotton', 'Sugarcane', 'Coffee'].map(t => (
+                            <SelectItem key={t} value={t} className="text-gold-100 uppercase text-[10px] font-bold">{t}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                        <div className="space-y-2">
@@ -572,7 +593,16 @@ export default function MyFarm() {
                               <Droplet className="h-4 w-4 text-gold-400/40" />
                               <span className="text-[10px] font-black text-gold-100 uppercase tracking-widest">{farm.irrigationType || farm.irrigation_type || 'Manual Protocol'}</span>
                            </div>
-                           <Button variant="link" className="p-0 h-auto text-[9px] font-black text-gold-400 uppercase tracking-widest no-underline hover:text-gold-100" onClick={() => window.location.href='/crop-details'}>Analyze System</Button>
+                           <Button 
+                              variant="link" 
+                              className="p-0 h-auto text-[9px] font-black text-gold-400 uppercase tracking-widest no-underline hover:text-gold-100" 
+                              onClick={() => {
+                                 setSelectedFarmForAnalysis(farm);
+                                 setShowAnalysis(true);
+                              }}
+                           >
+                              Initialize Intelligence
+                           </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -584,6 +614,31 @@ export default function MyFarm() {
             </ScrollReveal>
           </div>
         )}
+
+        <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>
+          <DialogContent className="bg-earth-main border-earth-border text-gold-100 max-w-5xl h-[90vh] overflow-y-auto custom-scrollbar">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-black flex items-center">
+                <Shield className="mr-2 text-gold-400" />
+                Intelligence Protocol: {selectedFarmForAnalysis?.name}
+              </DialogTitle>
+              <DialogDescription className="text-gold-100/40 font-bold uppercase text-[10px] tracking-widest mt-2">
+                Running nutrient optimization for {selectedFarmForAnalysis?.location}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-6">
+              <FertilizerAnalysisModule 
+                farmId={selectedFarmForAnalysis?.id} 
+                initialCrop={selectedFarmForAnalysis?.currentCrop || undefined}
+                initialSoilType={selectedFarmForAnalysis?.soilType || undefined}
+                onSaveSuccess={() => {
+                  toast({ title: 'Analysis Saved', description: 'Data committed to farm ledger.' });
+                  loadFarms();
+                }}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

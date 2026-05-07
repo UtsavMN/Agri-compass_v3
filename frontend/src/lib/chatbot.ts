@@ -25,20 +25,17 @@ class GeminiChatbotProvider implements ChatbotProvider {
     const systemPrompt = "You are KrishiMitra, an agriculture expert for Karnataka farmers. Respond in simple English mixed with Kannada when appropriate. Keep responses under 6 lines and focus on practical advice.";
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: systemPrompt }]
-          },
           contents: [
             {
               role: 'user',
-              parts: [{ text: userMessage }]
+              parts: [{ text: `${systemPrompt}\n\nUser Question: ${userMessage}` }]
             }
           ]
         }),

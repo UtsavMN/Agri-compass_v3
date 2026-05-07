@@ -120,4 +120,18 @@ By default, the backend uses a local SQLite database (`agri.db`). This file will
 - **Fix:** Ensure you used a **Google App Password** (16 characters, no spaces) and NOT your regular Google account password in the `MAIL_PASSWORD` field.
 
 ### 5. AI Chatbot or Market Prices not loading
-- **Fix:** Double check that your `GEMINI_API_KEY` and `DATA_GOV_API_KEY` are correct and do not contain extra quotes or whitespace in the `.env` file.
+- **Fix:** Double check that your `GEMINI_API_KEY` and `DATA_GOV_API_KEY` are correct. The backend now supports multiple Gemini keys separated by commas for higher rate limits.
+- **Note:** If the AI is offline, check the backend console for specific API error messages.
+
+### 6. Translation Toggle Not Working
+- **Fix:** The translation depends on the Google Translate widget. If it doesn't appear immediately, wait a few seconds and try the toggle again. The application now has a retry mechanism to catch the widget loading.
+
+### 7. "Unknown User" in Community
+- **Fix:** This is usually resolved by a fresh login. The system now has a self-healing mechanism that syncs your profile whenever you interact with the community.
+
+---
+
+## ✨ New Features in v3.1
+- **Fertilizer Intelligence:** Integrated AI-driven fertilizer recommendations available in the "My Farm" section.
+- **Regional Recommendations:** District-specific crop suggestions powered by AI and historical dataset.
+- **Modern UI:** Enhanced animations and glassmorphism effects for a premium feel.

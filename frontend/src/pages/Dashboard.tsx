@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { CardShimmer, CropCardShimmer } from '@/components/ui/loading-shimmer';
 import { ScrollReveal, StaggerContainer, StaggerItem } from '@/components/ui/animations';
 import { LottieEmptyState } from '@/components/ui/lottie-loading';
-import { Sprout, TrendingUp, Users, FileText, Cloud, Leaf, MapPin, Zap, Droplets, Thermometer } from 'lucide-react';
+import { Sprout, TrendingUp, Users, FileText, Cloud, Leaf, MapPin, Zap, Droplets, Thermometer, MessageSquare } from 'lucide-react';
 
 interface Crop {
   id: string;
@@ -325,7 +325,13 @@ export default function Dashboard() {
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gold-100">Popular Crops</h2>
-              <Button variant="ghost" className="text-gold-400 hover:text-gold-300 hover:bg-gold-400/5">View All</Button>
+              <Button 
+                variant="ghost" 
+                className="text-gold-400 hover:text-gold-300 hover:bg-gold-400/5"
+                onClick={() => navigate('/market-prices')}
+              >
+                View All
+              </Button>
             </div>
             
             {loading ? (
@@ -397,6 +403,7 @@ export default function Dashboard() {
             )}
           </div>
         </ScrollReveal>
+
 
 
 
@@ -497,6 +504,3 @@ export default function Dashboard() {
     </Layout>
   );
 }
-
-// Add a simple MessageSquare icon import if missing from lucide-react above
-import { MessageSquare } from 'lucide-react';

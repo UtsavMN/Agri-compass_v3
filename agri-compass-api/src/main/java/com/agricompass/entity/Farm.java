@@ -40,6 +40,9 @@ public class Farm {
     @Column(name = "irrigation_type")
     private String irrigationType;
 
+    @Column(name = "current_crop")
+    private String currentCrop;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

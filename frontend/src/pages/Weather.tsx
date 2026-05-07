@@ -30,10 +30,15 @@ export default function Weather() {
   }, []);
 
   useEffect(() => {
-    if (!selectedDistrict && profile?.location) {
-      setSelectedDistrict(profile.location);
+    if (!selectedDistrict) {
+      if (profile?.location) {
+        setSelectedDistrict(profile.location);
+      } else if (districts.length > 0) {
+        // Default to a major district if no profile location
+        setSelectedDistrict('Bengaluru Urban');
+      }
     }
-  }, [profile?.location, selectedDistrict, setSelectedDistrict]);
+  }, [profile?.location, selectedDistrict, setSelectedDistrict, districts]);
 
   useEffect(() => {
     if (selectedDistrict) {

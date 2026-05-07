@@ -224,6 +224,19 @@
     "deficiency_symptoms": {
       "nitrogen": "Pale green leaves",
       "calcium": "Blossom end rot"
+    },
+    "wheat": {
+      "nutrient_requirement_per_acre": {
+        "nitrogen_kg": 40,
+        "phosphorus_kg": 20,
+        "potassium_kg": 15
+      }
+    },
+    "cotton": {
+      "nutrient_requirement_per_acre": {
+        "nitrogen_kg": 45,
+        "phosphorus_kg": 25,
+        "potassium_kg": 20
+      }
     }
-  }
 }

@@ -3,28 +3,32 @@
 ## Latest Update
 
 **Name:**
-Aniruddh
+Antigravity AI
 
 **Date & Time:**
-2026-04-30 11:07
+2026-05-07 15:55
 
 ### Changes Made:
 
-- **Added:** `COMMUNICATION.md` (Team communication log template)
-- **Modified:** Fixed environment configuration files to remove hardcoded API keys.
-- **Deleted:** Removed `bin/` directory from git tracking by updating `agri-compass-api/.gitignore`.
+- **Fixed:** AI Service connectivity by updating `AiController` to handle multiple keys and modern model names.
+- **Fixed:** Translation toggle integration with Google Translate widget in `LanguageContext`.
+- **Fixed:** "View All" button on Dashboard now correctly navigates to Market Prices page.
+- **Fixed:** Community "UNKNOWN USER" issue with self-healing profile sync in `UserService`.
+- **Fixed:** Weather page initial state now defaults to Bengaluru Urban if no profile location is set.
+- **Improved:** `run.bat` now handles environment variable loading more reliably.
+- **Added:** Integration of Fertilizer Intelligence Module into "My Farm" page (Modal-based).
 
 ### APIs Updated:
 
-- **Endpoint:** N/A
-- **Changes:** Updated `application.properties` and `.env.example` to ensure no sensitive API keys (Gemini, Turso, OpenWeather, Data.gov) are pushed to the repository.
+- **Endpoint:** `/api/ai/chat` - Improved reliability and model fallback.
+- **Endpoint:** `/api/posts` - Improved user profile mapping.
 
 ### Important Notes:
 
-- **Any breaking changes?** No breaking changes.
-- **Any dependencies added?** No new dependencies.
-- **Any files others must pull carefully?** Please ensure your local `.env` is set up with your own API keys, as `.env.example` and `application.properties` have been reverted to use placeholders.
+- **Any breaking changes?** No.
+- **Any dependencies added?** No.
+- **Any files others must pull carefully?** All frontend and backend changes. Ensure your `.env` has valid Gemini and Data.gov.in keys for full functionality.
 
 ### Next Steps:
 
-- **What the other person should do next:** Pull the latest `main` branch. Make sure your local `application.properties` is using environment variables and your `.env` contains the actual keys.
+- **What the other person should do next:** Pull the latest changes and run `run.bat`. Verify that the AI Chat and Translation features are working.

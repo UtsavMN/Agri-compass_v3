@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 public class UserProfile {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @JsonIgnore
