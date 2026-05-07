@@ -75,10 +75,10 @@ public class PostController {
             Optional<UserProfile> profile = profileRepository.findById(post.getUserId());
             dto.put("user", profile.map(p -> Map.of(
                 "id", p.getId(),
-                "username", p.getUsername() != null ? p.getUsername() : "",
-                "full_name", p.getFullName() != null ? p.getFullName() : "",
+                "username", p.getUsername() != null ? p.getUsername() : p.getId(),
+                "full_name", p.getFullName() != null ? p.getFullName() : p.getUsername(),
                 "avatar_url", p.getAvatarUrl() != null ? p.getAvatarUrl() : ""
-            )).orElse(Map.of("id", post.getUserId(), "username", "Unknown User")));
+            )).orElse(Map.of("id", post.getUserId(), "username", post.getUserId().length() > 8 ? "Farmer " + post.getUserId().substring(0, 4) : post.getUserId())));
 
             return dto;
         }).toList();
