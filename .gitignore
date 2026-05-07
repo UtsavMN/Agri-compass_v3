@@ -34,6 +34,10 @@ dist-ssr
 agri-compass-api/jdk-17.0.2/
 agri-compass-api/maven.zip
 agri-compass-api/target/
-# agri-compass-api/*.db
+agri-compass-api/*.db
 agri-compass-api/*.log
-agri-compass-api/apache-maven-3.9.6/
+agri-compass-api/apache-maven-*/
+agri-compass-api/*.txt
+*.patch
+.sixth/
+bin/

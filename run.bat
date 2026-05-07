@@ -2,30 +2,34 @@
 setlocal
 
 echo ==========================================
-echo 🌱 Agri-Compass Quick Run
+echo 🌱 Agri-Compass Quick Run (v3.1)
 echo ==========================================
 
-:: Set default environment variables for backend
-set PORT=8080
-set DB_URL=jdbc:sqlite:agri.db
-
-:: Load variables from frontend\.env if it exists (overwrites defaults)
+:: Load variables from frontend\.env if it exists
 if exist "frontend\.env" (
     echo 📝 Loading environment variables from frontend\.env...
     for /f "usebackq tokens=*" %%i in ("frontend\.env") do (
-        set %%i
+        set "%%i"
     )
+) else (
+    echo ⚠️ frontend\.env not found. Using defaults.
+    set PORT=8080
+    set DB_URL=jdbc:sqlite:agri.db
 )
 
 echo.
 echo 🚀 Starting Spring Boot Backend...
-start "Agri-Compass Backend" cmd /c "cd agri-compass-api && mvnw.cmd spring-boot:run"
+:: Using pushd/popd to ensure correct directory context
+pushd agri-compass-api
+start "Agri-Compass Backend" cmd /c "mvnw.cmd spring-boot:run"
+popd
 
 echo 🎨 Starting Vite Frontend...
-cd frontend
+pushd frontend
 :: Check for node_modules
 if not exist "node_modules\" (
     echo 📦 node_modules not found, installing dependencies...
     call npm install
 )
 npm run dev
+popd
