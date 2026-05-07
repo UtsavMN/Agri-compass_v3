@@ -35,7 +35,7 @@ export default function Community() {
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [filterDate, setFilterDate] = useState('')
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
-  const [showOnlyLocal, setShowOnlyLocal] = useState(true)
+  const [showOnlyLocal, setShowOnlyLocal] = useState(false)
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: {

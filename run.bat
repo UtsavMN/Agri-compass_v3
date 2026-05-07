@@ -5,11 +5,17 @@ echo ==========================================
 echo 🌱 Agri-Compass Quick Run (v3.1)
 echo ==========================================
 
+:: Clear common ports if they are in use
+echo 🧹 Clearing ports 8080 and 5173...
+npx kill-port 8080 5173 >nul 2>&1
+
 :: Load variables from frontend\.env if it exists
 if exist "frontend\.env" (
     echo 📝 Loading environment variables from frontend\.env...
     for /f "usebackq tokens=*" %%i in ("frontend\.env") do (
-        set "%%i"
+        echo %%i | findstr /b /c:"#" >nul || (
+            set "%%i"
+        )
     )
 ) else (
     echo ⚠️ frontend\.env not found. Using defaults.

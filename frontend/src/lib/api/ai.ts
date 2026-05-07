@@ -85,6 +85,15 @@ Provide a helpful, concise response in English or Kannada as appropriate.`
     } catch (error) {
       console.error('AI chat error:', error)
 
+      // Check for quota error (429)
+      if ((error as any).status === 429 || (error as any).message?.includes('429')) {
+        return {
+          response: 'ಕ್ಷಮಿಸಿ, AI ಸೇವಾ ಮಿತಿ ಮೀರಿದೆ. ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಪ್ರಯತ್ನಿಸಿ. (Quota Limit Reached)',
+          success: false,
+          error: 'Quota Exceeded'
+        }
+      }
+
       // Fallback responses based on language detection
       const isKannada = /[\u0C80-\u0CFF]/.test(request.message)
 
