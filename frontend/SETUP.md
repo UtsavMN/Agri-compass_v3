@@ -129,6 +129,9 @@ By default, the backend uses a local SQLite database (`agri.db`). This file will
 ### 7. "Unknown User" in Community
 - **Fix:** This is usually resolved by a fresh login. The system now has a self-healing mechanism that syncs your profile whenever you interact with the community.
 
+### 8. Project Crashing after Pull
+- **Fix:** We have cleaned the repository of all tracked database files and logs. If you still see errors, run `setup.bat` to refresh your dependencies. Ensure you are using `run.bat` from the root to start the application.
+
 ---
 
 ## ✨ New Features in v3.1
