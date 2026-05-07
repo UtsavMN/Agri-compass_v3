@@ -134,6 +134,29 @@ By default, the backend uses a local SQLite database (`agri.db`). This file will
 
 ---
 
+## 🌐 API Reference
+
+### External APIs (Requires API Keys in `.env`)
+- **Google Gemini API:** Powering the AI Chat, Regional Recommendations, and Fertilizer Intelligence.
+- **OpenWeather API:** Providing real-time weather data and 5-day forecasts.
+- **Data.gov.in (OGD) API:** Fetching live Mandi market prices across India.
+- **Google Translate:** Enabling English and Kannada language support.
+
+### Internal Backend Endpoints
+| Component | Base Path | Description |
+|-----------|-----------|-------------|
+| **AI Assistant** | `/api/ai` | Chatbot and recommendation engine. |
+| **Market Data** | `/api/market-prices` | Live Mandi price aggregation. |
+| **Community** | `/api/posts` | Social feed, comments, and likes. |
+| **Crops** | `/api/crops` | Crop encyclopedia and district mapping. |
+| **Farms** | `/api/farms` | Farm asset management and tracking. |
+| **Fertilizer** | `/api/fertilizer` | Soil analysis and intelligence system. |
+| **Weather** | `/api/weather` | District-level weather forecasting. |
+| **Profiles** | `/api/profiles` | User profile and location management. |
+| **Schemes** | `/api/schemes` | Government agricultural schemes database. |
+
+---
+
 ## ✨ New Features in v3.1
 - **Fertilizer Intelligence:** Integrated AI-driven fertilizer recommendations available in the "My Farm" section.
 - **Regional Recommendations:** District-specific crop suggestions powered by AI and historical dataset.
