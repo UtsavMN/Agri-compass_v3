@@ -2,7 +2,6 @@ package com.agricompass.controller;
 
 import com.agricompass.entity.FertilizerAnalysis;
 import com.agricompass.service.FertilizerService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,10 +10,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/fertilizer")
-@RequiredArgsConstructor
 public class FertilizerController {
 
     private final FertilizerService fertilizerService;
+
+    public FertilizerController(FertilizerService fertilizerService) {
+        this.fertilizerService = fertilizerService;
+    }
 
     @PostMapping("/recommend")
     public ResponseEntity<Map<String, Object>> getRecommendation(@RequestBody Map<String, Object> body) {

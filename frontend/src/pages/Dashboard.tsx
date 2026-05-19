@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { CardShimmer, CropCardShimmer } from '@/components/ui/loading-shimmer';
+import { CropCardPremium } from '@/components/ui/crop-card-premium';
 import { ScrollReveal, StaggerContainer, StaggerItem } from '@/components/ui/animations';
 import { LottieEmptyState } from '@/components/ui/lottie-loading';
 import { Sprout, TrendingUp, Users, FileText, Cloud, Leaf, MapPin, Zap, Droplets, Thermometer, MessageSquare } from 'lucide-react';
@@ -91,23 +92,25 @@ export default function Dashboard() {
       });
       setDistrictData(data);
       setDistricts(data.map(d => d.district));
+      return data;
     } catch (error) {
       console.error('Error loading district data:', error);
+      return [];
     }
   };
 
   const initializeDashboard = async () => {
     try {
-      // Load districts from CSV
-      await loadDistrictDataFromCSV();
+      // Load districts from CSV before choosing a default district.
+      const loadedDistrictData = await loadDistrictDataFromCSV();
 
       // Set default district from profile or first available
-      const defaultDistrict = profile?.location || districts[0] || '';
+      const defaultDistrict = profile?.location || profile?.district || loadedDistrictData[0]?.district || '';
       setSelectedDistrict(defaultDistrict);
 
-      // Load crops
-      const data = await apiGet('/api/crops?limit=6');
-      setCrops(data || []);
+      // Load crops — API returns Spring Page object with .content
+      const data = await apiGet('/api/crops?page=0&size=6&sortBy=name');
+      setCrops(data?.content || []);
 
 
 
@@ -136,12 +139,13 @@ export default function Dashboard() {
       // Load specific crop details for the district (Recommended Crops)
       setLoading(true);
       let data = await apiGet(`/api/crops/recommendations/${encodeURIComponent(selectedDistrict)}`);
-      
+
       // Fallback to all crops if no recommendations found for this district
       if (!data || data.length === 0) {
-        data = await apiGet('/api/crops?limit=6');
+        const fallback = await apiGet('/api/crops?page=0&size=6&sortBy=name');
+        data = fallback?.content || [];
       }
-      
+
       setCrops(data || []);
 
       // Load weather data
@@ -287,7 +291,7 @@ export default function Dashboard() {
                               </div>
                             </div>
                             <p className="text-sm text-gold-100/60 mb-3 leading-relaxed">{rec.reason}</p>
-                            
+
                             <div className="flex items-center gap-2 mb-3 text-xs font-bold text-gold-400 uppercase tracking-wider">
                               <Zap className="h-3 w-3" />
                               <span>Expected: {rec.expectedYield}</span>
@@ -325,15 +329,15 @@ export default function Dashboard() {
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gold-100">Popular Crops</h2>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="text-gold-400 hover:text-gold-300 hover:bg-gold-400/5"
-                onClick={() => navigate('/market-prices')}
+                onClick={() => navigate('/crops')}
               >
                 View All
               </Button>
             </div>
-            
+
             {loading ? (
               <CropCardShimmer count={6} />
             ) : crops.length > 0 ? (
@@ -341,59 +345,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {crops.map((crop) => (
                     <StaggerItem key={crop.id}>
-                      <Card
-                        className="card-premium group overflow-hidden border-earth-border/50 hover:border-gold-400/30 cursor-pointer"
-                        onClick={() => navigate(`/crop/${crop.name.toLowerCase()}`)}
-                      >
-                        {crop.image_url && (
-                          <div className="h-44 overflow-hidden relative">
-                            <img
-                              src={crop.image_url}
-                              alt={crop.name}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                              loading="lazy"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-earth-main/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <div className="absolute top-4 right-4">
-                              <Badge className="bg-earth-main/80 text-gold-400 border border-gold-400/20 shadow-sm backdrop-blur-md">
-                                {crop.season || 'Annual'}
-                              </Badge>
-                            </div>
-                          </div>
-                        )}
-                        <CardHeader className="pb-2">
-                          <CardTitle className="flex justify-between items-center text-xl text-gold-100 font-bold">
-                            <div className="flex items-center">
-                              <Leaf className="h-5 w-5 mr-2 text-gold-400" />
-                              {crop.name}
-                            </div>
-                          </CardTitle>
-                          <CardDescription className="text-gold-100/40 text-xs uppercase tracking-widest font-bold">
-                            {crop.durationDays ? `${crop.durationDays} Days Duration` : crop.category}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="flex flex-col gap-1 p-3 bg-earth-elevated rounded-xl border border-earth-border group-hover:border-gold-400/20 transition-all">
-                              <div className="text-[10px] uppercase tracking-wider text-gold-100/40 font-bold">Investment</div>
-                              <div className="text-sm font-bold text-gold-200">
-                                {crop.investmentPerAcre ? `₹${crop.investmentPerAcre.toLocaleString()}` : '₹35,000+'}
-                              </div>
-                            </div>
-                            
-                            <div className="flex flex-col gap-1 p-3 bg-earth-elevated rounded-xl border border-earth-border group-hover:border-gold-400/20 transition-all">
-                              <div className="text-[10px] uppercase tracking-wider text-gold-100/40 font-bold">Returns</div>
-                              <div className="text-sm font-bold text-gold-400">
-                                {crop.expectedReturns ? `₹${crop.expectedReturns.toLocaleString()}` : '₹55,000+'}
-                              </div>
-                            </div>
-                          </div>
-
-                          <Button className="w-full btn-gold h-11 transition-all group-hover:shadow-gold-glow">
-                            View Detailed Analysis
-                          </Button>
-                        </CardContent>
-                      </Card>
+                      <CropCardPremium crop={crop} />
                     </StaggerItem>
                   ))}
                 </div>

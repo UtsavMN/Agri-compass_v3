@@ -1,4 +1,5 @@
-import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { createContext, useContext, ReactNode, useState } from 'react';
+import { apiPut } from '@/lib/httpClient';
 
 export interface Profile {
   id: string;
@@ -6,6 +7,9 @@ export interface Profile {
   full_name: string | null;
   email: string | null;
   district: string | null;
+  phone: string | null;
+  location: string | null;
+  language_preference: string | null;
 }
 
 interface AuthContextType {
@@ -30,6 +34,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [activeUserId, setActiveUserId] = useState<string>(() => {
     return localStorage.getItem('mockUserId') || 'dev_user';
   });
+  const [profileOverrides, setProfileOverrides] = useState<Partial<Profile>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(`mockProfile:${activeUserId}`) || '{}');
+    } catch {
+      return {};
+    }
+  });
 
   const switchUser = (userId: string) => {
     setActiveUserId(userId);
@@ -45,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     firstName: activeMock.name.split(' ')[0],
     lastName: activeMock.name.split(' ')[1] || '',
     fullName: activeMock.name,
+    email: `${activeMock.id}@example.com`,
     primaryEmailAddress: { emailAddress: `${activeMock.id}@example.com` }
   };
 
@@ -54,10 +66,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     full_name: mockUser.fullName,
     email: mockUser.primaryEmailAddress.emailAddress,
     district: null,
+    phone: null,
+    location: null,
+    language_preference: null,
+    ...profileOverrides,
   };
 
   const updateProfile = async (data: any) => {
-    console.log("Mock updateProfile called with:", data);
+    const nextProfile = { ...profile, ...data };
+    setProfileOverrides((prev) => ({ ...prev, ...data }));
+    localStorage.setItem(`mockProfile:${activeUserId}`, JSON.stringify(nextProfile));
+
+    try {
+      await apiPut(`/api/profiles/${mockUser.id}`, data);
+    } catch (error) {
+      console.warn('Profile saved locally but backend sync failed:', error);
+    }
   };
 
   const signOut = async () => {

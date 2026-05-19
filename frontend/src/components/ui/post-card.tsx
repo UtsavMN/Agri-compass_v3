@@ -21,7 +21,7 @@ interface PostCardProps {
     content: string
     kn_caption?: string | null
     images?: string[]
-    video_url?: string
+    video_url?: string | null
     location?: string
     created_at: string
     user: {

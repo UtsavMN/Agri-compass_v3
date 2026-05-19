@@ -29,7 +29,18 @@ public class CropEconomics {
     @Column(name = "profit_margin")
     private Double profitMargin;
 
-    // Getters and Setters
+    public CropEconomics() {}
+
+    public CropEconomics(Long id, Crop crop, Double investmentPerAcre, Double yieldQuintal, Double marketPrice, Double expectedReturn, Double profitMargin) {
+        this.id = id;
+        this.crop = crop;
+        this.investmentPerAcre = investmentPerAcre;
+        this.yieldQuintal = yieldQuintal;
+        this.marketPrice = marketPrice;
+        this.expectedReturn = expectedReturn;
+        this.profitMargin = profitMargin;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -50,4 +61,32 @@ public class CropEconomics {
 
     public Double getProfitMargin() { return profitMargin; }
     public void setProfitMargin(Double profitMargin) { this.profitMargin = profitMargin; }
+
+    public static CropEconomicsBuilder builder() {
+        return new CropEconomicsBuilder();
+    }
+
+    public static class CropEconomicsBuilder {
+        private Long id;
+        private Crop crop;
+        private Double investmentPerAcre;
+        private Double yieldQuintal;
+        private Double marketPrice;
+        private Double expectedReturn;
+        private Double profitMargin;
+
+        CropEconomicsBuilder() {}
+
+        public CropEconomicsBuilder id(Long id) { this.id = id; return this; }
+        public CropEconomicsBuilder crop(Crop crop) { this.crop = crop; return this; }
+        public CropEconomicsBuilder investmentPerAcre(Double investmentPerAcre) { this.investmentPerAcre = investmentPerAcre; return this; }
+        public CropEconomicsBuilder yieldQuintal(Double yieldQuintal) { this.yieldQuintal = yieldQuintal; return this; }
+        public CropEconomicsBuilder marketPrice(Double marketPrice) { this.marketPrice = marketPrice; return this; }
+        public CropEconomicsBuilder expectedReturn(Double expectedReturn) { this.expectedReturn = expectedReturn; return this; }
+        public CropEconomicsBuilder profitMargin(Double profitMargin) { this.profitMargin = profitMargin; return this; }
+
+        public CropEconomics build() {
+            return new CropEconomics(id, crop, investmentPerAcre, yieldQuintal, marketPrice, expectedReturn, profitMargin);
+        }
+    }
 }

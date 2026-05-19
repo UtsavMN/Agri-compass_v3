@@ -1,3 +1,5 @@
+import { apiPost } from './httpClient';
+
 export type ChatMessage = {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -12,17 +14,28 @@ class GeminiChatbotProvider implements ChatbotProvider {
   name = 'gemini-native';
 
   async sendMessage(messages: ChatMessage[]): Promise<string> {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      console.warn('Gemini API key is not configured in .env');
-      return 'AI Configuration Error: Please ensure VITE_GEMINI_API_KEY is properly set in the frontend .env file.';
-    }
-
     const last = messages[messages.length - 1];
     const userMessage = last?.content ?? '';
     if (!userMessage) return 'Please provide a question or prompt.';
 
     const systemPrompt = "You are KrishiMitra, an agriculture expert for Karnataka farmers. Respond in simple English mixed with Kannada when appropriate. Keep responses under 6 lines and focus on practical advice.";
+
+    try {
+      const backendResponse = await apiPost('/api/ai/chat', {
+        prompt: `${systemPrompt}\n\nUser Question: ${userMessage}`,
+      });
+
+      if (backendResponse?.response) {
+        return backendResponse.response;
+      }
+    } catch (backendError) {
+      console.warn('Backend AI endpoint unavailable, trying optional frontend Gemini key:', backendError);
+    }
+
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      return 'Namaste! I am KrishiMitra in offline mode. Please ask about crops, weather, fertilizer, farm planning, or market prices, and I can give general practical advice.';
+    }
 
     try {
       const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`;

@@ -18,6 +18,33 @@
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
 
+    <!-- Suppress Google Translate toolbar / popup -->
+    <style>
+      /* Hide the floating Google Translate banner entirely */
+      .goog-te-banner-frame,
+      .goog-te-menu-frame,
+      iframe.goog-te-banner-frame,
+      iframe.skiptranslate,
+      .VIpgJd-Zvi9od-aZ2wEe-wOHMyf,
+      .VIpgJd-Zvi9od-ORHb-OEVmcd,
+      #goog-gt-tt,
+      .goog-te-balloon-frame,
+      .goog-tooltip,
+      .goog-tooltip:hover { 
+        display: none !important; 
+        visibility: hidden !important;
+      }
+
+      /* Prevent Google Translate from pushing the page down */
+      body { top: 0 !important; margin-top: 0 !important; position: static !important; }
+
+      /* Remove highlight styling Google Translate adds to translated text */
+      .goog-text-highlight {
+        background: none !important;
+        box-shadow: none !important;
+      }
+    </style>
+
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Agri Compass - Smart Farming Platform" />
@@ -27,16 +54,65 @@
     <title>Agri Compass - Smart Farming Platform</title>
   </head>
   <body>
-    <div id="google_translate_element" style="display:none;"></div>
+    <!--
+      Keep the GT element OFF-SCREEN (not display:none).
+      display:none prevents the browser from rendering the <select> inside it,
+      so the combo never initialises and programmatic triggering silently fails.
+    -->
+    <div id="google_translate_element"
+         style="position:absolute;top:-9999px;left:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;">
+    </div>
+
     <script type="text/javascript">
       function googleTranslateElementInit() {
         new google.translate.TranslateElement(
-          {pageLanguage: 'en', includedLanguages: 'en,kn', autoDisplay: false}, 
+          {
+            pageLanguage: 'en',
+            includedLanguages: 'en,kn',
+            autoDisplay: false
+          },
           'google_translate_element'
         );
       }
+
+      // ------------------------------------------------------------------
+      // Suppress the GT body-top offset with a targeted MutationObserver.
+      // We only watch body[style] changes — far cheaper than a setInterval.
+      // ------------------------------------------------------------------
+      function suppressBodyOffset() {
+        if (document.body && document.body.style.top && document.body.style.top !== '0px') {
+          document.body.style.top = '0px';
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        suppressBodyOffset();
+        if (window.MutationObserver) {
+          new MutationObserver(suppressBodyOffset)
+            .observe(document.body, { attributes: true, attributeFilter: ['style'] });
+        }
+      });
+
+      // ------------------------------------------------------------------
+      // Global helper called by React to switch the page language.
+      // Returns true when the combo was found and triggered, false otherwise
+      // (caller should retry after a short delay).
+      // ------------------------------------------------------------------
+      window.__triggerGTranslate = function (lang) {
+        var select = document.querySelector('.goog-te-combo');
+        if (!select) return false;
+        if (select.value !== lang) {
+          select.value = lang;
+          // Dispatch both 'change' and 'input' for maximum compatibility
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+          select.dispatchEvent(new Event('input',  { bubbles: true }));
+        }
+        return true;
+      };
     </script>
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script type="text/javascript"
+            src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit">
+    </script>
     
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

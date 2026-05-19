@@ -4,7 +4,6 @@ import com.agricompass.entity.User;
 import com.agricompass.entity.UserProfile;
 import com.agricompass.repository.UserRepository;
 import com.agricompass.repository.UserProfileRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,11 +17,13 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
 
-    @Autowired
-    private UserProfileRepository userProfileRepository;
+    public UserService(UserRepository userRepository, UserProfileRepository userProfileRepository) {
+        this.userRepository = userRepository;
+        this.userProfileRepository = userProfileRepository;
+    }
 
     @Transactional
     public User syncUser(Jwt jwt) {
@@ -125,5 +126,22 @@ public class UserService {
         }
 
         return user;
+    }
+
+    @Transactional
+    public UserProfile syncUserProfile(Jwt jwt) {
+        User user = syncUser(jwt);
+        return userProfileRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("Profile not found for user: " + user.getId()));
+    }
+
+    @Transactional
+    public UserProfile updateProfile(String fullName, String avatarUrl) {
+        UserProfile profile = syncUserProfile(null);
+        
+        if (fullName != null) profile.setFullName(fullName);
+        if (avatarUrl != null) profile.setAvatarUrl(avatarUrl);
+        
+        return userProfileRepository.save(profile);
     }
 }

@@ -1,11 +1,10 @@
 package com.agricompass.controller;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,14 +14,15 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/upload")
-@RequiredArgsConstructor
 public class UploadController {
 
     // =========================================================================
     // OPTION 1: Local Filesystem (Good for development, use ONLY for local dev)
     // =========================================================================
     private static final String UPLOAD_DIR = "uploads";
-    private static final String BASE_URL = "http://localhost:8080/uploads";
+
+    @Value("${app.backend-url:http://localhost:8080}")
+    private String backendUrl;
 
     @PostMapping
     public ResponseEntity<Map<String, String>> uploadFile(
@@ -35,6 +35,10 @@ public class UploadController {
             Files.createDirectories(uploadPath);
 
             // Generate unique filename
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Uploaded file is empty"));
+            }
+
             String originalFilename = file.getOriginalFilename();
             String extension = originalFilename != null && originalFilename.contains(".")
                 ? originalFilename.substring(originalFilename.lastIndexOf("."))
@@ -45,7 +49,7 @@ public class UploadController {
             Path filePath = uploadPath.resolve(uniqueFilename);
             Files.write(filePath, file.getBytes());
 
-            String fileUrl = BASE_URL + "/" + folder + "/" + uniqueFilename;
+            String fileUrl = backendUrl.replaceAll("/$", "") + "/uploads/" + folder + "/" + uniqueFilename;
             return ResponseEntity.ok(Map.of("url", fileUrl));
 
         } catch (IOException e) {

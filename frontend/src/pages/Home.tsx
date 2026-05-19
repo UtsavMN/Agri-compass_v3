@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { translateToKannada, containsKannada } from '@/lib/ai/translator';
 import { cropRecommender, DetailedCropData } from '@/lib/ai/cropRecommender';
 import { PostsAPI, Post } from '@/lib/api/posts';
@@ -25,7 +26,7 @@ export default function Home() {
   const [cropFilter, setCropFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [userFilter, setUserFilter] = useState('');
-  const [language, setLanguage] = useState<'en' | 'kn'>('en');
+  const { language, toggleLanguage: globalToggleLanguage } = useLanguage();
   const [translating, setTranslating] = useState(false);
   const [detailedCrops, setDetailedCrops] = useState<DetailedCropData[]>([]);
   const [cropsLoading, setCropsLoading] = useState(true);
@@ -158,11 +159,11 @@ export default function Home() {
     }
   };
 
-  const toggleLanguage = async () => {
+  const handleToggleLanguage = async () => {
     setTranslating(true);
     try {
+      globalToggleLanguage(); // This will change the context state
       const newLanguage = language === 'en' ? 'kn' : 'en';
-      setLanguage(newLanguage);
 
       // Translate posts if switching to Kannada
       if (newLanguage === 'kn') {
@@ -259,7 +260,7 @@ export default function Home() {
             <div className="flex items-center gap-4">
               <Button
                 variant="outline"
-                onClick={toggleLanguage}
+                onClick={handleToggleLanguage}
                 disabled={translating}
                 className="flex items-center gap-2 transition-smooth hover:scale-105"
               >

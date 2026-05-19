@@ -1,0 +1,10 @@
+{
+  "name": "agri-compass-root",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --prefix frontend && echo 'Backend uses Maven, no npm install needed'",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "cd agri-compass-api && ./mvnw.cmd spring-boot:run",
+    "dev": "npm run dev:frontend"
+  }
+}

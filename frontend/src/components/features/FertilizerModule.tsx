@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { apiPost } from '@/lib/httpClient';
 import { Activity, AlertTriangle, CheckCircle, Sprout, TestTube, ThermometerSun, Zap, Beaker } from 'lucide-react';
 import { ScrollReveal } from '@/components/ui/animations';
+import { Badge } from '@/components/ui/badge';
 
 interface FertilizerModuleProps {
   cropName: string;

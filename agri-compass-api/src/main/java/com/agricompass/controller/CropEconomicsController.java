@@ -1,7 +1,6 @@
 package com.agricompass.controller;
 
 import com.agricompass.entity.Crop;
-import com.agricompass.entity.CropEconomics;
 import com.agricompass.repository.CropRepository;
 import com.agricompass.repository.CropEconomicsRepository;
 import org.springframework.http.ResponseEntity;

@@ -35,15 +35,30 @@ export interface FarmImage {
   created_at: string
 }
 
+function normalizeFarm(farm: any): Farm {
+  return {
+    ...farm,
+    user_id: farm.user_id ?? farm.userId,
+    area_acres: Number(farm.area_acres ?? farm.areaAcres ?? 0),
+    soil_type: farm.soil_type ?? farm.soilType ?? null,
+    irrigation_type: farm.irrigation_type ?? farm.irrigationType ?? null,
+    current_crop: farm.current_crop ?? farm.currentCrop ?? null,
+    created_at: farm.created_at ?? farm.createdAt ?? new Date().toISOString(),
+  }
+}
+
 export class FarmsAPI {
   // GET /api/farms - Get user's farms with enhanced data
   static async getFarms(userId: string): Promise<Farm[]> {
     try {
-      const farms = await apiGet(`/api/farms?userId=${userId}`)
-      return farms.map((farm: Farm) => ({
-        ...farm,
-        duration_days: Math.floor((Date.now() - new Date(farm.created_at).getTime()) / (1000 * 60 * 60 * 24)),
-      }))
+      const farms = await apiGet(`/api/farms?userId=${encodeURIComponent(userId)}`)
+      return farms.map((rawFarm: any) => {
+        const farm = normalizeFarm(rawFarm)
+        return {
+          ...farm,
+          duration_days: Math.floor((Date.now() - new Date(farm.created_at).getTime()) / (1000 * 60 * 60 * 24)),
+        }
+      })
     } catch (error) {
       console.error('Error fetching farms:', error)
       throw error
@@ -61,7 +76,7 @@ export class FarmsAPI {
     current_crop?: string
   }): Promise<Farm> {
     try {
-      return await apiPost('/api/farms', farmData)
+      return normalizeFarm(await apiPost('/api/farms', farmData))
     } catch (error) {
       console.error('Error creating farm:', error)
       throw error
@@ -71,7 +86,7 @@ export class FarmsAPI {
   // PUT /api/farms/:id - Update farm details
   static async updateFarm(farmId: string, farmData: Partial<Farm>): Promise<Farm> {
     try {
-      return await apiPut(`/api/farms/${farmId}`, farmData)
+      return normalizeFarm(await apiPut(`/api/farms/${farmId}`, farmData))
     } catch (error) {
       console.error('Error updating farm:', error)
       throw error
@@ -108,7 +123,7 @@ export class FarmsAPI {
     try {
       // Upload raw file using the generic Multipart upload endpoint
       const uploadResult = await UploadAPI.uploadMedia(file, 'farms')
-      
+
       return await apiPost(`/api/farms/${farmId}/images`, {
         userId,
         image_url: uploadResult.url,

@@ -1,58 +1,72 @@
 package com.agricompass.controller;
 
-import com.agricompass.entity.Crop;
-import com.agricompass.entity.CropRecommendation;
-import com.agricompass.repository.CropRecommendationRepository;
-import com.agricompass.repository.CropRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.agricompass.dto.CropDTO;
+import com.agricompass.service.CropService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/crops")
 public class CropController {
 
-    @Autowired
-    private CropRepository cropRepository;
+    private final CropService cropService;
 
-    @Autowired
-    private CropRecommendationRepository cropRecommendationRepository;
+    public CropController(CropService cropService) {
+        this.cropService = cropService;
+    }
 
     @GetMapping
-    public ResponseEntity<List<Crop>> getAllCrops(@RequestParam(required = false) Integer limit) {
-        List<Crop> crops = cropRepository.findAll();
-        if (limit != null && limit > 0 && crops.size() > limit) {
-            return ResponseEntity.ok(crops.subList(0, limit));
-        }
-        return ResponseEntity.ok(crops);
+    public ResponseEntity<Page<CropDTO>> getAllCrops(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return ResponseEntity.ok(cropService.getAllCrops(pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Crop> getCropById(@PathVariable Long id) {
-        return cropRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<CropDTO> getCropById(@PathVariable Long id) {
+        CropDTO crop = cropService.getCropById(id);
+        return crop != null ? ResponseEntity.ok(crop) : ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/recommendations/{district}")
-    public ResponseEntity<List<Crop>> getRecommendationsByDistrict(@PathVariable String district) {
-        List<CropRecommendation> recommendations = cropRecommendationRepository.findByDistrictIgnoreCase(district);
-        
-        List<Crop> crops = recommendations.stream()
-                .map(CropRecommendation::getCrop)
-                .collect(Collectors.toList());
-                
-        // Fallback: If no recommendations, try returning crops that match district directly
-        if (crops.isEmpty()) {
-            return ResponseEntity.ok(cropRepository.findAll().stream()
-                    .filter(c -> c.getDistrict() != null && c.getDistrict().equalsIgnoreCase(district))
-                    .collect(Collectors.toList()));
-        }
-                
-        return ResponseEntity.ok(crops);
+    @GetMapping("/search")
+    public ResponseEntity<List<CropDTO>> searchCrops(@RequestParam String query) {
+        return ResponseEntity.ok(cropService.searchCrops(query));
+    }
+
+    @GetMapping("/recommendations")
+    public ResponseEntity<List<CropDTO>> getRecommendations(@RequestParam String district) {
+        return ResponseEntity.ok(cropService.getRecommendations(district));
+    }
+
+    @GetMapping("/district/{district}")
+    public ResponseEntity<List<CropDTO>> getCropsByDistrict(@PathVariable String district) {
+        return ResponseEntity.ok(cropService.getCropsByDistrict(district));
+    }
+
+    @GetMapping("/season/{season}")
+    public ResponseEntity<List<CropDTO>> getCropsBySeason(@PathVariable String season) {
+        return ResponseEntity.ok(cropService.getCropsBySeason(season));
+    }
+
+    @GetMapping("/high-profit")
+    public ResponseEntity<List<CropDTO>> getHighProfitCrops() {
+        return ResponseEntity.ok(cropService.getHighProfitCrops());
+    }
+
+    @GetMapping("/low-water")
+    public ResponseEntity<List<CropDTO>> getLowWaterCrops() {
+        return ResponseEntity.ok(cropService.getLowWaterCrops());
     }
 }

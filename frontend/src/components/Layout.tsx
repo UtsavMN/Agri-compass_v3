@@ -26,6 +26,8 @@ import {
   Languages,
   Settings,
   MessageSquare,
+  Leaf,
+  Sparkles,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
@@ -49,7 +51,9 @@ export default function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: Home },
-    { path: '/', label: 'Community', icon: MessageSquare },
+    { path: '/crops', label: 'Crops', icon: Leaf },
+    { path: '/soil-analysis', label: 'Soil AI', icon: Sparkles },
+    { path: '/community', label: 'Community', icon: MessageSquare },
     { path: '/my-farm', label: 'My Farm', icon: Sprout },
     { path: '/market-prices', label: 'Market Prices', icon: TrendingUp },
     { path: '/schemes', label: 'Gov Schemes', icon: FileText },
@@ -66,7 +70,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* ===== SIDEBAR (Desktop) ===== */}
       <aside className="hidden lg:flex flex-col w-60 border-r fixed h-screen z-40"
         style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)' }}>
-        
+
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 h-16 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
           <Sprout className="h-7 w-7" style={{ color: 'var(--accent)' }} />
@@ -85,11 +89,10 @@ export default function Layout({ children }: LayoutProps) {
               return (
                 <Link key={item.path} to={item.path}>
                   <div
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      isActive
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
                         ? 'text-gold-400'
                         : 'hover:text-gold-300'
-                    }`}
+                      }`}
                     style={{
                       background: isActive ? 'var(--accent-soft)' : 'transparent',
                       color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
@@ -147,7 +150,7 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Desktop: top bar nav links */}
           <div className="hidden lg:flex items-center gap-1">
-            {navItems.slice(0, 6).map((item) => {
+            {navItems.slice(0, 7).map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Link key={item.path} to={item.path}>
