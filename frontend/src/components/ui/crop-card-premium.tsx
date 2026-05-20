@@ -4,7 +4,7 @@ import { Button } from './button';
 import { Leaf, Star, TrendingUp, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-interface Crop {
+export interface Crop {
   id: string | number;
   name: string;
   season?: string;

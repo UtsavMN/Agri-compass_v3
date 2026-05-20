@@ -10,23 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { CardShimmer, CropCardShimmer } from '@/components/ui/loading-shimmer';
-import { CropCardPremium } from '@/components/ui/crop-card-premium';
+import { CropCardPremium, Crop } from '@/components/ui/crop-card-premium';
 import { ScrollReveal, StaggerContainer, StaggerItem } from '@/components/ui/animations';
 import { LottieEmptyState } from '@/components/ui/lottie-loading';
 import { Sprout, TrendingUp, Users, FileText, Cloud, Leaf, MapPin, Zap, Droplets, Thermometer, MessageSquare } from 'lucide-react';
-
-interface Crop {
-  id: string;
-  name: string;
-  category: string;
-  image_url: string | null;
-  investmentPerAcre?: number;
-  expectedReturns?: number;
-  breakevenMonths?: number;
-  durationDays?: number;
-  season?: string;
-  weatherPattern?: string;
-}
 
 interface CropRecommendation {
   cropName: string;
