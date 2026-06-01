@@ -136,11 +136,61 @@ public class UserService {
     }
 
     @Transactional
-    public UserProfile updateProfile(String fullName, String avatarUrl) {
+    public UserProfile updateProfile(String fullName, String avatarUrl, String location, String phone, String languagePreference, String district) {
         UserProfile profile = syncUserProfile(null);
         
         if (fullName != null) profile.setFullName(fullName);
         if (avatarUrl != null) profile.setAvatarUrl(avatarUrl);
+        if (location != null) profile.setLocation(location);
+        if (phone != null) profile.setPhone(phone);
+        if (languagePreference != null) profile.setLanguagePreference(languagePreference);
+        if (district != null) profile.setDistrict(district);
+        else if (location != null) profile.setDistrict(location);
+        
+        return userProfileRepository.save(profile);
+    }
+
+    @Transactional
+    public UserProfile getProfileById(String id) {
+        if (!userProfileRepository.existsById(id)) {
+            Optional<User> existingUser = userRepository.findById(id);
+            User user;
+            if (existingUser.isPresent()) {
+                user = existingUser.get();
+            } else {
+                user = User.builder()
+                        .id(id)
+                        .username(id)
+                        .email(id + "@example.com")
+                        .passwordHash("MOCK_AUTH")
+                        .build();
+                user = userRepository.save(user);
+            }
+            
+            UserProfile profile = UserProfile.builder()
+                    .id(id)
+                    .user(user)
+                    .username(id)
+                    .email(user.getEmail())
+                    .fullName(id.equals("user_a") ? "Farmer A (Mock)" : (id.equals("user_b") ? "Farmer B (Mock)" : id))
+                    .build();
+            userProfileRepository.save(profile);
+        }
+        return userProfileRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Profile not found for ID: " + id));
+    }
+
+    @Transactional
+    public UserProfile updateProfileForUser(String id, String fullName, String avatarUrl, String location, String phone, String languagePreference, String district) {
+        UserProfile profile = getProfileById(id);
+        
+        if (fullName != null) profile.setFullName(fullName);
+        if (avatarUrl != null) profile.setAvatarUrl(avatarUrl);
+        if (location != null) profile.setLocation(location);
+        if (phone != null) profile.setPhone(phone);
+        if (languagePreference != null) profile.setLanguagePreference(languagePreference);
+        if (district != null) profile.setDistrict(district);
+        else if (location != null) profile.setDistrict(location);
         
         return userProfileRepository.save(profile);
     }

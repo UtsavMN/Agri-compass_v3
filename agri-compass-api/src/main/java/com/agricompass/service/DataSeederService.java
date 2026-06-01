@@ -117,7 +117,7 @@ public class DataSeederService {
         
         if (eco.getMarketPrice() == null) eco.setMarketPrice(2500.0); 
         if (eco.getYieldQuintal() == null) eco.setYieldQuintal(returns / 2500.0);
-        if (eco.getProfitMargin() == null) eco.setProfitMargin(cost > 0 ? ((returns - cost) / cost) * 100 : 50.0);
+        if (eco.getProfitMargin() == null) eco.setProfitMargin(returns - cost);
         
         cropEconomicsRepository.save(eco);
     }

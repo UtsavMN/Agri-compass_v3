@@ -1,6 +1,7 @@
 package com.agricompass.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -32,9 +33,11 @@ public class UserProfile {
     private String username;
 
     @Column(name = "full_name")
+    @JsonProperty("full_name")
     private String fullName;
 
     @Column(name = "avatar_url")
+    @JsonProperty("avatar_url")
     private String avatarUrl;
 
     private String email;
@@ -44,6 +47,7 @@ public class UserProfile {
     private String location;
 
     @Column(name = "language_preference")
+    @JsonProperty("language_preference")
     private String languagePreference;
 
     @CreationTimestamp

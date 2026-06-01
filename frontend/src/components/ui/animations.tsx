@@ -3,8 +3,8 @@
  * Reusable animation components using Framer Motion
  */
 
-import { motion, useInView, Variants } from 'framer-motion';
-import { ReactNode, useRef } from 'react';
+import { motion, useInView, Variants, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 
 // ============================================
 // 1. ENTRY & SCROLL ANIMATIONS
@@ -58,6 +58,7 @@ export function ScrollReveal({
         ease: [0.25, 0.4, 0.25, 1]
       }}
       className={className}
+      style={{ willChange: 'transform, opacity' }}
     >
       {children}
     </motion.div>
@@ -111,7 +112,7 @@ export function StaggerItem({ children, className = '' }: { children: ReactNode;
   };
 
   return (
-    <motion.div variants={itemVariants} className={className}>
+    <motion.div variants={itemVariants} className={className} style={{ willChange: 'transform, opacity' }}>
       {children}
     </motion.div>
   );
@@ -138,6 +139,7 @@ export function FadeIn({
       exit={{ opacity: 0 }}
       transition={{ duration, delay }}
       className={className}
+      style={{ willChange: 'opacity' }}
     >
       {children}
     </motion.div>
@@ -181,6 +183,7 @@ export function InteractiveCard({
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       className={className}
+      style={{ willChange: 'transform' }}
     >
       {children}
     </motion.div>
@@ -287,6 +290,7 @@ export function PageTransition({
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
       className={className}
+      style={{ willChange: 'transform, opacity' }}
     >
       {children}
     </motion.div>
@@ -319,6 +323,7 @@ export function SlideIn({
       exit={{ opacity: 0, ...directions[direction] }}
       transition={{ duration: 0.3 }}
       className={className}
+      style={{ willChange: 'transform, opacity' }}
     >
       {children}
     </motion.div>
@@ -364,7 +369,8 @@ export function ScaleModal({
 // 4. COUNT UP ANIMATION
 // ============================================
 
-import { useEffect, useState } from 'react';
+
+
 
 /**
  * Count Up - Animated number counter
@@ -387,19 +393,26 @@ export function CountUp({
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    let start = 0;
-    const increment = end / (duration / 16);
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= end) {
-        setCount(end);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(start));
-      }
-    }, 16);
+    let startTime: number | null = null;
+    let animationFrameId: number;
 
-    return () => clearInterval(timer);
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      const rate = Math.min(progress / duration, 1);
+      
+      setCount(Math.floor(rate * end));
+
+      if (progress < duration) {
+        animationFrameId = requestAnimationFrame(animate);
+      } else {
+        setCount(end);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrameId);
   }, [end, duration]);
 
   return (
@@ -500,3 +513,62 @@ export function CircularProgress({
     </div>
   );
 }
+
+// ============================================
+// 6. 3D MOTION & PARALLAX COMPONENTS
+// ============================================
+
+interface TiltCardProps {
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+}
+
+/**
+ * TiltCard - 3D card tilt hover effect
+ */
+export function TiltCard({ children, className = '', onClick }: TiltCardProps) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  // Map mouse positions to rotation degrees
+  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [10, -10]), { damping: 25, stiffness: 200 });
+  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-10, 10]), { damping: 25, stiffness: 200 });
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    
+    // Calculate relative cursor position from center (-0.5 to 0.5)
+    const mouseX = (event.clientX - rect.left) / width - 0.5;
+    const mouseY = (event.clientY - rect.top) / height - 0.5;
+
+    x.set(mouseX);
+    y.set(mouseY);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.div
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: 'preserve-3d',
+        perspective: 1000,
+        willChange: 'transform'
+      }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+

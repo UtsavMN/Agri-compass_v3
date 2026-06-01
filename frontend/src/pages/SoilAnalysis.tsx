@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Layout from '@/components/Layout';
+import { apiPost } from '@/lib/httpClient';
 import { Button } from '@/components/ui/button';
 import {
   Sparkles,
@@ -59,7 +60,13 @@ interface RecommendationResponse {
   confidence_level: number;
 }
 
-export default function SoilAnalysis() {
+const getSoilColor = (value: number, ideal: [number, number]) => {
+  if (value < ideal[0]) return 'rgba(196,90,74,0.3)';   // deficient — red
+  if (value > ideal[1]) return 'rgba(74,122,196,0.3)';  // excess — blue
+  return 'rgba(74,154,106,0.3)';                          // ideal — green
+};
+
+export function SoilAnalysisContent() {
   const [farmerName, setFarmerName] = useState('');
   const [location, setLocation] = useState('');
   const [fieldSize, setFieldSize] = useState('1');
@@ -130,19 +137,7 @@ export default function SoilAnalysis() {
         season: season,
       };
 
-      const response = await fetch('/api/ai/soil-recommendation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error('API request failed');
-      }
-
-      const data = await response.json();
+      const data = await apiPost<RecommendationResponse>('/api/ai/soil-recommendation', payload);
       setResults(data);
       if (data.recommended_crops && data.recommended_crops.length > 0) {
         setExpandedCrop(data.recommended_crops[0].crop_name);
@@ -198,7 +193,7 @@ export default function SoilAnalysis() {
   };
 
   return (
-    <Layout>
+    <>
       <div className="space-y-8 no-print">
         {/* Header section with Premium Gold gradient */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-subtle pb-6" style={{ borderColor: 'var(--border-subtle)' }}>
@@ -358,7 +353,7 @@ export default function SoilAnalysis() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Nitrogen */}
-                <div className="space-y-2.5">
+                <div className="space-y-2.5 p-4 rounded-xl border bg-earth-main/20 transition-all duration-200" style={{ borderColor: getSoilColor(soil.nitrogen, [60, 90]) }}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
                       <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
@@ -372,8 +367,8 @@ export default function SoilAnalysis() {
                     max="200"
                     value={soil.nitrogen}
                     onChange={(e) => handleSoilChange('nitrogen', parseInt(e.target.value))}
-                    className="w-full accent-gold cursor-pointer"
-                    style={{ accentColor: 'var(--accent)' }}
+                    className="soil-slider cursor-pointer"
+                    style={{ '--pct': `${(soil.nitrogen / 200) * 100}%` } as React.CSSProperties}
                   />
                   <div className="flex justify-between text-[10px]" style={{ color: 'var(--text-muted)' }}>
                     <span>Deficient (0)</span>
@@ -383,7 +378,7 @@ export default function SoilAnalysis() {
                 </div>
 
                 {/* Phosphorus */}
-                <div className="space-y-2.5">
+                <div className="space-y-2.5 p-4 rounded-xl border bg-earth-main/20 transition-all duration-200" style={{ borderColor: getSoilColor(soil.phosphorus, [20, 40]) }}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
                       <span className="w-2.5 h-2.5 rounded-full bg-purple-400" />
@@ -397,8 +392,8 @@ export default function SoilAnalysis() {
                     max="100"
                     value={soil.phosphorus}
                     onChange={(e) => handleSoilChange('phosphorus', parseInt(e.target.value))}
-                    className="w-full accent-gold cursor-pointer"
-                    style={{ accentColor: 'var(--accent)' }}
+                    className="soil-slider cursor-pointer"
+                    style={{ '--pct': `${(soil.phosphorus / 100) * 100}%` } as React.CSSProperties}
                   />
                   <div className="flex justify-between text-[10px]" style={{ color: 'var(--text-muted)' }}>
                     <span>Deficient (0)</span>
@@ -408,7 +403,7 @@ export default function SoilAnalysis() {
                 </div>
 
                 {/* Potassium */}
-                <div className="space-y-2.5">
+                <div className="space-y-2.5 p-4 rounded-xl border bg-earth-main/20 transition-all duration-200" style={{ borderColor: getSoilColor(soil.potassium, [40, 70]) }}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
                       <span className="w-2.5 h-2.5 rounded-full bg-pink-400" />
@@ -422,8 +417,8 @@ export default function SoilAnalysis() {
                     max="200"
                     value={soil.potassium}
                     onChange={(e) => handleSoilChange('potassium', parseInt(e.target.value))}
-                    className="w-full accent-gold cursor-pointer"
-                    style={{ accentColor: 'var(--accent)' }}
+                    className="soil-slider cursor-pointer"
+                    style={{ '--pct': `${(soil.potassium / 200) * 100}%` } as React.CSSProperties}
                   />
                   <div className="flex justify-between text-[10px]" style={{ color: 'var(--text-muted)' }}>
                     <span>Deficient (0)</span>
@@ -433,7 +428,7 @@ export default function SoilAnalysis() {
                 </div>
 
                 {/* pH */}
-                <div className="space-y-2.5">
+                <div className="space-y-2.5 p-4 rounded-xl border bg-earth-main/20 transition-all duration-200" style={{ borderColor: getSoilColor(soil.pH, [6.0, 7.5]) }}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
@@ -448,8 +443,8 @@ export default function SoilAnalysis() {
                     step="0.1"
                     value={soil.pH}
                     onChange={(e) => handleSoilChange('pH', parseFloat(e.target.value))}
-                    className="w-full accent-gold cursor-pointer"
-                    style={{ accentColor: 'var(--accent)' }}
+                    className="soil-slider cursor-pointer"
+                    style={{ '--pct': `${((soil.pH - 4) / 5) * 100}%` } as React.CSSProperties}
                   />
                   <div className="flex justify-between text-[10px]" style={{ color: 'var(--text-muted)' }}>
                     <span>Highly Acidic (4)</span>
@@ -459,7 +454,7 @@ export default function SoilAnalysis() {
                 </div>
 
                 {/* Soil Moisture */}
-                <div className="space-y-2.5">
+                <div className="space-y-2.5 p-4 rounded-xl border bg-earth-main/20 transition-all duration-200" style={{ borderColor: getSoilColor(soil.moisture, [40, 60]) }}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
                       <Droplets className="h-3.5 w-3.5 text-blue-400" />
@@ -473,8 +468,8 @@ export default function SoilAnalysis() {
                     max="100"
                     value={soil.moisture}
                     onChange={(e) => handleSoilChange('moisture', parseInt(e.target.value))}
-                    className="w-full accent-gold cursor-pointer"
-                    style={{ accentColor: 'var(--accent)' }}
+                    className="soil-slider cursor-pointer"
+                    style={{ '--pct': `${(soil.moisture / 100) * 100}%` } as React.CSSProperties}
                   />
                   <div className="flex justify-between text-[10px]" style={{ color: 'var(--text-muted)' }}>
                     <span>Arid/Dry (0%)</span>
@@ -484,7 +479,7 @@ export default function SoilAnalysis() {
                 </div>
 
                 {/* Temperature */}
-                <div className="space-y-2.5">
+                <div className="space-y-2.5 p-4 rounded-xl border bg-earth-main/20 transition-all duration-200" style={{ borderColor: getSoilColor(soil.temperature_C, [25, 32]) }}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
                       <Thermometer className="h-3.5 w-3.5 text-red-400" />
@@ -498,8 +493,8 @@ export default function SoilAnalysis() {
                     max="45"
                     value={soil.temperature_C}
                     onChange={(e) => handleSoilChange('temperature_C', parseInt(e.target.value))}
-                    className="w-full accent-gold cursor-pointer"
-                    style={{ accentColor: 'var(--accent)' }}
+                    className="soil-slider cursor-pointer"
+                    style={{ '--pct': `${((soil.temperature_C - 10) / 35) * 100}%` } as React.CSSProperties}
                   />
                   <div className="flex justify-between text-[10px]" style={{ color: 'var(--text-muted)' }}>
                     <span>Cold (10°C)</span>
@@ -509,7 +504,7 @@ export default function SoilAnalysis() {
                 </div>
 
                 {/* Humidity */}
-                <div className="space-y-2.5 md:col-span-2">
+                <div className="space-y-2.5 p-4 rounded-xl border bg-earth-main/20 transition-all duration-200 md:col-span-2" style={{ borderColor: getSoilColor(soil.humidity_percent, [70, 85]) }}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
                       <Wind className="h-3.5 w-3.5 text-emerald-400" />
@@ -523,8 +518,8 @@ export default function SoilAnalysis() {
                     max="100"
                     value={soil.humidity_percent}
                     onChange={(e) => handleSoilChange('humidity_percent', parseInt(e.target.value))}
-                    className="w-full accent-gold cursor-pointer"
-                    style={{ accentColor: 'var(--accent)' }}
+                    className="soil-slider cursor-pointer"
+                    style={{ '--pct': `${((soil.humidity_percent - 10) / 90) * 100}%` } as React.CSSProperties}
                   />
                   <div className="flex justify-between text-[10px]" style={{ color: 'var(--text-muted)' }}>
                     <span>Dry (10%)</span>
@@ -916,6 +911,14 @@ export default function SoilAnalysis() {
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+export default function SoilAnalysis() {
+  return (
+    <Layout>
+      <SoilAnalysisContent />
     </Layout>
   );
 }

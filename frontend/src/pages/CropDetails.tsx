@@ -6,13 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { 
   ArrowLeft, DollarSign, Droplets, MapPin, ListChecks, Sprout, AlertTriangle, 
   Beaker, Zap, Calendar, Wind, Shield, BarChart3, TrendingUp, History, Info,
-  Leaf, Settings, ExternalLink, Activity
+  Leaf, Settings, ExternalLink, Activity, Printer
 } from 'lucide-react';
 import { apiGet } from '@/lib/httpClient';
 import { Badge } from '@/components/ui/badge';
 import { ScrollReveal } from '@/components/ui/animations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { resolveCropImage, getCropImage } from '@/lib/cropImages';
+import { formatCurrency } from '@/data/masterData';
+import { CropDetailsShimmer } from '@/components/ui/loading-shimmer';
 
 const slugify = (text: string) => {
   return text
@@ -22,6 +25,80 @@ const slugify = (text: string) => {
     .replace(/[\s/]+/g, '-')       // Replace spaces and slashes with a single dash
     .replace(/-+/g, '-')           // Replace multiple consecutive dashes with a single dash
     .replace(/^-+|-+$/g, '');      // Remove leading and trailing dashes
+};
+
+const getSeasonCalendar = (seasonStr: string, cropName: string = '') => {
+  const normalized = (seasonStr || '').toLowerCase();
+  const name = (cropName || '').toLowerCase();
+  const months = [
+    { name: 'Jan' }, { name: 'Feb' }, { name: 'Mar' }, { name: 'Apr' },
+    { name: 'May' }, { name: 'Jun' }, { name: 'Jul' }, { name: 'Aug' },
+    { name: 'Sep' }, { name: 'Oct' }, { name: 'Nov' }, { name: 'Dec' }
+  ];
+
+  const isPerennial = normalized.includes('perennial') || normalized.includes('year-round');
+
+  return months.map((m, idx) => {
+    let isSowing = false;
+    let isHarvest = false;
+
+    if (isPerennial) {
+      // Perennial crops are sown/planted ONCE (one-time sowing),
+      // so we do not show a recurring annual sowing window. Only the harvest window is shown.
+      isSowing = false;
+
+      // Specific harvesting windows for perennial crops in India/Karnataka
+      if (name.includes('coconut')) {
+        isHarvest = true; // Year-round harvest
+      } else if (name.includes('arecanut') || name.includes('areca')) {
+        isHarvest = idx >= 9 || idx <= 2; // Oct to Mar
+      } else if (name.includes('coffee')) {
+        isHarvest = idx >= 10 || idx <= 2; // Nov to Mar
+      } else if (name.includes('mango')) {
+        isHarvest = idx >= 3 && idx <= 6; // Apr to Jul
+      } else if (name.includes('grapes') || name.includes('grape')) {
+        isHarvest = idx >= 0 && idx <= 3; // Jan to Apr
+      } else if (name.includes('pepper')) {
+        isHarvest = idx >= 11 || idx <= 2; // Dec to Mar
+      } else if (name.includes('cardamom')) {
+        isHarvest = idx >= 7 || idx <= 1; // Aug to Feb
+      } else if (name.includes('cocoa')) {
+        isHarvest = true; // Year-round
+      } else if (name.includes('rubber')) {
+        isHarvest = idx !== 5 && idx !== 6; // Aug to May (exclude heavy monsoon Jun-Jul)
+      } else if (name.includes('tea')) {
+        isHarvest = idx >= 2 && idx <= 10; // Mar to Nov
+      } else {
+        isHarvest = true; // Default to year-round harvest for other perennial crops
+      }
+    } else if (normalized.includes('kharif')) {
+      // Sowing: June - Aug (indices 5, 6, 7)
+      // Harvest: Oct - Dec (indices 9, 10, 11)
+      if (idx >= 5 && idx <= 7) isSowing = true;
+      if (idx >= 9 && idx <= 11) isHarvest = true;
+    } else if (normalized.includes('rabi')) {
+      // Sowing: Oct - Nov (indices 9, 10)
+      // Harvest: Feb - Apr (indices 1, 2, 3)
+      if (idx >= 9 && idx <= 10) isSowing = true;
+      if (idx >= 1 && idx <= 3) isHarvest = true;
+    } else if (normalized.includes('summer') || normalized.includes('zaid')) {
+      // Sowing: Jan - Feb (indices 0, 1)
+      // Harvest: May - Jun (indices 4, 5)
+      if (idx >= 0 && idx <= 1) isSowing = true;
+      if (idx >= 4 && idx <= 5) isHarvest = true;
+    } else if (normalized.includes('pre-monsoon')) {
+      // Sowing: Mar - Apr (indices 2, 3)
+      // Harvest: Jul - Aug (indices 6, 7)
+      if (idx >= 2 && idx <= 3) isSowing = true;
+      if (idx >= 6 && idx <= 7) isHarvest = true;
+    } else {
+      // Standard annual crop fallback (Kharif-like)
+      if (idx >= 5 && idx <= 7) isSowing = true;
+      if (idx >= 9 && idx <= 11) isHarvest = true;
+    }
+
+    return { ...m, isSowing, isHarvest };
+  });
 };
 
 export default function CropDetails() {
@@ -75,18 +152,7 @@ export default function CropDetails() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex flex-col justify-center items-center h-96 space-y-4">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gold-400"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Activity className="h-6 w-6 text-gold-400/50 animate-pulse" />
-            </div>
-          </div>
-          <div className="text-center">
-            <p className="text-gold-100 text-lg font-bold tracking-tight">Syncing Intelligence</p>
-            <p className="text-gold-100/40 text-xs uppercase tracking-widest font-black mt-1">Aggregating production-grade data</p>
-          </div>
-        </div>
+        <CropDetailsShimmer />
       </Layout>
     );
   }
@@ -109,46 +175,109 @@ export default function CropDetails() {
     );
   }
 
+  const displayImage = resolveCropImage(crop);
+
   return (
     <Layout>
-      <div className="space-y-8 pb-12">
-        <ScrollReveal direction="left" delay={0.1}>
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate(-1)} 
-            className="group text-gold-100/60 hover:text-gold-400 hover:bg-gold-400/5 transition-all mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-            Registry Overview
-          </Button>
-        </ScrollReveal>
+      {/* Stylesheet for print report */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          body, html {
+            background: white !important;
+            color: black !important;
+          }
+          .no-print, header, aside, button, nav, .btn-gold, [role="tablist"] {
+            display: none !important;
+          }
+          .print-only {
+            display: block !important;
+          }
+          .print-container {
+            color: black !important;
+            padding: 20px !important;
+          }
+          .card-premium {
+            border: 1px solid #ddd !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            color: black !important;
+          }
+          .text-gold-100, .text-gold-400, .text-gold-300 {
+            color: black !important;
+          }
+          .bg-earth-main, .bg-earth-elevated {
+            background: #f9f9f9 !important;
+            border-color: #eee !important;
+          }
+          .print-badge {
+            border: 1px solid #333 !important;
+            color: black !important;
+            background: transparent !important;
+          }
+        }
+      `}} />
+
+      <div className="space-y-8 pb-12 print-container">
+        {/* Navigation & Print Actions */}
+        <div className="flex justify-between items-center no-print">
+          <ScrollReveal direction="left" delay={0.1}>
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate(-1)} 
+              className="group text-gold-100/60 hover:text-gold-400 hover:bg-gold-400/5 transition-all"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+              My Farms
+            </Button>
+          </ScrollReveal>
+          <ScrollReveal direction="right" delay={0.1}>
+            <Button 
+              onClick={() => window.print()} 
+              className="btn-gold flex items-center gap-2 py-5 px-6 rounded-2xl"
+            >
+              <Printer className="h-4 w-4" />
+              Print Precision Report
+            </Button>
+          </ScrollReveal>
+        </div>
+
+        {/* Print Only Header */}
+        <div className="hidden print:block border-b-2 border-black pb-4 mb-6">
+          <h1 className="text-3xl font-black tracking-tight">AGRI COMPASS PRECISION REPORT</h1>
+          <p className="text-xs uppercase tracking-widest font-bold">Crop Technical Sheet & Agronomic Advisory</p>
+        </div>
 
         {/* Hero Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-3">
-            <ScrollReveal direction="up" delay={0.2}>
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-earth-border h-[450px]">
-                {crop.imageUrl ? (
-                  <img src={crop.imageUrl} alt={crop.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-earth-elevated flex items-center justify-center">
-                    <Sprout className="h-24 w-24 text-gold-400/20" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-earth-main via-earth-main/40 to-transparent" />
-                <div className="absolute bottom-8 left-10 right-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <ScrollReveal direction="up" delay={0.2}>
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-border h-[320px] mb-8 w-full">
+            {displayImage ? (
+              <img 
+                src={displayImage} 
+                alt={crop.name} 
+                className="w-full h-full object-cover" 
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = getCropImage('default');
+                }}
+              />
+            ) : (
+              <div className="w-full h-full bg-surface flex items-center justify-center">
+                <Sprout className="h-24 w-24 text-gold-primary/20" />
+              </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent print:hidden" />
+                <div className="absolute bottom-8 left-10 right-10 flex flex-col md:flex-row md:items-end justify-between gap-6 print:relative print:bottom-0 print:left-0 print:right-0 print:text-black">
                   <div>
                     <div className="flex items-center gap-3 mb-4">
-                      <Badge className="bg-gold-400 text-earth-main font-black px-4 py-1.5 text-[10px] uppercase tracking-widest shadow-lg">
+                      <Badge className="bg-gold-400 text-earth-main font-black px-4 py-1.5 text-[10px] uppercase tracking-widest shadow-lg print:border print:border-black print:text-black print:bg-transparent">
                         {crop.season} SEEDING
                       </Badge>
-                      <Badge variant="outline" className="border-gold-400/30 text-gold-400 font-black px-4 py-1.5 text-[10px] uppercase tracking-widest bg-earth-main/60 backdrop-blur-md">
+                      <Badge variant="outline" className="border-gold-400/30 text-gold-400 font-black px-4 py-1.5 text-[10px] uppercase tracking-widest bg-earth-main/60 backdrop-blur-md print:border-black print:text-black">
                         {crop.durationDays} DAY CYCLE
                       </Badge>
                       {crop.difficultyLevel && (
                         <Badge 
                           variant="outline" 
-                          className={`font-black px-4 py-1.5 text-[10px] uppercase tracking-widest bg-earth-main/60 backdrop-blur-md ${
+                          className={`font-black px-4 py-1.5 text-[10px] uppercase tracking-widest bg-earth-main/60 backdrop-blur-md print:border-black print:text-black ${
                             crop.difficultyLevel.toLowerCase() === 'easy' 
                               ? 'border-green-500/30 text-green-400' 
                               : crop.difficultyLevel.toLowerCase() === 'hard'
@@ -160,15 +289,15 @@ export default function CropDetails() {
                         </Badge>
                       )}
                     </div>
-                    <h1 className="text-6xl font-black text-gold-100 tracking-tighter leading-none mb-2 drop-shadow-2xl">{crop.name}</h1>
-                    {crop.scientificName && (
-                      <p className="text-xl italic text-gold-300/80 mb-3 font-medium drop-shadow-2xl">{crop.scientificName}</p>
+                    <h1 className="text-6xl font-black text-gold-100 tracking-tighter leading-none mb-2 drop-shadow-2xl print:text-black print:text-4xl">{crop.name}</h1>
+                    {crop.scientificName && crop.scientificName.toLowerCase() !== 'unknown' && (
+                      <p className="text-xl italic text-gold-300/80 mb-3 font-medium drop-shadow-2xl print:text-black print:text-lg">{crop.scientificName}</p>
                     )}
-                    <p className="text-gold-400 font-bold flex items-center tracking-widest text-xs uppercase bg-earth-main/30 backdrop-blur-sm w-fit px-3 py-1 rounded-full border border-gold-400/20">
+                    <p className="text-gold-400 font-bold flex items-center tracking-widest text-xs uppercase bg-earth-main/30 backdrop-blur-sm w-fit px-3 py-1 rounded-full border border-gold-400/20 print:text-black print:border-none">
                       <MapPin className="h-3 w-3 mr-1.5" /> High Compatibility: {crop.recommendedDistricts?.slice(0, 3).join(', ') || 'Global'}
                     </p>
                   </div>
-                  <div className="bg-earth-main/60 backdrop-blur-xl p-6 rounded-3xl border border-gold-400/20 shadow-2xl min-w-[200px]">
+                  <div className="bg-earth-main/60 backdrop-blur-xl p-6 rounded-3xl border border-gold-400/20 shadow-2xl min-w-[200px] print:hidden">
                     <div className="text-[10px] text-gold-100/40 uppercase tracking-widest font-black mb-1">Climate Suitability</div>
                     <div className="text-4xl font-black text-gold-100 flex items-end gap-1">
                       {crop.aiScore?.climateSuitabilityScore || 85}<span className="text-gold-400 text-xl">%</span>
@@ -178,10 +307,10 @@ export default function CropDetails() {
                 </div>
               </div>
             </ScrollReveal>
-          </div>
 
-          <div className="lg:col-span-1 flex flex-col gap-8">
-            <ScrollReveal direction="right" delay={0.3}>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="lg:col-span-3 space-y-8">
+            <ScrollReveal direction="up" delay={0.3} className="lg:hidden">
               <Card className="bg-gradient-to-br from-gold-400 to-gold-600 text-earth-main border-none shadow-gold-glow h-full flex flex-col group hover:scale-[1.02] transition-transform duration-500 rounded-3xl overflow-hidden">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-earth-main font-black flex items-center uppercase tracking-tighter text-xl">
@@ -191,11 +320,11 @@ export default function CropDetails() {
                 <CardContent className="space-y-6 flex-1 flex flex-col justify-center">
                   <div className="bg-earth-main/10 p-5 rounded-2xl border border-earth-main/5 backdrop-blur-sm">
                     <div className="text-[10px] text-earth-main/60 uppercase tracking-widest font-black mb-1">Average MSP</div>
-                    <div className="text-4xl font-black tracking-tighter">₹{Math.round(crop.marketInfo?.averageMsp || 0).toLocaleString() || 'N/A'}</div>
+                    <div className="text-4xl font-black tracking-tighter">{formatCurrency(crop.marketInfo?.averageMsp || 0)}</div>
                   </div>
                   <div className="bg-earth-main/10 p-5 rounded-2xl border border-earth-main/5 backdrop-blur-sm">
                     <div className="text-[10px] text-earth-main/60 uppercase tracking-widest font-black mb-1">Projected Returns</div>
-                    <div className="text-4xl font-black tracking-tighter">₹{Math.round(crop.expectedReturns || 0).toLocaleString() || 'N/A'}</div>
+                    <div className="text-4xl font-black tracking-tighter">{formatCurrency(crop.expectedReturns || 0)}</div>
                   </div>
                   <div className="flex items-center justify-between px-2 pt-2">
                     <div className="flex items-center gap-2">
@@ -209,6 +338,86 @@ export default function CropDetails() {
             </ScrollReveal>
           </div>
         </div>
+
+        {/* Calendar and Core Requirements Row */}
+        <ScrollReveal direction="up" delay={0.35}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-2">
+              <Card className="card-premium h-full">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-xs text-gold-400 font-black uppercase tracking-widest flex items-center">
+                    <Calendar className="mr-2 h-4 w-4" /> Sowing & Harvesting Calendar
+                  </CardTitle>
+                  <CardDescription className="text-gold-100/40">Optimal months for the {crop.season || 'Annual'} cropping cycle in Karnataka</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <div className="grid grid-cols-12 gap-1 text-center">
+                    {getSeasonCalendar(crop.season, crop.name).map((month, idx) => (
+                      <div key={idx} className="flex flex-col items-center">
+                        <span className="text-[10px] font-black text-gold-100/40 mb-2 uppercase">{month.name}</span>
+                        <div 
+                          className={`w-full h-8 rounded-md flex items-center justify-center text-[10px] font-black transition-all ${
+                            month.isSowing 
+                              ? 'bg-gold-400 text-earth-main shadow-[0_0_8px_rgba(186,117,23,0.4)] font-bold' 
+                              : month.isHarvest 
+                              ? 'bg-green-500 text-earth-main shadow-[0_0_8px_rgba(34,197,94,0.4)] font-bold' 
+                              : 'bg-earth-elevated/40 text-gold-100/20 border border-earth-border/40'
+                          }`}
+                        >
+                          {month.isSowing ? 'SOW' : month.isHarvest ? 'HARV' : '-'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-4 mt-4 justify-between items-start sm:items-center text-[10px] font-black tracking-widest uppercase">
+                    <div className="flex gap-4">
+                      {!(crop.season || '').toLowerCase().includes('perennial') && !(crop.season || '').toLowerCase().includes('year-round') && (
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3 h-3 rounded bg-gold-400" />
+                          <span className="text-gold-100/60">Sowing Window</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded bg-green-500" />
+                        <span className="text-gold-100/60">Harvesting Window</span>
+                      </div>
+                    </div>
+                    {((crop.season || '').toLowerCase().includes('perennial') || (crop.season || '').toLowerCase().includes('year-round')) && (
+                      <span className="text-gold-400/80 font-bold normal-case text-[10px] italic">
+                        * Perennial crop: One-time planting/sowing, recurring harvests.
+                      </span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="md:col-span-1">
+              <Card className="card-premium h-full">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-xs text-gold-400 font-black uppercase tracking-widest flex items-center">
+                    <Info className="mr-2 h-4 w-4" /> Quick Specs
+                  </CardTitle>
+                  <CardDescription className="text-gold-100/40">Basic growth metrics</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-2">
+                  <div className="flex justify-between items-center text-xs border-b border-earth-border/40 pb-2">
+                    <span className="text-gold-100/40">Water Intensity</span>
+                    <span className="font-bold text-gold-100 uppercase">{crop.waterRequirement || 'Moderate'}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs border-b border-earth-border/40 pb-2">
+                    <span className="text-gold-100/40">Temperature Range</span>
+                    <span className="font-bold text-gold-100">{crop.temperatureRange || '18-35'} °C</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gold-100/40">Soil Type</span>
+                    <span className="font-bold text-gold-400 truncate max-w-[150px] text-right" title={crop.soilType}>{crop.soilType || 'Loam'}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </ScrollReveal>
 
         {/* Intelligence Tabs */}
         <ScrollReveal direction="up" delay={0.4}>
@@ -376,69 +585,75 @@ export default function CropDetails() {
             <TabsContent value="management" className="mt-0 outline-none">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
-                  <Card className="card-premium">
-                    <CardHeader className="border-b border-earth-border/30">
-                      <CardTitle className="text-lg text-gold-100 font-black tracking-tight">Cultivation Architecture</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="divide-y divide-earth-border">
-                        {crop.growingSteps?.map((step: any, idx: number) => (
-                          <div key={idx} className="flex gap-6 p-6 hover:bg-earth-elevated/20 transition-colors group">
-                            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-earth-elevated text-gold-400 border border-earth-border flex items-center justify-center font-black shadow-lg group-hover:bg-gold-400 group-hover:text-earth-main transition-all">
-                              {step.stepNumber}
+                  {crop.growingSteps && crop.growingSteps.length > 0 && (
+                    <Card className="card-premium">
+                      <CardHeader className="border-b border-earth-border/30">
+                        <CardTitle className="text-lg text-gold-100 font-black tracking-tight">Cultivation Architecture</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <div className="divide-y divide-earth-border">
+                          {crop.growingSteps.map((step: any, idx: number) => (
+                            <div key={idx} className="flex gap-6 p-6 hover:bg-earth-elevated/20 transition-colors group">
+                              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-earth-elevated text-gold-400 border border-earth-border flex items-center justify-center font-black shadow-lg group-hover:bg-gold-400 group-hover:text-earth-main transition-all">
+                                {step.stepNumber}
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-bold text-gold-100 uppercase tracking-tight text-sm">{step.title}</h4>
+                                <p className="text-gold-100/50 mt-1 text-xs leading-relaxed">{step.details}</p>
+                              </div>
                             </div>
-                            <div className="flex-1">
-                              <h4 className="font-bold text-gold-100 uppercase tracking-tight text-sm">{step.title}</h4>
-                              <p className="text-gold-100/50 mt-1 text-xs leading-relaxed">{step.details}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
 
                 <div className="space-y-8">
-                  <Card className="card-premium border-red-500/10">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-xs text-red-400 font-black uppercase tracking-widest flex items-center">
-                        <AlertTriangle className="mr-2 h-4 w-4" /> Pathogen Alerts
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {crop.diseases?.map((disease: any, i: number) => (
-                        <div key={i} className="p-4 bg-red-500/5 rounded-2xl border border-red-500/10">
-                          <h5 className="text-sm font-bold text-red-400 uppercase tracking-tight mb-1">{disease.name}</h5>
-                          <p className="text-[10px] text-gold-100/40 mb-2 italic">"{disease.symptoms}"</p>
-                          <div className="text-[10px] font-black text-gold-100/60 leading-relaxed bg-earth-main/50 p-2 rounded-lg">
-                            <span className="text-red-400">MANAGEMENT:</span> {disease.management}
+                  {crop.diseases && crop.diseases.length > 0 && (
+                    <Card className="card-premium border-red-500/10">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-xs text-red-400 font-black uppercase tracking-widest flex items-center">
+                          <AlertTriangle className="mr-2 h-4 w-4" /> Pathogen Alerts
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {crop.diseases.map((disease: any, i: number) => (
+                          <div key={i} className="p-4 bg-red-500/5 rounded-2xl border border-red-500/10">
+                            <h5 className="text-sm font-bold text-red-400 uppercase tracking-tight mb-1">{disease.name}</h5>
+                            <p className="text-[10px] text-gold-100/40 mb-2 italic">"{disease.symptoms}"</p>
+                            <div className="text-[10px] font-black text-gold-100/60 leading-relaxed bg-earth-main/50 p-2 rounded-lg">
+                              <span className="text-red-400">MANAGEMENT:</span> {disease.management}
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
 
-                  <Card className="card-premium">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-xs text-gold-400 font-black uppercase tracking-widest flex items-center">
-                        <History className="mr-2 h-4 w-4" /> Post-Harvest
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-gold-100/40">Storage Mode</span>
-                        <span className="font-bold text-gold-100">{crop.postHarvest?.storageMethod || 'Dry'}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-gold-100/40">Duration</span>
-                        <span className="font-bold text-gold-100">{crop.postHarvest?.storageDurationMonths || 6} Months</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-gold-100/40">Processing</span>
-                        <span className="font-bold text-gold-400">{crop.postHarvest?.processingRequired ? 'Required' : 'None'}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  {crop.postHarvest && (
+                    <Card className="card-premium">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-xs text-gold-400 font-black uppercase tracking-widest flex items-center">
+                          <History className="mr-2 h-4 w-4" /> Post-Harvest
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-gold-100/40">Storage Mode</span>
+                          <span className="font-bold text-gold-100">{crop.postHarvest.storageMethod || 'Dry'}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-gold-100/40">Duration</span>
+                          <span className="font-bold text-gold-100">{crop.postHarvest.storageDurationMonths || 6} Months</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-gold-100/40">Processing</span>
+                          <span className="font-bold text-gold-400">{crop.postHarvest.processingRequired ? 'Required' : 'None'}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </div>
             </TabsContent>
@@ -477,15 +692,15 @@ export default function CropDetails() {
                       <div className="space-y-4">
                         <div className="flex justify-between text-sm">
                           <span className="text-gold-100/40">Production Cost</span>
-                          <span className="font-bold text-gold-100">₹{Math.round(crop.investmentPerAcre || 0).toLocaleString()}</span>
+                          <span className="font-bold text-gold-100">{formatCurrency(crop.investmentPerAcre || 0)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gold-100/40">Market Potential</span>
-                          <span className="font-bold text-gold-100">₹{Math.round(crop.expectedReturns || 0).toLocaleString()}</span>
+                          <span className="font-bold text-gold-100">{formatCurrency(crop.expectedReturns || 0)}</span>
                         </div>
                         <div className="pt-4 border-t border-earth-border flex justify-between text-lg">
                           <span className="font-black text-gold-100 tracking-tight">NET PROFIT</span>
-                          <span className="font-black text-gold-400 tracking-tight">₹{Math.round((crop.expectedReturns || 0) - (crop.investmentPerAcre || 0)).toLocaleString()}</span>
+                          <span className="font-black text-gold-400 tracking-tight">{formatCurrency((crop.expectedReturns || 0) - (crop.investmentPerAcre || 0))}</span>
                         </div>
                       </div>
                     </div>
@@ -520,7 +735,40 @@ export default function CropDetails() {
             </TabsContent>
           </Tabs>
         </ScrollReveal>
-      </div>
+          </div>
+
+          {/* Sticky Side Panel for Market Intel */}
+          <div className="lg:col-span-1 hidden lg:block">
+            <div className="sticky top-20 flex flex-col gap-8">
+              <ScrollReveal direction="right" delay={0.3}>
+                <Card className="bg-gradient-to-br from-gold-primary to-gold-hover text-black border-none shadow-premium flex flex-col group hover:scale-[1.02] transition-transform duration-500 rounded-3xl overflow-hidden">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-black font-black flex items-center uppercase tracking-tighter text-xl">
+                      <TrendingUp className="mr-2 h-6 w-6" /> Market Intel
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="bg-black/10 p-5 rounded-2xl backdrop-blur-sm">
+                      <div className="text-[10px] text-black/60 uppercase tracking-widest font-black mb-1">Average MSP</div>
+                      <div className="text-4xl font-black tracking-tighter">{formatCurrency(crop.marketInfo?.averageMsp || 0)}</div>
+                    </div>
+                    <div className="bg-black/10 p-5 rounded-2xl backdrop-blur-sm">
+                      <div className="text-[10px] text-black/60 uppercase tracking-widest font-black mb-1">Projected Returns</div>
+                      <div className="text-4xl font-black tracking-tighter">{formatCurrency(crop.expectedReturns || 0)}</div>
+                    </div>
+                    <div className="flex items-center justify-between px-2 pt-2">
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-4 w-4" />
+                        <span className="text-xs font-bold uppercase tracking-tight">Demand: {crop.marketInfo?.marketDemand || 'High'}</span>
+                      </div>
+                      <div className="h-2 w-2 rounded-full bg-black animate-pulse" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </ScrollReveal>
+            </div>
+          </div>
     </Layout>
   );
 }
+

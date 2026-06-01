@@ -249,6 +249,7 @@ public class FertilizerService {
 
         Map<String, Object> result = new HashMap<>();
         result.put("nutrient_deficit", Map.of("nitrogen", deficitN, "phosphorus", deficitP, "potassium", deficitK));
+        result.put("stage_application", Map.of("nitrogen", stageN, "phosphorus", stageP, "potassium", stageK));
         result.put("fertilizer_recommendation", Map.of(
             "urea", Math.round(recUrea * 10.0) / 10.0,
             "dap", Math.round(recDap * 10.0) / 10.0,
@@ -257,6 +258,7 @@ public class FertilizerService {
         result.put("soil_health_score", score);
         result.put("warnings", warnings);
         result.put("explanations", explanations);
+        result.put("stage_weights", Map.of("basal", 0.4, "tillering", 0.3, "flowering", 0.3));
 
         return result;
     }
@@ -270,13 +272,26 @@ public class FertilizerService {
         return (Map<String, Object>) cropDataMap.get(cropKey);
     }
 
+    private double parseDoubleSafe(Object obj) {
+        if (obj == null) return 0.0;
+        if (obj instanceof Number) return ((Number) obj).doubleValue();
+        if (obj instanceof String) {
+            try {
+                return Double.parseDouble((String) obj);
+            } catch (NumberFormatException e) {
+                return 0.0;
+            }
+        }
+        return 0.0;
+    }
+
     @SuppressWarnings("unchecked")
     public FertilizerAnalysis saveAnalysis(Map<String, Object> body) throws IOException {
         String farmId = (String) body.get("farmId");
         String crop = (String) body.get("crop");
-        double soilN = ((Number) body.get("soil_n")).doubleValue();
-        double soilP = ((Number) body.get("soil_p")).doubleValue();
-        double soilK = ((Number) body.get("soil_k")).doubleValue();
+        double soilN = parseDoubleSafe(body.get("soil_n"));
+        double soilP = parseDoubleSafe(body.get("soil_p"));
+        double soilK = parseDoubleSafe(body.get("soil_k"));
         String soilLevel = (String) body.get("soil_level");
         String soilPh = (String) body.get("soil_ph");
         String growthStage = (String) body.get("growth_stage");

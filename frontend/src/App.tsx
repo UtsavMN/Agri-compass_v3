@@ -1,44 +1,47 @@
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
-import { DistrictProvider } from '@/contexts/DistrictContext';
 import { Toaster } from '@/components/ui/toaster';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { LoadingOverlay } from '@/components/ui/loading-components';
 
-import Dashboard from '@/pages/Dashboard';
-import CropDetails from '@/pages/CropDetails';
-import MyFarm from '@/pages/MyFarm';
-import MarketPrices from '@/pages/MarketPrices';
-import GovSchemes from '@/pages/GovSchemes';
-import AirAgent from '@/pages/AirAgent';
-import Community from '@/pages/Community';
-import Profile from '@/pages/Profile';
-import Weather from '@/pages/Weather';
-import Auth from '@/pages/Auth';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
-import Home from '@/pages/Home';
-import PostDetail from './pages/PostDetail';
-import NotFound from '@/pages/NotFound';
-import Crops from '@/pages/Crops';
-import SoilAnalysis from '@/pages/SoilAnalysis';
-
+// Lazy loaded routes
+const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
+const CropDetails = React.lazy(() => import('@/pages/CropDetails'));
+const MyFarm = React.lazy(() => import('@/pages/MyFarm'));
+const MarketPrices = React.lazy(() => import('@/pages/MarketPrices'));
+const GovSchemes = React.lazy(() => import('@/pages/GovSchemes'));
+const AirAgent = React.lazy(() => import('@/pages/AirAgent'));
+const Community = React.lazy(() => import('@/pages/Community'));
+const Profile = React.lazy(() => import('@/pages/Profile'));
+const Weather = React.lazy(() => import('@/pages/Weather'));
+const Auth = React.lazy(() => import('@/pages/Auth'));
+const ForgotPassword = React.lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = React.lazy(() => import('@/pages/ResetPassword'));
+const Home = React.lazy(() => import('@/pages/Home'));
+const PostDetail = React.lazy(() => import('./pages/PostDetail'));
+const NotFound = React.lazy(() => import('@/pages/NotFound'));
+const Crops = React.lazy(() => import('@/pages/Crops'));
+const SoilAnalysis = React.lazy(() => import('@/pages/SoilAnalysis'));
 
 function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider>
+    <ThemeProvider>
+      <Router>
         <LanguageProvider>
-          <DistrictProvider>
-            <Router>
-              <Routes>
-                <Route path="/" element={<Community />} />
-                <Route path="/community" element={<Community />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
+          <Suspense fallback={<LoadingOverlay message="Loading Agri Compass..." fullScreen />}>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Community />} />
+              <Route path="/community" element={<Community />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
+              {/* Protected Routes */}
+              <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/crop/:cropName" element={<CropDetails />} />
                 <Route path="/my-farm" element={<MyFarm />} />
@@ -50,14 +53,15 @@ function App() {
                 <Route path="/post/:id" element={<PostDetail />} />
                 <Route path="/crops" element={<Crops />} />
                 <Route path="/soil-analysis" element={<SoilAnalysis />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
-            </Router>
-          </DistrictProvider>
+              </Route>
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+          <Toaster />
         </LanguageProvider>
-      </ThemeProvider>
-    </AuthProvider>
+      </Router>
+    </ThemeProvider>
   );
 }
 

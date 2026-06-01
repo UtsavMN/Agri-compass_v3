@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser, MOCK_USERS } from '@/store';
 import { FarmsAPI, Farm, FarmImage } from '@/lib/api/farms'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -37,7 +37,7 @@ interface FarmCardProps {
 }
 
 export default function FarmCard({ farm, onDelete, onUpdate }: FarmCardProps) {
-  const { user } = useAuth()
+  const { user } = useUser()
   const { toast } = useToast()
   const [weatherModalOpen, setWeatherModalOpen] = useState(false)
   const [imageGalleryOpen, setImageGalleryOpen] = useState(false)

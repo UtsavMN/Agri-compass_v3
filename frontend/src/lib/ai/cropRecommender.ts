@@ -1,3 +1,4 @@
+import Papa from 'papaparse';
 // No longer using Supabase
 
 export interface DistrictData {
@@ -62,17 +63,16 @@ export class CropRecommender {
   }
 
   private parseCSV(csvText: string): DistrictData[] {
-    const lines = csvText.split('\n').filter(line => line.trim());
-  // headers not needed — parse values by position
-
-    return lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim());
+    const parsed = Papa.parse<string[]>(csvText, { skipEmptyLines: true });
+    if (!parsed.data || parsed.data.length < 2) return [];
+    
+    return parsed.data.slice(1).map(values => {
       return {
-        district: values[0] || '',
-        recommended_crops: values[1] || '',
-        soil_type: values[2] || '',
-        avg_rainfall: values[3] || '',
-        weather_pattern: values[4] || '',
+        district: values[0]?.trim() || '',
+        recommended_crops: values[1]?.trim() || '',
+        soil_type: values[2]?.trim() || '',
+        avg_rainfall: values[3]?.trim() || '',
+        weather_pattern: values[4]?.trim() || '',
       };
     });
   }
@@ -176,22 +176,19 @@ export class CropRecommender {
   }
 
   private parseDetailedCropCSV(csvText: string, region: string): DetailedCropData[] {
-    const lines = csvText.split('\n').filter(line => line.trim());
-    if (lines.length < 2) return [];
+    const parsed = Papa.parse<string[]>(csvText, { skipEmptyLines: true });
+    if (!parsed.data || parsed.data.length < 2) return [];
 
-  // headers not needed — parse values by position
-
-    return lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim());
+    return parsed.data.slice(1).map(values => {
       return {
-        crop: values[0] || '',
-        description: values[1] || '',
-        how_to_grow: values[2] || '',
-        economic_importance: values[3] || '',
-        uses: values[4] || '',
-        major_districts: values[5] || '',
-        youtube_links: values[6] || '',
-        article_links: values[7] || '',
+        crop: values[0]?.trim() || '',
+        description: values[1]?.trim() || '',
+        how_to_grow: values[2]?.trim() || '',
+        economic_importance: values[3]?.trim() || '',
+        uses: values[4]?.trim() || '',
+        major_districts: values[5]?.trim() || '',
+        youtube_links: values[6]?.trim() || '',
+        article_links: values[7]?.trim() || '',
         region: region
       };
     });

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser, MOCK_USERS } from '@/store';
 import { FarmsAPI, FarmImage } from '@/lib/api/farms'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -32,7 +32,7 @@ export default function FarmImageGallery({
   isOpen,
   onClose
 }: FarmImageGalleryProps) {
-  const { user } = useAuth()
+  const { user } = useUser()
   const { toast } = useToast()
   const [isUploading, setIsUploading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<FarmImage | null>(null)

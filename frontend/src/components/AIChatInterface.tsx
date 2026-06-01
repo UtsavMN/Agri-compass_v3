@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser, MOCK_USERS } from '@/store';
 import { AIAPI } from '@/lib/api/ai'
 import { FarmsAPI, Farm } from '@/lib/api/farms'
 import { Button } from '@/components/ui/button'
@@ -25,7 +25,7 @@ interface AIChatInterfaceProps {
 }
 
 export default function AIChatInterface({ selectedFarmId, onFarmSelect }: AIChatInterfaceProps) {
-  const { user } = useAuth()
+  const { user } = useUser()
   const { toast } = useToast()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')

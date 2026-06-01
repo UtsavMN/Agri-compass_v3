@@ -101,8 +101,9 @@
       window.__triggerGTranslate = function (lang) {
         var select = document.querySelector('.goog-te-combo');
         if (!select) return false;
-        if (select.value !== lang) {
-          select.value = lang;
+        var targetValue = lang === 'en' ? '' : lang;
+        if (select.value !== targetValue) {
+          select.value = targetValue;
           // Dispatch both 'change' and 'input' for maximum compatibility
           select.dispatchEvent(new Event('change', { bubbles: true }));
           select.dispatchEvent(new Event('input',  { bubbles: true }));

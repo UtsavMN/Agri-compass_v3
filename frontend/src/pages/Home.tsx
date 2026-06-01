@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser, MOCK_USERS } from '@/store';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translateToKannada, containsKannada } from '@/lib/ai/translator';
 import { cropRecommender, DetailedCropData } from '@/lib/ai/cropRecommender';
@@ -18,7 +18,7 @@ import { Sprout, Search, Plus, MessageCircle, Heart, Globe, Leaf, TrendingUp, Fi
 import { motion } from 'framer-motion';
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const { toast } = useToast();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -350,7 +350,7 @@ export default function Home() {
                           crop={crop}
                           onViewDetails={(crop) => {
                             // Handle view details - could open modal or navigate
-                            console.log('View details for:', crop.crop);
+
                           }}
                         />
                       </StaggerItem>
@@ -453,3 +453,4 @@ export default function Home() {
     </Layout>
   );
 }
+

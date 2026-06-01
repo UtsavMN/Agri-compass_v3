@@ -158,8 +158,8 @@ export default function FertilizerAnalysisModule({
   };
 
   const scoreData = result ? [
-    { name: 'Health', value: result.soil_health_score },
-    { name: 'Deficit', value: 100 - result.soil_health_score }
+    { name: 'Health', value: result.soil_health_score ?? 100 },
+    { name: 'Deficit', value: 100 - (result.soil_health_score ?? 100) }
   ] : [];
 
   const COLORS = ['#C6A96B', '#1B211F'];
@@ -386,9 +386,9 @@ export default function FertilizerAnalysisModule({
             <div className="lg:col-span-2 space-y-8">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {[
-                  { label: 'Nitrogen', value: result.nutrient_deficit.nitrogen, color: 'text-blue-400', symbol: 'N' },
-                  { label: 'Phosphorus', value: result.nutrient_deficit.phosphorus, color: 'text-purple-400', symbol: 'P' },
-                  { label: 'Potassium', value: result.nutrient_deficit.potassium, color: 'text-orange-400', symbol: 'K' },
+                  { label: 'Nitrogen', value: result.nutrient_deficit?.nitrogen ?? 0, color: 'text-blue-400', symbol: 'N' },
+                  { label: 'Phosphorus', value: result.nutrient_deficit?.phosphorus ?? 0, color: 'text-purple-400', symbol: 'P' },
+                  { label: 'Potassium', value: result.nutrient_deficit?.potassium ?? 0, color: 'text-orange-400', symbol: 'K' },
                 ].map((item, idx) => (
                   <Card key={idx} className="bg-earth-elevated/40 border-earth-border/50 overflow-hidden relative group hover:border-gold-400/30 transition-all">
                     <div className="absolute -right-4 -top-4 text-6xl font-black text-gold-100/5 group-hover:text-gold-100/10 transition-colors select-none">{item.symbol}</div>
@@ -415,9 +415,9 @@ export default function FertilizerAnalysisModule({
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                     {[
-                      { name: 'Urea', val: result.fertilizer_recommendation.urea, desc: 'Nitrogen Source' },
-                      { name: 'DAP', val: result.fertilizer_recommendation.dap, desc: 'Phosphorus Source' },
-                      { name: 'MOP', val: result.fertilizer_recommendation.mop, desc: 'Potassium Source' },
+                      { name: 'Urea', val: result.fertilizer_recommendation?.urea ?? 0, desc: 'Nitrogen Source' },
+                      { name: 'DAP', val: result.fertilizer_recommendation?.dap ?? 0, desc: 'Phosphorus Source' },
+                      { name: 'MOP', val: result.fertilizer_recommendation?.mop ?? 0, desc: 'Potassium Source' },
                     ].map((f, i) => (
                       <div key={i} className="flex flex-col items-center text-center p-6 bg-earth-main/50 rounded-[2rem] border border-earth-border">
                         <span className="text-3xl font-black text-gold-100 tracking-tighter">{f.val} <span className="text-sm font-normal text-gold-100/40">kg</span></span>
@@ -432,7 +432,7 @@ export default function FertilizerAnalysisModule({
                     <div>
                       <h6 className="text-xs font-black text-gold-400 uppercase tracking-widest mb-2">Strategy Insights</h6>
                       <ul className="space-y-2">
-                        {result.explanations.map((exp, i) => (
+                        {(result.explanations || []).map((exp, i) => (
                           <li key={i} className="text-xs text-gold-100/70 italic flex items-center gap-2">
                             <div className="w-1 h-1 bg-gold-400 rounded-full" />
                             {exp}
@@ -455,7 +455,7 @@ export default function FertilizerAnalysisModule({
                 </CardContent>
               </Card>
 
-              {result.warnings.length > 0 && (
+              {result.warnings && result.warnings.length > 0 && (
                 <div className="grid grid-cols-1 gap-4">
                   {result.warnings.map((w, i) => (
                     <div key={i} className="p-4 bg-red-400/5 border border-red-400/20 rounded-2xl flex items-center gap-4">
@@ -491,7 +491,7 @@ export default function FertilizerAnalysisModule({
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-5xl font-black text-gold-100 tracking-tighter">{result.soil_health_score}</span>
+                    <span className="text-5xl font-black text-gold-100 tracking-tighter">{result.soil_health_score ?? 100}</span>
                     <span className="text-[10px] font-black text-gold-400 uppercase tracking-widest">Index</span>
                   </div>
                 </div>
@@ -515,9 +515,9 @@ export default function FertilizerAnalysisModule({
                  </CardHeader>
                  <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-earth-border/50">
                     {[
-                      { stage: 'Basal', weight: result.stage_weights.basal, current: formData.growth_stage === 'basal' },
-                      { stage: 'Tillering', weight: result.stage_weights.tillering, current: formData.growth_stage === 'tillering' },
-                      { stage: 'Flowering', weight: result.stage_weights.flowering, current: formData.growth_stage === 'flowering' },
+                      { stage: 'Basal', weight: result.stage_weights?.basal ?? 0.4, current: formData.growth_stage === 'basal' },
+                      { stage: 'Tillering', weight: result.stage_weights?.tillering ?? 0.3, current: formData.growth_stage === 'tillering' },
+                      { stage: 'Flowering', weight: result.stage_weights?.flowering ?? 0.3, current: formData.growth_stage === 'flowering' },
                     ].map((s, i) => (
                       <div key={i} className={`flex gap-6 relative transition-all duration-500 ${s.current ? 'translate-x-2' : 'opacity-40'}`}>
                         <div className={`w-6 h-6 rounded-full border-2 z-10 flex items-center justify-center shrink-0 ${s.current ? 'bg-gold-400 border-gold-400 text-earth-main' : 'bg-earth-main border-earth-border text-gold-100/20'}`}>
@@ -525,7 +525,7 @@ export default function FertilizerAnalysisModule({
                         </div>
                         <div>
                            <h6 className={`text-xs font-black uppercase tracking-widest ${s.current ? 'text-gold-100' : 'text-gold-100/40'}`}>{s.stage} Stage</h6>
-                           <p className="text-[10px] font-bold text-gold-400 mt-1">{s.weight * 100}% Allocation</p>
+                           <p className="text-[10px] font-bold text-gold-400 mt-1">{((s.weight) || 0) * 100}% Allocation</p>
                         </div>
                       </div>
                     ))}

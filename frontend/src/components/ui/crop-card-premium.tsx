@@ -1,8 +1,11 @@
+import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './card';
 import { Badge } from './badge';
 import { Button } from './button';
 import { Leaf, Star, TrendingUp, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { resolveCropImage } from '@/lib/cropImages';
+import { formatCurrency } from '@/data/masterData';
 
 export interface Crop {
   id: string | number;
@@ -35,14 +38,31 @@ const slugify = (text: string) => {
     .replace(/^-+|-+$/g, '');      // Remove leading and trailing dashes
 };
 
-export function CropCardPremium({ crop }: CropCardPremiumProps) {
+const SEASON_ACCENTS: Record<string, { border: string; bg: string }> = {
+  Kharif:    { border: 'rgba(74,154,106,0.3)',  bg: 'rgba(74,154,106,0.05)'  },
+  Rabi:      { border: 'rgba(74,122,196,0.3)',  bg: 'rgba(74,122,196,0.05)'  },
+  Perennial: { border: 'rgba(196,154,42,0.3)',  bg: 'rgba(196,154,42,0.05)'  },
+  Summer:    { border: 'rgba(196,90,74,0.3)',   bg: 'rgba(196,90,74,0.05)'   },
+};
+
+export const CropCardPremium = React.memo(function CropCardPremium({ crop }: CropCardPremiumProps) {
   const navigate = useNavigate();
-  const displayImage = crop.imageUrl || crop.image_url;
+  const displayImage = resolveCropImage(crop);
   const profitScore = crop.aiScore?.profitabilityScore || 80;
+  
+  const seasonKey = crop.season || '';
+  const accent = SEASON_ACCENTS[seasonKey] || { border: 'rgba(255,255,255,0.07)', bg: '#1e1e16' };
 
   return (
     <Card
-      className="card-premium group overflow-hidden border-earth-border/50 hover:border-gold-400/30 cursor-pointer h-full flex flex-col"
+      className="group overflow-hidden cursor-pointer h-full flex flex-col card-hover"
+      style={{ 
+        borderColor: accent.border, 
+        backgroundColor: accent.bg,
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderRadius: '14px'
+      }}
       onClick={() => navigate(`/crop/${slugify(crop.name)}`)}
     >
       <div className="h-48 overflow-hidden relative">
@@ -89,14 +109,14 @@ export function CropCardPremium({ crop }: CropCardPremiumProps) {
           <div className="flex flex-col gap-1 p-3 bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
             <div className="text-[9px] uppercase tracking-widest text-gold-100/40 font-black">Capital</div>
             <div className="text-sm font-bold text-gold-200">
-              ₹{Math.round(crop.investmentPerAcre || 0).toLocaleString() || 'N/A'}
+              {formatCurrency(crop.investmentPerAcre || 0)}
             </div>
           </div>
 
           <div className="flex flex-col gap-1 p-3 bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
             <div className="text-[9px] uppercase tracking-widest text-gold-100/40 font-black">Returns</div>
             <div className="text-sm font-black text-gold-400 flex items-center gap-1">
-              ₹{Math.round(crop.expectedReturns || 0).toLocaleString() || 'N/A'}
+              {formatCurrency(crop.expectedReturns || 0)}
               <TrendingUp className="h-3 w-3" />
             </div>
           </div>
@@ -104,7 +124,7 @@ export function CropCardPremium({ crop }: CropCardPremiumProps) {
 
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-gold-100/60 uppercase tracking-tight">
-            <Zap className="h-3 w-3 text-gold-400" /> {crop.durationDays || 'N/A'} Day Cycle
+            <Zap className="h-3 w-3 text-gold-400" /> {crop.durationDays || '120'} Day Cycle
           </div>
           {crop.difficultyLevel ? (
             <Badge 
@@ -138,4 +158,5 @@ export function CropCardPremium({ crop }: CropCardPremiumProps) {
       </CardContent>
     </Card>
   );
-}
+});
+

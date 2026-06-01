@@ -20,6 +20,10 @@ public class Post {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private UserProfile userProfile;
+
     private String title;
 
     @Column(columnDefinition = "TEXT")
@@ -78,6 +82,9 @@ public class Post {
 
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
+
+    public UserProfile getUserProfile() { return userProfile; }
+    public void setUserProfile(UserProfile userProfile) { this.userProfile = userProfile; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }

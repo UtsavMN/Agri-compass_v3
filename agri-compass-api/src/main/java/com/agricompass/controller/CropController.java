@@ -50,6 +50,11 @@ public class CropController {
         return ResponseEntity.ok(cropService.getRecommendations(district));
     }
 
+    @GetMapping("/recommendations/{district}")
+    public ResponseEntity<List<CropDTO>> getRecommendationsByPath(@PathVariable String district) {
+        return ResponseEntity.ok(cropService.getRecommendations(district));
+    }
+
     @GetMapping("/district/{district}")
     public ResponseEntity<List<CropDTO>> getCropsByDistrict(@PathVariable String district) {
         return ResponseEntity.ok(cropService.getCropsByDistrict(district));

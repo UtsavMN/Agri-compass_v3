@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 
 type Language = 'en' | 'kn';
 
@@ -19,6 +20,7 @@ const RETRY_DELAYS = [300, 400, 500, 600, 700, 800, 900,
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const { i18n, t } = useTranslation();
+  const location = useLocation();
   // Track the retry timer in a ref so clearing it doesn't cause re-renders
   const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -31,7 +33,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return 'en';
   });
 
-  // Drive the hidden Google Translate combo whenever language changes.
+  // Drive the hidden Google Translate combo whenever language or route changes.
   // Uses window.__triggerGTranslate (defined in index.html) with backoff retry
   // because the GT script loads asynchronously after React mounts.
   useEffect(() => {
@@ -41,7 +43,34 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
     document.documentElement.lang = language;
 
-    // Cancel any in-flight retry from a previous language change
+    // Direct cookie control to keep Google Translate from getting out of sync.
+    // If the language is English, clear Google Translate cookies.
+    // Otherwise, set the translation to the selected language.
+    if (language === 'en') {
+      document.body.removeAttribute('translate');
+      const domains = [
+        window.location.hostname,
+        '.' + window.location.hostname,
+        '.google.com',
+        'google.com'
+      ];
+      const hasCookie = document.cookie.includes('googtrans');
+      if (hasCookie) {
+        domains.forEach(domain => {
+          document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain}`;
+          document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        });
+        // Force a page reload once if the cookie was present when it shouldn't be
+        window.location.reload();
+        return;
+      }
+    } else {
+      document.body.removeAttribute('translate');
+      document.cookie = `googtrans=/en/${language}; path=/; domain=${window.location.hostname};`;
+      document.cookie = `googtrans=/en/${language}; path=/;`;
+    }
+
+    // Cancel any in-flight retry from a previous language change or navigation
     if (retryTimer.current) clearTimeout(retryTimer.current);
 
     let attempt = 0;
@@ -58,8 +87,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       } else {
         const sel = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
         if (sel) {
-          if (sel.value !== language) {
-            sel.value = language;
+          const targetValue = language === 'en' ? '' : language;
+          if (sel.value !== targetValue) {
+            sel.value = targetValue;
             sel.dispatchEvent(new Event('change', { bubbles: true }));
             sel.dispatchEvent(new Event('input',  { bubbles: true }));
           }
@@ -78,30 +108,22 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return () => {
       if (retryTimer.current) clearTimeout(retryTimer.current);
     };
-  }, [language, i18n]);
+  }, [language, i18n, location.pathname]);
 
-  // Keep state in sync if i18n changes language externally (e.g. language detector)
-  useEffect(() => {
-    const handleLanguageChange = (lng: string) => {
-      if (lng === 'en' || lng === 'kn') {
-        setLanguageState(lng as Language);
-      }
-    };
-    i18n.on('languageChanged', handleLanguageChange);
-    return () => { i18n.off('languageChanged', handleLanguageChange); };
-  }, [i18n]);
 
   const toggleLanguage = () => {
     const newLang = language === 'en' ? 'kn' : 'en';
     setLanguageState(newLang);
     localStorage.setItem('language', newLang);
     document.documentElement.lang = newLang;
+    window.location.reload();
   };
 
   const setLanguage = (newLanguage: Language) => {
     setLanguageState(newLanguage);
     localStorage.setItem('language', newLanguage);
     document.documentElement.lang = newLanguage;
+    window.location.reload();
   };
 
   return (

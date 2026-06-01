@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser, MOCK_USERS } from '@/store';
 import { PostsAPI } from '@/lib/api/posts'
 import { FarmsAPI } from '@/lib/api/farms'
 import { UploadAPI } from '@/lib/api/upload'
@@ -26,7 +26,7 @@ interface Farm {
 }
 
 export default function CreatePostModal({ isOpen, onClose, onPostCreated }: CreatePostModalProps) {
-  const { user } = useAuth()
+  const { user } = useUser()
   const { toast } = useToast()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')

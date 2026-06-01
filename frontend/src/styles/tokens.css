@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #0f0f0b;
+    --surface: #1a1a14;
+    --card: #1e1e16;
+    --border: rgba(255, 255, 255, 0.08);
+    
+    --gold-primary: #c49a2a;
+    --gold-hover: #d4aa3a;
+    --gold-muted: #8a6a1a;
+    
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.5);
+  }
+}

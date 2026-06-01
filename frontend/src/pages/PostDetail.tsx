@@ -53,17 +53,17 @@ export default function PostDetail() {
         ) : post ? (
           <Card className="overflow-hidden">
             <CardHeader className="bg-leaf-600 text-white">
-              <CardTitle>{post.user.full_name || post.user.username}</CardTitle>
-              <CardDescription>{format(new Date(post.created_at), 'PPPP')}</CardDescription>
+              <CardTitle>{post.user?.full_name || post.user?.username || 'Farmer'}</CardTitle>
+              <CardDescription>{post.created_at ? format(new Date(post.created_at), 'PPPP') : 'Recently'}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-3">
                 <Avatar>
-                  <AvatarImage src={post.user.avatar_url} />
-                  <AvatarFallback>{post.user.username[0]?.toUpperCase()}</AvatarFallback>
+                  <AvatarImage src={post.user?.avatar_url} />
+                  <AvatarFallback>{((post.user?.username || post.user?.full_name || 'F')[0] || 'F').toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-semibold">@{post.user.username}</p>
+                  <p className="font-semibold">@{post.user?.username || 'farmer'}</p>
                   <p className="text-sm text-tertiary">Post ID: {post.id}</p>
                 </div>
               </div>

@@ -1,7 +1,10 @@
 package com.agricompass.dto;
 
 import java.util.List;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
+@JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
 public class CropDTO {
     private Long id;
     private String name;
@@ -32,6 +35,7 @@ public class CropDTO {
     private List<GrowingStepDTO> growingSteps;
     private List<String> recommendedDistricts;
 
+    @JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
     public static class SoilRequirementDTO {
         public String phRange;
         public String organicCarbon;
@@ -40,18 +44,21 @@ public class CropDTO {
         public Boolean mulching;
     }
 
+    @JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
     public static class NutrientDTO {
         public Integer nitrogenKg;
         public Integer phosphorusKg;
         public Integer potassiumKg;
     }
 
+    @JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
     public static class DiseaseDTO {
         public String name;
         public String symptoms;
         public String management;
     }
 
+    @JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
     public static class MarketInfoDTO {
         public Double averageMsp;
         public String marketDemand;
@@ -59,18 +66,21 @@ public class CropDTO {
         public String priceVolatility;
     }
 
+    @JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
     public static class YieldInfoDTO {
         public Double minimumQuintals;
         public Double averageQuintals;
         public Double bestPracticeQuintals;
     }
 
+    @JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
     public static class PostHarvestDTO {
         public String storageMethod;
         public Integer storageDurationMonths;
         public Boolean processingRequired;
     }
 
+    @JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
     public static class AiScoreDTO {
         public Integer climateSuitabilityScore;
         public Integer soilSuitabilityScore;
@@ -79,6 +89,7 @@ public class CropDTO {
         public Double sustainabilityRating;
     }
 
+    @JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
     public static class GrowingStepDTO {
         public Integer stepNumber;
         public String title;

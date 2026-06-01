@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* stylelint-disable */
+@import './styles/tokens.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,9 +14,9 @@
 @layer base {
   :root {
     /* Backgrounds */
-    --bg-main: #0E1110;
-    --bg-card: #151A18;
-    --bg-elevated: #1B211F;
+    --bg-main: #0f0f0b;
+    --bg-card: #1a1a14;
+    --bg-elevated: #1e1e16;
 
     /* Text */
     --text-primary: #E8ECEA;
@@ -23,35 +24,35 @@
     --text-muted: #6F7873;
 
     /* Accent (Premium Gold) */
-    --accent: #C6A96B;
-    --accent-soft: rgba(198, 169, 107, 0.15);
-    --accent-hover: #B8965A;
-    --accent-dark: #a07c3f;
+    --accent: #c49a2a;
+    --accent-soft: rgba(196, 154, 42, 0.15);
+    --accent-hover: #d4aa3a;
+    --accent-dark: #8a6a1a;
 
     /* Borders */
-    --border-subtle: rgba(255, 255, 255, 0.06);
-    --border-medium: rgba(255, 255, 255, 0.1);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-medium: rgba(255, 255, 255, 0.12);
 
     /* Mapped to Tailwind/shadcn tokens */
-    --background: #0E1110;
+    --background: #0f0f0b;
     --foreground: #E8ECEA;
-    --card: #151A18;
+    --card: #1a1a14;
     --card-foreground: #E8ECEA;
-    --popover: #1B211F;
+    --popover: #1e1e16;
     --popover-foreground: #E8ECEA;
-    --primary: #C6A96B;
-    --primary-foreground: #111;
-    --secondary: #1B211F;
+    --primary: #c49a2a;
+    --primary-foreground: #000000;
+    --secondary: #1e1e16;
     --secondary-foreground: #A6B0AA;
-    --muted: #1B211F;
+    --muted: #1e1e16;
     --muted-foreground: #6F7873;
-    --accent-tw: #C6A96B;
-    --accent-foreground: #111;
+    --accent-tw: #c49a2a;
+    --accent-foreground: #000000;
     --destructive: #DC263E;
     --destructive-foreground: #FFFFFF;
-    --border: rgba(255, 255, 255, 0.06);
-    --input: #0E1110;
-    --ring: #C6A96B;
+    --border: rgba(255, 255, 255, 0.08);
+    --input: #0f0f0b;
+    --ring: #c49a2a;
     --radius: 0.875rem;
 
     /* Typography */
@@ -341,6 +342,42 @@
   }
 }
 
+/* Shimmer sweep effect */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-20deg);
+  pointer-events: none;
+}
+
+.btn-shimmer:hover::after {
+  animation: shimmer-sweep 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    left: -150%;
+  }
+  100% {
+    left: 150%;
+  }
+}
+
 /* ============================================ */
 /* PRINT                                         */
 /* ============================================ */
@@ -348,3 +385,80 @@
   .no-print { display: none !important; }
   body { background: white; color: black; }
 }
+
+/* ============================================ */
+/* Agricompass Megaupgrade Styles               */
+/* ============================================ */
+
+/* Subtle radial gold glow on page background — gives depth */
+.page-glow {
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 0%, rgba(196,154,42,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 80% 100%, rgba(196,154,42,0.03) 0%, transparent 60%),
+    #0f0f0b;
+}
+
+/* Section dividers — thin gold line with fade */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(196,154,42,0.2), transparent);
+  margin: 48px 0;
+}
+
+/* Card variants */
+.card-base    { background: #1e1e16; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; }
+.card-gold    { background: rgba(196,154,42,0.06); border: 1px solid rgba(196,154,42,0.2); border-radius: 14px; }
+.card-surface { background: #1a1a14; border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; }
+.card-elevated{ background: #242418; border: 1px solid rgba(255,255,255,0.09); border-radius: 14px;
+                box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+
+/* Hover lift for interactive cards */
+.card-hover {
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  border-color: rgba(196,154,42,0.2);
+}
+
+/* Page hero bands — coloured section backgrounds */
+.band-dark   { background: linear-gradient(180deg, #0f0f0b 0%, #141410 100%); }
+.band-warm   { background: linear-gradient(180deg, #1a1710 0%, #141410 100%); }
+.band-surface{ background: #1a1a14; }
+
+/* Gold shimmer on key numbers */
+@keyframes goldShimmer {
+  0%,100% { color: #c49a2a; }
+  50%      { color: #e0b84a; }
+}
+.gold-pulse { animation: goldShimmer 3s ease-in-out infinite; }
+
+/* Replace plain sliders with styled range inputs */
+.soil-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg,
+    #c49a2a var(--pct),
+    rgba(255,255,255,0.1) var(--pct)
+  );
+}
+.soil-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #c49a2a;
+  box-shadow: 0 0 8px rgba(196,154,42,0.5);
+  cursor: pointer;
+}
+.soil-slider::-moz-range-thumb {
+  width: 16px; height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: #c49a2a;
+  box-shadow: 0 0 8px rgba(196,154,42,0.5);
+  cursor: pointer;
+}
+

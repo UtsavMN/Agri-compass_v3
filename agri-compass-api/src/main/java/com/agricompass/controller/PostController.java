@@ -9,6 +9,8 @@ import com.agricompass.repository.PostRepository;
 import com.agricompass.repository.UserProfileRepository;
 import com.agricompass.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.agricompass.dto.CommentResponseDTO;
+import com.agricompass.dto.UserSummaryDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,8 +41,8 @@ public class PostController {
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String user,
             @RequestParam(required = false) String userId,
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer limit) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int limit) {
 
         String query = (q != null && !q.trim().isEmpty()) ? q : null;
         String loc = (location != null && !location.trim().isEmpty()) ? location : null;
@@ -48,9 +50,11 @@ public class PostController {
         String userIdFilter = (requestedUser != null && !requestedUser.trim().isEmpty()) ? requestedUser : null;
 
         String currentUserId = userService.syncUser(null).getId();
-        List<Post> posts = postRepository.findWithFilters(query, loc, userIdFilter);
+        
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page - 1), limit);
+        org.springframework.data.domain.Page<Post> postsPage = postRepository.findWithFilters(query, loc, userIdFilter, pageable);
 
-        List<Map<String, Object>> allPosts = posts.stream().map(post -> {
+        List<Map<String, Object>> result = postsPage.map(post -> {
             Map<String, Object> dto = new HashMap<>();
             dto.put("id", post.getId());
             dto.put("user_id", post.getUserId());
@@ -83,12 +87,11 @@ public class PostController {
             dto.put("isLiked", currentUserId != null &&
                 postLikeRepository.findByPostIdAndUserId(post.getId(), currentUserId).isPresent());
 
-            dto.put("user", userDto(post.getUserId()));
+            dto.put("user", userDtoFromProfile(post.getUserId(), post.getUserProfile()));
 
             return dto;
-        }).toList();
+        }).getContent();
 
-        List<Map<String, Object>> result = paginate(allPosts, page, limit);
         return ResponseEntity.ok(result);
     }
 
@@ -145,15 +148,15 @@ public class PostController {
         dto.put("isLiked", currentUserId != null &&
             postLikeRepository.findByPostIdAndUserId(post.getId(), currentUserId).isPresent());
         
-        dto.put("user", userDto(post.getUserId()));
+        dto.put("user", userDtoFromProfile(post.getUserId(), post.getUserProfile()));
         
         List<Map<String, Object>> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(id).stream().map(comment -> {
             Map<String, Object> c = new HashMap<>();
             c.put("id", comment.getId());
             c.put("content", comment.getContent());
             c.put("user_id", comment.getUserId());
-            c.put("created_at", comment.getCreatedAt());
-            c.put("user", userDto(comment.getUserId()));
+            c.put("created_at", comment.getCreatedAt() != null ? comment.getCreatedAt().toString() : null);
+            c.put("user", userDtoFromProfile(comment.getUserId(), comment.getUserProfile()));
             return c;
         }).toList();
         
@@ -178,8 +181,27 @@ public class PostController {
         }
     }
 
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<CommentResponseDTO>> getComments(@PathVariable String id) {
+        List<CommentResponseDTO> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(id).stream().map(comment -> {
+            Map<String, Object> userMap = userDtoFromProfile(comment.getUserId(), comment.getUserProfile());
+            UserSummaryDTO userDto = new UserSummaryDTO(
+                (String) userMap.get("id"),
+                (String) userMap.get("username"),
+                (String) userMap.get("avatar_url")
+            );
+            return new CommentResponseDTO(
+                comment.getId(),
+                comment.getContent(),
+                comment.getCreatedAt() != null ? comment.getCreatedAt().toString() : null,
+                userDto
+            );
+        }).toList();
+        return ResponseEntity.ok(comments);
+    }
+
     @PostMapping("/{id}/comments")
-    public ResponseEntity<Comment> addComment(@PathVariable String id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<CommentResponseDTO> addComment(@PathVariable String id, @RequestBody Map<String, String> body) {
         String userId = userService.syncUser(null).getId();
         Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
         
@@ -188,26 +210,64 @@ public class PostController {
             .userId(userId)
             .content(body.get("content"))
             .build();
-        return ResponseEntity.ok(commentRepository.save(comment));
+        comment = commentRepository.save(comment);
+
+        // Fetch user profile properly for response
+        com.agricompass.entity.UserProfile userProfile = profileRepository.findById(userId).orElse(null);
+        Map<String, Object> userMap = userDtoFromProfile(userId, userProfile);
+        UserSummaryDTO userDto = new UserSummaryDTO(
+            (String) userMap.get("id"),
+            (String) userMap.get("username"),
+            (String) userMap.get("avatar_url")
+        );
+        
+        CommentResponseDTO response = new CommentResponseDTO(
+            comment.getId(),
+            comment.getContent(),
+            comment.getCreatedAt() != null ? comment.getCreatedAt().toString() : null,
+            userDto
+        );
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePost(@PathVariable String id) {
+        String currentUserId = userService.syncUser(null).getId();
+        Post post = postRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Post not found"));
+        if (!post.getUserId().equals(currentUserId)) {
+            return ResponseEntity.status(403).build();
+        }
+        postRepository.delete(post);
+        return ResponseEntity.noContent().build();
+    }
+
+    private Map<String, Object> userDtoFromProfile(String userId, com.agricompass.entity.UserProfile p) {
+        if (p == null) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", userId);
+            map.put("fullName", "Farmer");
+            map.put("full_name", "Farmer");
+            map.put("username", "farmer");
+            map.put("avatar_url", "https://api.dicebear.com/7.x/avataaars/svg?seed=farmer");
+            return map;
+        }
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", p.getId());
+        String displayName = p.getFullName() != null ? p.getFullName() : p.getUsername();
+        map.put("fullName", displayName);
+        map.put("full_name", displayName);
+        map.put("username", p.getUsername());
+        String avatarUrl = p.getAvatarUrl() != null ? p.getAvatarUrl() : "https://api.dicebear.com/7.x/avataaars/svg?seed=" + p.getUsername();
+        map.put("avatar_url", avatarUrl);
+        return map;
     }
 
     private Map<String, Object> userDto(String userId) {
         return (Map<String, Object>) profileRepository.findById(userId)
-            .map(p -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("id", p.getId());
-                map.put("fullName", p.getFullName() != null ? p.getFullName() : p.getUsername());
-                map.put("username", p.getUsername());
-                map.put("avatar_url", p.getAvatarUrl() != null ? p.getAvatarUrl() : "https://api.dicebear.com/7.x/avataaars/svg?seed=" + p.getUsername());
-                return map;
-            })
-            .orElseGet(() -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("id", userId);
-                map.put("fullName", "Farmer");
-                map.put("username", "farmer");
-                return map;
-            });
+            .map(p -> userDtoFromProfile(userId, p))
+            .orElseGet(() -> userDtoFromProfile(userId, null));
     }
 
     private List<Map<String, Object>> paginate(List<Map<String, Object>> list, Integer page, Integer limit) {

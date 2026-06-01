@@ -28,6 +28,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final CropAiScoreRepository aiScoreRepo;
     private final CropGrowingStepRepository stepRepo;
     private final CropDistrictRepository districtRepo;
+    private final CropEconomicsRepository economicsRepo;
 
     public DatabaseSeeder(
             CropRepository cropRepo,
@@ -40,7 +41,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             CropPostHarvestRepository postHarvestRepo,
             CropAiScoreRepository aiScoreRepo,
             CropGrowingStepRepository stepRepo,
-            CropDistrictRepository districtRepo) {
+            CropDistrictRepository districtRepo,
+            CropEconomicsRepository economicsRepo) {
         this.cropRepo = cropRepo;
         this.soilRepo = soilRepo;
         this.nutrientRepo = nutrientRepo;
@@ -52,6 +54,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.aiScoreRepo = aiScoreRepo;
         this.stepRepo = stepRepo;
         this.districtRepo = districtRepo;
+        this.economicsRepo = economicsRepo;
     }
 
     @SuppressWarnings("unchecked")
@@ -240,6 +243,18 @@ public class DatabaseSeeder implements CommandLineRunner {
                         stepRepo.save(step);
                     }
                 }
+
+                // Crop Economics
+                CropEconomics economics = economicsRepo.findByCropId(crop.getId()).orElseGet(CropEconomics::new);
+                economics.setCrop(crop);
+                economics.setInvestmentPerAcre(crop.getInvestmentPerAcre());
+                double yieldQ = yield.getAverageQuintals();
+                double expectedRet = crop.getExpectedReturns();
+                economics.setYieldQuintal(yieldQ);
+                economics.setExpectedReturn(expectedRet);
+                economics.setProfitMargin(expectedRet - crop.getInvestmentPerAcre());
+                economics.setMarketPrice(yieldQ > 0 ? expectedRet / yieldQ : 2500.0);
+                economicsRepo.save(economics);
             }
             System.out.println("✅ Production-grade Agricultural Dataset (Crops_data.json) Seeded Successfully!");
         } catch (Exception e) {

@@ -24,7 +24,7 @@ public class ProfileController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserProfile> getProfileById(@PathVariable String id) {
-        return ResponseEntity.ok(userService.syncUserProfile(null));
+        return ResponseEntity.ok(userService.getProfileById(id));
     }
 
     @PutMapping("/{id}")
@@ -35,10 +35,13 @@ public class ProfileController {
         String avatarUrl = (String) body.get("avatarUrl");
         if (avatarUrl == null) avatarUrl = (String) body.get("avatar_url");
         
-        // Also support location update which the frontend is sending
         String location = (String) body.get("location");
+        String phone = (String) body.get("phone");
+        String languagePreference = (String) body.get("language_preference");
+        if (languagePreference == null) languagePreference = (String) body.get("languagePreference");
+        String district = (String) body.get("district");
         
-        UserProfile profile = userService.updateProfile(fullName, avatarUrl);
+        UserProfile profile = userService.updateProfileForUser(id, fullName, avatarUrl, location, phone, languagePreference, district);
         return ResponseEntity.ok(profile);
     }
     
@@ -50,7 +53,13 @@ public class ProfileController {
         String avatarUrl = (String) body.get("avatarUrl");
         if (avatarUrl == null) avatarUrl = (String) body.get("avatar_url");
         
-        UserProfile profile = userService.updateProfile(fullName, avatarUrl);
+        String location = (String) body.get("location");
+        String phone = (String) body.get("phone");
+        String languagePreference = (String) body.get("language_preference");
+        if (languagePreference == null) languagePreference = (String) body.get("languagePreference");
+        String district = (String) body.get("district");
+        
+        UserProfile profile = userService.updateProfile(fullName, avatarUrl, location, phone, languagePreference, district);
         return ResponseEntity.ok(profile);
     }
 }

@@ -21,9 +21,9 @@ public class FertilizerController {
     @PostMapping("/recommend")
     public ResponseEntity<Map<String, Object>> getRecommendation(@RequestBody Map<String, Object> body) {
         String crop = (String) body.get("crop");
-        double soilN = ((Number) body.get("soil_n")).doubleValue();
-        double soilP = ((Number) body.get("soil_p")).doubleValue();
-        double soilK = ((Number) body.get("soil_k")).doubleValue();
+        double soilN = body.get("soil_n") instanceof Number ? ((Number) body.get("soil_n")).doubleValue() : 0.0;
+        double soilP = body.get("soil_p") instanceof Number ? ((Number) body.get("soil_p")).doubleValue() : 0.0;
+        double soilK = body.get("soil_k") instanceof Number ? ((Number) body.get("soil_k")).doubleValue() : 0.0;
 
         try {
             Map<String, Object> result = fertilizerService.calculateRecommendation(crop, soilN, soilP, soilK);
@@ -37,9 +37,9 @@ public class FertilizerController {
     public ResponseEntity<Map<String, Object>> analyzeFertilizer(@RequestBody Map<String, Object> body) {
         try {
             String crop = (String) body.get("crop");
-            double soilN = ((Number) body.get("soil_n")).doubleValue();
-            double soilP = ((Number) body.get("soil_p")).doubleValue();
-            double soilK = ((Number) body.get("soil_k")).doubleValue();
+            double soilN = body.get("soil_n") instanceof Number ? ((Number) body.get("soil_n")).doubleValue() : 0.0;
+            double soilP = body.get("soil_p") instanceof Number ? ((Number) body.get("soil_p")).doubleValue() : 0.0;
+            double soilK = body.get("soil_k") instanceof Number ? ((Number) body.get("soil_k")).doubleValue() : 0.0;
             String soilLevel = (String) body.getOrDefault("soil_level", "medium");
             String soilPh = (String) body.getOrDefault("soil_ph", "neutral");
             String growthStage = (String) body.getOrDefault("growth_stage", "basal");

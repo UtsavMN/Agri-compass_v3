@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+import Papa from 'papaparse';
+import { useUser, MOCK_USERS } from '@/store';
+import { useDistrict } from '@/store';
 import { apiGet } from '@/lib/httpClient';
 import { cropRecommender } from '@/lib/ai/cropRecommender';
-import { WeatherAPI } from '@/lib/api/weather';
+import { WeatherAPI, WeatherResponse } from '@/lib/api/weather';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,9 +13,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { CardShimmer, CropCardShimmer } from '@/components/ui/loading-shimmer';
 import { CropCardPremium, Crop } from '@/components/ui/crop-card-premium';
-import { ScrollReveal, StaggerContainer, StaggerItem } from '@/components/ui/animations';
+import { ScrollReveal, StaggerContainer, StaggerItem, TiltCard, CountUp } from '@/components/ui/animations';
 import { LottieEmptyState } from '@/components/ui/lottie-loading';
-import { Sprout, TrendingUp, Users, FileText, Cloud, Leaf, MapPin, Zap, Droplets, Thermometer, MessageSquare } from 'lucide-react';
+import { PostsAPI, Post } from '@/lib/api/posts';
+import { Sprout, TrendingUp, Users, FileText, Cloud, Leaf, MapPin, Zap, Droplets, Thermometer, MessageSquare, AlertTriangle, RefreshCw, Clock, User, Menu } from 'lucide-react';
+import { useScroll, useTransform, motion, AnimatePresence } from 'framer-motion';
+import { MarketTrendCard } from '@/components/dashboard/MarketTrendCard';
+import { KarnatakaMap } from '@/components/dashboard/KarnatakaMap';
+import { HeroCarousel } from '@/components/dashboard/HeroCarousel';
+
 
 interface CropRecommendation {
   cropName: string;
@@ -36,17 +44,44 @@ interface WeatherData {
   }>;
 }
 
+interface HeroStatCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  sub: string;
+  onClick?: () => void;
+}
+
+const HeroStatCard = ({ icon, label, value, sub, onClick }: HeroStatCardProps) => (
+  <TiltCard className="h-full animate-fade-in" onClick={onClick}>
+    <div className="card-premium bg-[#12120e]/85 backdrop-blur-md border-t-2 border-gold-400/80 p-5 flex items-center gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
+      <div className="w-10 h-10 rounded-xl bg-gold-400/10 flex items-center justify-center flex-shrink-0">
+        <span className="text-gold-400">{icon}</span>
+      </div>
+      <div>
+        <p className="text-[10px] font-black text-gold-100/50 uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-[20px] font-black text-[#f0ece0] leading-tight">{value}</p>
+        <p className="text-[11px] text-[#a09880] mt-0.5 font-bold uppercase tracking-wider">{sub}</p>
+      </div>
+    </div>
+  </TiltCard>
+);
+
 export default function Dashboard() {
-  const { user, profile } = useAuth();
+  const { user, profile } = useUser();
   const navigate = useNavigate();
+  const { scrollY } = useScroll();
+  const yBg = useTransform(scrollY, [0, 600], [0, 180]);
   const [crops, setCrops] = useState<Crop[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDistrict, setSelectedDistrict] = useState<string>('');
+  const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const [districts, setDistricts] = useState<string[]>([]);
   const [districtData, setDistrictData] = useState<any[]>([]);
   const [cropRecommendations, setCropRecommendations] = useState<CropRecommendation[]>([]);
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [newsItems, setNewsItems] = useState<string[]>([]);
+
+  const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [communityPosts, setCommunityPosts] = useState<Post[]>([]);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
 
   useEffect(() => {
@@ -67,19 +102,22 @@ export default function Dashboard() {
     try {
       const response = await fetch('/districts.csv');
       const csvText = await response.text();
-      const lines = csvText.split('\n').filter(line => line.trim());
-      const headers = lines[0].split(',');
-      const data = lines.slice(1).map(line => {
-        const values = line.split(',');
-        const obj: any = {};
-        headers.forEach((header, index) => {
-          obj[header.trim()] = values[index]?.trim();
+      return new Promise<any[]>((resolve) => {
+        Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            const data = results.data as any[];
+            setDistrictData(data);
+            setDistricts(data.map(d => d.district));
+            resolve(data);
+          },
+          error: (error: any) => {
+            console.error('Error parsing CSV:', error);
+            resolve([]);
+          }
         });
-        return obj;
       });
-      setDistrictData(data);
-      setDistricts(data.map(d => d.district));
-      return data;
     } catch (error) {
       console.error('Error loading district data:', error);
       return [];
@@ -91,9 +129,11 @@ export default function Dashboard() {
       // Load districts from CSV before choosing a default district.
       const loadedDistrictData = await loadDistrictDataFromCSV();
 
-      // Set default district from profile or first available
-      const defaultDistrict = profile?.location || profile?.district || loadedDistrictData[0]?.district || '';
-      setSelectedDistrict(defaultDistrict);
+      // Set default district from profile or first available if not set
+      if (!selectedDistrict) {
+        const defaultDistrict = profile?.location || profile?.district || loadedDistrictData[0]?.district || '';
+        setSelectedDistrict(defaultDistrict);
+      }
 
       // Load crops — API returns Spring Page object with .content
       const data = await apiGet('/api/crops?page=0&size=6&sortBy=name');
@@ -101,13 +141,32 @@ export default function Dashboard() {
 
 
 
-      // Load news items (mock for now)
-      setNewsItems([
-        'New subsidy scheme announced for organic farming',
-        'Weather alert: Heavy rainfall expected in coastal districts',
-        'New pest-resistant rice variety released',
-        'Farmers training program starting next month'
-      ]);
+      // Load news items from NewsAPI
+      try {
+        const query = encodeURIComponent('(agriculture OR farming OR farmer OR farmers OR crop OR crops OR harvest OR agritech OR mandi) AND (India OR Karnataka OR Indian)');
+        const newsResponse = await fetch(`https://newsapi.org/v2/everything?qInTitle=${query}&language=en&sortBy=publishedAt&pageSize=4&apiKey=44400a74abc14987ae8a431819183d08`);
+        const newsData = await newsResponse.json();
+        if (newsData.status === 'ok' && newsData.articles && newsData.articles.length > 0) {
+          setNewsItems(newsData.articles);
+        } else {
+          throw new Error('No articles found');
+        }
+      } catch (newsError) {
+        console.error('Error fetching news:', newsError);
+        setNewsItems([
+          { title: 'New subsidy scheme announced for organic farming', url: '#', source: { name: 'Local Gov' } },
+          { title: 'Weather alert: Heavy rainfall expected in coastal districts', url: '#', source: { name: 'IMD' } },
+          { title: 'New pest-resistant rice variety released', url: '#', source: { name: 'ICAR' } },
+          { title: 'Farmers training program starting next month', url: '#', source: { name: 'Agri Dept' } }
+        ]);
+      }
+
+      try {
+        const posts = await PostsAPI.getPosts();
+        setCommunityPosts(posts.slice(0, 3));
+      } catch (err) {
+        console.error('Error fetching community posts for dashboard:', err);
+      }
     } catch (error) {
       console.error('Error initializing dashboard:', error);
     } finally {
@@ -135,11 +194,7 @@ export default function Dashboard() {
 
       setCrops(data || []);
 
-      // Load weather data
-      const weatherRes = await WeatherAPI.getWeatherForDistrict(selectedDistrict);
-      if (weatherRes) {
-        setWeatherData(weatherRes.weather);
-      }
+
     } catch (error) {
       console.error('Error loading district data:', error);
     } finally {
@@ -149,295 +204,232 @@ export default function Dashboard() {
 
 
 
+
+
   if (!user) return null;
 
   return (
-    <Layout>
-      <div className="space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gradient-gold">
-              Welcome back, {profile?.full_name || profile?.username || 'Farmer'}!
-            </h1>
-            <p className="text-gold-100/60 mt-1">
-              {profile?.location
-                ? `Farming from ${profile.location}`
-                : 'Manage your farming activities and stay updated'}
-            </p>
-          </div>
+    <Layout fullBleed>
+      <div className="min-h-screen bg-[#0f0f0b]">
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-earth-elevated px-3 py-1.5 rounded-lg border border-earth-border">
-              <MapPin className="h-4 w-4 text-gold-400" />
-              <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
-                <SelectTrigger className="w-40 bg-transparent border-none focus:ring-0 h-auto p-0 text-sm font-medium text-gold-100 notranslate" translate="no">
-                  <SelectValue placeholder="Select district" />
-                </SelectTrigger>
-                <SelectContent className="bg-earth-elevated border-earth-border notranslate" translate="no">
-                  {districts.sort().map((district) => (
-                    <SelectItem key={district} value={district} className="text-gold-100 hover:bg-earth-card">
-                      {district}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
+        {/* ===== DYNAMIC HERO CAROUSEL (FULL BLEED) ===== */}
+        <HeroCarousel
+          temp={34}
+          condition={'Partly Cloudy'}
+          cropsCount={crops.length || 6}
+          newsCount={newsItems.length || 4}
+        />
 
+        {/* ===== MAIN CONTENT GRID ===== */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
+          
+          {selectedDistrict && (
+            <ScrollReveal direction="up" delay={0.1}>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                {/* Market Trend */}
+                <TiltCard>
+                  <MarketTrendCard />
+                </TiltCard>
 
+                {/* Recommendations */}
+                <TiltCard>
+                  <Card className="card-premium overflow-hidden h-full border-earth-border/55 hover:shadow-[0_0_20px_rgba(196,154,42,0.15)]">
+                    <CardHeader className="pb-2 border-b border-earth-border/50">
+                      <CardTitle className="flex items-center text-gold-100">
+                        <Leaf className="h-5 w-5 mr-2 text-gold-400" />
+                        Recommended Crops for {selectedDistrict}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      {cropRecommendations.length > 0 ? (
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                          {cropRecommendations.slice(0, 4).map((rec, index) => {
+                            const districtInfo = districtData.find(d => d.district === selectedDistrict);
+                            const recommendedCrops = districtInfo?.recommended_crops?.split(' / ') || [];
+                            const isRecommended = recommendedCrops.includes(rec.cropName);
 
-        {selectedDistrict && (
-          <ScrollReveal direction="up" delay={0.1}>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Weather Card */}
-              <Card className="card-premium overflow-hidden">
-                <CardHeader className="pb-2 border-b border-earth-border/50">
-                  <CardTitle className="flex items-center text-gold-100">
-                    <Cloud className="h-5 w-5 mr-2 text-gold-400" />
-                    Weather in {selectedDistrict}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  {weatherData ? (
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-3 bg-gold-400/10 rounded-xl">
-                            <Thermometer className="h-6 w-6 text-gold-400" />
-                          </div>
-                          <div>
-                            <span className="text-3xl font-bold text-gold-100">{weatherData.temperature}°C</span>
-                            <p className="text-xs text-gold-100/50">Current Temperature</p>
-                          </div>
-                        </div>
-                        <Badge className="bg-gold-400/20 text-gold-400 border-none px-3 py-1">{weatherData.description}</Badge>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-center gap-3 p-3 bg-earth-elevated rounded-xl border border-earth-border">
-                          <Droplets className="h-4 w-4 text-gold-300" />
-                          <div>
-                            <p className="text-xs text-gold-100/50 uppercase tracking-wider font-bold">Humidity</p>
-                            <p className="text-sm font-bold text-gold-100">{weatherData.humidity}%</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 bg-earth-elevated rounded-xl border border-earth-border">
-                          <Cloud className="h-4 w-4 text-gold-300" />
-                          <div>
-                            <p className="text-xs text-gold-100/50 uppercase tracking-wider font-bold">Wind Speed</p>
-                            <p className="text-sm font-bold text-gold-100">{weatherData.windSpeed} km/h</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="text-xs font-bold text-gold-100/50 uppercase tracking-widest mb-3">5-Day Forecast</h4>
-                        <div className="space-y-3">
-                          {weatherData.forecast.slice(0, 3).map((day, index) => (
-                            <div key={index} className="flex justify-between items-center text-sm p-2 hover:bg-earth-elevated rounded-lg transition-colors">
-                              <span className="font-medium text-gold-100">{new Date(day.date).toLocaleDateString('en-IN', { weekday: 'short' })}</span>
-                              <div className="flex items-center gap-4">
-                                <span className="text-gold-100/70">{day.temp_min}° - {day.temp_max}°</span>
-                                <span className="text-xs bg-earth-elevated px-2 py-0.5 rounded text-gold-300">{day.description}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <CardShimmer />
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Crop Recommendations Card */}
-              <Card className="card-premium overflow-hidden">
-                <CardHeader className="pb-2 border-b border-earth-border/50">
-                  <CardTitle className="flex items-center text-gold-100">
-                    <Leaf className="h-5 w-5 mr-2 text-gold-400" />
-                    Recommended Crops for {selectedDistrict}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  {cropRecommendations.length > 0 ? (
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                      {cropRecommendations.slice(0, 4).map((rec, index) => {
-                        const districtInfo = districtData.find(d => d.district === selectedDistrict);
-                        const recommendedCrops = districtInfo?.recommended_crops?.split(' / ') || [];
-                        const isRecommended = recommendedCrops.includes(rec.cropName);
-
-                        return (
-                          <div key={index} className="border border-earth-border rounded-xl p-4 bg-earth-elevated hover:border-gold-400/30 transition-all">
-                            <div className="flex justify-between items-start mb-3">
-                              <h4 className="font-bold text-gold-200 text-lg">{rec.cropName}</h4>
-                              <div className="flex gap-2">
-                                {isRecommended && <Badge className="bg-gold-400 text-earth-main font-bold">Recommended</Badge>}
-                                <Badge variant="outline" className="border-gold-400/30 text-gold-400">{rec.season}</Badge>
-                              </div>
-                            </div>
-                            <p className="text-sm text-gold-100/60 mb-3 leading-relaxed">{rec.reason}</p>
-
-                            <div className="flex items-center gap-2 mb-3 text-xs font-bold text-gold-400 uppercase tracking-wider">
-                              <Zap className="h-3 w-3" />
-                              <span>Expected: {rec.expectedYield}</span>
-                            </div>
-
-                            {/* District-specific information from CSV */}
-                            {districtInfo && (
-                              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-earth-border/50 text-[11px]">
-                                <div>
-                                  <span className="text-gold-100/40 uppercase tracking-tighter">Soil Type</span>
-                                  <p className="text-gold-100/80 truncate">{districtInfo.soil_type}</p>
+                            return (
+                              <div key={index} className="border border-earth-border rounded-xl p-4 bg-earth-elevated hover:border-gold-400/30 transition-all">
+                                <div className="flex justify-between items-start mb-3">
+                                  <h4 className="font-bold text-gold-200 text-lg">{rec.cropName}</h4>
+                                  <div className="flex gap-2">
+                                    {isRecommended && <Badge className="bg-gold-400 text-earth-main font-bold">Recommended</Badge>}
+                                    <Badge variant="outline" className="border-gold-400/30 text-gold-400">{rec.season}</Badge>
+                                  </div>
                                 </div>
-                                <div>
-                                  <span className="text-gold-100/40 uppercase tracking-tighter">Weather Pattern</span>
-                                  <p className="text-gold-100/80 truncate">{districtInfo.weather_pattern}</p>
+                                <p className="text-sm text-gold-100/60 mb-3 leading-relaxed">{rec.reason}</p>
+
+                                <div className="flex items-center gap-2 mb-3 text-xs font-bold text-gold-400 uppercase tracking-wider">
+                                  <Zap className="h-3 w-3" />
+                                  <span>Expected: {rec.expectedYield}</span>
                                 </div>
+
+                                {/* District info */}
+                                {districtInfo && (
+                                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-earth-border/50 text-[11px]">
+                                    <div>
+                                      <span className="text-gold-100/40 uppercase tracking-tighter">Soil Type</span>
+                                      <p className="text-gold-100/80 truncate">{districtInfo.soil_type}</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-gold-100/40 uppercase tracking-tighter">Weather Pattern</span>
+                                      <p className="text-gold-100/80 truncate">{districtInfo.weather_pattern}</p>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <CardShimmer />
-                  )}
-                </CardContent>
-              </Card>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <CardShimmer />
+                      )}
+                    </CardContent>
+                  </Card>
+                </TiltCard>
+              </div>
+            </ScrollReveal>
+          )}
+
+          {/* Popular crops grid */}
+          <ScrollReveal direction="up" delay={0.15}>
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gold-100">Popular Crops</h2>
+                <Button
+                  variant="ghost"
+                  className="text-gold-400 hover:text-gold-300 hover:bg-gold-400/5 font-bold uppercase tracking-widest text-[10px]"
+                  onClick={() => navigate('/crops')}
+                >
+                  View All
+                </Button>
+              </div>
+
+              {loading ? (
+                <CropCardShimmer count={6} />
+              ) : crops.length > 0 ? (
+                <StaggerContainer staggerDelay={0.05}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {crops.map((crop) => (
+                      <StaggerItem key={crop.id}>
+                        <TiltCard className="h-full">
+                          <CropCardPremium crop={crop} />
+                        </TiltCard>
+                      </StaggerItem>
+                    ))}
+                  </div>
+                </StaggerContainer>
+              ) : (
+                <LottieEmptyState message="No crops available at the moment" />
+              )}
             </div>
           </ScrollReveal>
-        )}
 
-
-
-        <ScrollReveal direction="up" delay={0.2}>
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gold-100">Popular Crops</h2>
-              <Button
-                variant="ghost"
-                className="text-gold-400 hover:text-gold-300 hover:bg-gold-400/5"
-                onClick={() => navigate('/crops')}
-              >
-                View All
-              </Button>
-            </div>
-
-            {loading ? (
-              <CropCardShimmer count={6} />
-            ) : crops.length > 0 ? (
-              <StaggerContainer staggerDelay={0.05}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {crops.map((crop) => (
-                    <StaggerItem key={crop.id}>
-                      <CropCardPremium crop={crop} />
-                    </StaggerItem>
-                  ))}
-                </div>
-              </StaggerContainer>
-            ) : (
-              <LottieEmptyState message="No crops available at the moment" />
-            )}
-          </div>
-        </ScrollReveal>
-
-
-
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* District-wise Crop Recommendations */}
-          <Card className="lg:col-span-2 card-premium">
-            <CardHeader className="border-b border-earth-border/50">
-              <CardTitle className="text-gold-100 flex items-center">
-                <MapPin className="h-5 w-5 mr-2 text-gold-400" />
-                Regional Crop Recommendations
-              </CardTitle>
-              <CardDescription className="text-gold-100/40">
-                Detailed overview for districts in Karnataka
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              {districtData.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                  {districtData.map((district, index) => (
-                    <div key={index} className="border border-earth-border rounded-xl p-4 bg-earth-elevated hover:bg-earth-elevated/80 transition-colors">
-                      <h4 className="font-bold text-gold-400 mb-3 flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-gold-400 rounded-full"></span>
-                        {district.district}
-                      </h4>
-                      <div className="space-y-3 text-xs leading-relaxed">
-                        <div>
-                          <span className="text-gold-100/40 uppercase tracking-tighter block mb-1">Recommended Crops</span>
-                          <p className="text-gold-100/80 font-medium">{district.recommended_crops}</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <span className="text-gold-100/40 uppercase tracking-tighter block mb-1">Soil Type</span>
-                            <p className="text-gold-100/80">{district.soil_type}</p>
-                          </div>
-                          <div>
-                            <span className="text-gold-100/40 uppercase tracking-tighter block mb-1">Rainfall</span>
-                            <p className="text-gold-100/80">{district.avg_rainfall}</p>
-                          </div>
-                        </div>
+          {/* ══════════════════════════════════════════
+              ZONE 4 — MARKET NEWS + COMMUNITY SNIPPET
+              Two columns, market news left, community right
+          ══════════════════════════════════════════ */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+            
+            {/* Market News Card (1fr) */}
+            <div className="bg-[#1e1e16] border border-[rgba(255,255,255,0.07)] rounded-xl p-6 flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] text-[#6a6050] uppercase tracking-wider font-bold">
+                  MARKET INTELLIGENCE
+                </span>
+                <h3 className="text-[14px] font-medium text-[#f0ece0] mt-1 mb-6">
+                  Agricultural News & Trade Bulletins
+                </h3>
+                
+                <div className="space-y-4">
+                  {newsItems.map((news, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-start gap-4 p-4 rounded-lg bg-[#12120e] border border-[rgba(255,255,255,0.03)] hover:border-gold-400/20 transition-all cursor-pointer group"
+                      onClick={() => news.url && news.url !== '#' ? window.open(news.url, '_blank') : navigate('/market-prices')}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-[rgba(196,154,42,0.08)] flex items-center justify-center text-[#c49a2a] shrink-0">
+                        <FileText size={16} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-[#a09880] group-hover:text-[#f0ece0] transition-colors leading-relaxed font-medium line-clamp-2" title={typeof news === 'string' ? news : news.title}>
+                          {typeof news === 'string' ? news : news.title}
+                        </p>
+                        <span className="text-[10px] text-[#6a6050] mt-1 block">
+                          {typeof news === 'string' ? 'Live APMC Bulletins' : (news.source?.name || 'Agri News')}
+                        </span>
                       </div>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <CardShimmer />
-              )}
-            </CardContent>
-          </Card>
+              </div>
+              
+              <button 
+                onClick={() => navigate('/market-prices')} 
+                className="mt-6 text-[11px] text-[#c49a2a] hover:text-[#d4aa3a] text-left transition-colors uppercase tracking-widest font-bold"
+              >
+                Go to Market Prices →
+              </button>
+            </div>
 
-          <div className="space-y-8">
-            {/* News Section */}
-            <Card className="card-premium">
-              <CardHeader className="border-b border-earth-border/50">
-                <CardTitle className="text-gold-100 flex items-center">
-                  <FileText className="h-5 w-5 mr-2 text-gold-400" />
-                  Market News
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
+            {/* Community Snippet Card (320px) */}
+            <div className="bg-[#1e1e16] border border-[rgba(255,255,255,0.07)] rounded-xl p-6 flex flex-col justify-between w-full">
+              <div>
+                <span className="text-[11px] text-[#6a6050] uppercase tracking-wider font-bold">
+                  COMMUNITY DISCUSSION
+                </span>
+                <h3 className="text-[14px] font-medium text-[#f0ece0] mt-1 mb-6">
+                  Kisan Feed Highlights
+                </h3>
+                
                 <div className="space-y-4">
-                  {newsItems.map((news, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-earth-elevated/50 rounded-xl border border-earth-border group hover:border-gold-400/20 transition-all cursor-pointer">
-                      <div className="w-1.5 h-1.5 bg-gold-400 rounded-full mt-1.5 flex-shrink-0 group-hover:scale-150 transition-transform"></div>
-                      <p className="text-xs text-gold-100/70 group-hover:text-gold-100 leading-relaxed">{news}</p>
+                  {communityPosts.length > 0 ? (
+                    communityPosts.map((post) => (
+                      <div 
+                        key={post.id} 
+                        className="p-3.5 rounded-lg bg-[#12120e] border border-[rgba(255,255,255,0.03)] hover:border-gold-400/20 transition-all cursor-pointer group"
+                        onClick={() => navigate(`/post/${post.id}`)}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-5 h-5 rounded-full bg-[#c49a2a]/20 flex items-center justify-center text-[10px] text-[#c49a2a] font-bold">
+                            {post.user?.full_name?.[0] || post.user?.username?.[0] || 'K'}
+                          </div>
+                          <span className="text-[11px] font-bold text-[#e2dcd0] truncate max-w-[120px]">
+                            {post.user?.full_name || post.user?.username || 'Farmer'}
+                          </span>
+                          {post.location && (
+                            <span className="text-[9px] text-[#6a6050] flex items-center gap-0.5 ml-auto">
+                              <MapPin size={8} /> {post.location}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-[#a09880] group-hover:text-[#f0ece0] transition-colors line-clamp-2 leading-relaxed">
+                          {post.body || post.content || ''}
+                        </p>
+                        <div className="flex items-center gap-3 mt-2 text-[10px] text-[#6a6050] font-bold">
+                          <span className="flex items-center gap-1">👍 {post._count?.likes || 0}</span>
+                          <span className="flex items-center gap-1">💬 {post._count?.comments || 0}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 text-xs text-[#6a6050]">
+                      No recent community posts
                     </div>
-                  ))}
+                  )}
                 </div>
-                <Button variant="link" className="w-full text-gold-400 mt-4 text-xs font-bold uppercase tracking-widest">Read More Updates</Button>
-              </CardContent>
-            </Card>
+              </div>
+              
+              <button 
+                onClick={() => navigate('/community')} 
+                className="mt-6 text-[11px] text-[#c49a2a] hover:text-[#d4aa3a] text-left transition-colors uppercase tracking-widest font-bold"
+              >
+                Open Kisan Feed →
+              </button>
+            </div>
 
-            {/* Help Section */}
-            <ScrollReveal direction="up" delay={0.3}>
-              <Card className="bg-gradient-to-br from-gold-400 to-gold-600 text-earth-main border-none shadow-gold-glow relative overflow-hidden group">
-                <div className="absolute -right-8 -bottom-8 opacity-10 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-700">
-                  <Zap size={160} />
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-earth-main font-black">Need Expert Advice?</CardTitle>
-                  <CardDescription className="text-earth-main/70 font-medium">
-                    Our AI assistant and agricultural experts are ready to help you optimize your yield.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    onClick={() => navigate('/air-agent')}
-                    className="w-full bg-earth-main text-gold-400 hover:bg-earth-main/90 font-bold rounded-xl h-12 shadow-lg"
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Chat with KrishiMitra
-                  </Button>
-                </CardContent>
-              </Card>
-            </ScrollReveal>
           </div>
+
         </div>
       </div>
     </Layout>

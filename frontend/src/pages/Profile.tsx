@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser, MOCK_USERS } from '@/store';
 import { apiGet } from '@/lib/httpClient';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -11,11 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { User, Mail, MapPin, Phone, Globe, Save, Shield, LayoutGrid, Clock, MessageSquare, Sprout } from 'lucide-react';
 import ArchitectureMap from '@/components/ArchitectureMap';
 import { useNavigate } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
 import { ScrollReveal, StaggerContainer, StaggerItem } from '@/components/ui/animations';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Badge } from '@/components/ui/badge';
+import { DISTRICTS } from '@/data/masterData';
 
 export default function Profile() {
-  const { user, profile, updateProfile, switchUser } = useAuth();
+  const { user, profile, updateProfile, switchUser } = useUser();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -138,8 +140,8 @@ export default function Profile() {
                <User className="h-10 w-10" />
             </div>
             <div className="text-center md:text-left">
-              <h1 className="text-4xl font-black text-gold-100 tracking-tight">Account Configuration</h1>
-              <p className="text-gold-100/40 text-sm font-bold uppercase tracking-[0.2em] mt-1">Management Console</p>
+              <h1 className="text-4xl font-black text-gold-100 tracking-tight">My Profile</h1>
+              <p className="text-gold-100/40 text-sm font-bold uppercase tracking-[0.2em] mt-1">Settings</p>
             </div>
           </div>
         </ScrollReveal>
@@ -153,10 +155,10 @@ export default function Profile() {
                        <User className="h-4 w-4 mr-3" /> Profile Details
                     </Button>
                     <Button variant="ghost" className="w-full justify-start text-gold-100/40 hover:text-gold-100 h-11 rounded-lg mt-1" onClick={() => navigate('/my-farm')}>
-                       <Sprout className="h-4 w-4 mr-3" /> Farm Registry
+                       <Sprout className="h-4 w-4 mr-3" /> My Farms
                     </Button>
                     <Button variant="ghost" className="w-full justify-start text-gold-100/40 hover:text-gold-100 h-11 rounded-lg mt-1" onClick={() => navigate('/community')}>
-                       <MessageSquare className="h-4 w-4 mr-3" /> Broadcast History
+                       <MessageSquare className="h-4 w-4 mr-3" /> My Posts
                     </Button>
                  </Card>
               </ScrollReveal>
@@ -165,7 +167,7 @@ export default function Profile() {
                  <Card className="card-premium p-6 border-gold-400/10 bg-gold-400/5">
                     <CardHeader className="p-0 mb-4">
                        <CardTitle className="text-xs font-black uppercase tracking-widest text-gold-400 flex items-center">
-                          <Shield className="h-3 w-3 mr-2" /> Identity Switcher
+                          <Shield className="h-3 w-3 mr-2" /> Switch User
                        </CardTitle>
                     </CardHeader>
                     <div className="space-y-2">
@@ -193,7 +195,7 @@ export default function Profile() {
                  <Card className="card-premium">
                     <CardHeader className="border-b border-earth-border/50">
                        <CardTitle className="text-gold-100 font-black tracking-tight flex items-center">
-                          <LayoutGrid className="h-5 w-5 mr-3 text-gold-400" /> Personal Metadata
+                          <LayoutGrid className="h-5 w-5 mr-3 text-gold-400" /> Profile Details
                        </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-8">
@@ -218,7 +220,7 @@ export default function Profile() {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                              <div className="space-y-2">
-                                <Label htmlFor="full_name" className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Legal Full Name</Label>
+                                <Label htmlFor="full_name" className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Full Name</Label>
                                 <Input
                                   id="full_name"
                                   value={formData.full_name}
@@ -227,7 +229,7 @@ export default function Profile() {
                                 />
                              </div>
                              <div className="space-y-2">
-                                <Label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Telecom Interface</Label>
+                                <Label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Phone</Label>
                                 <Input
                                   id="phone"
                                   placeholder="+91 0000000000"
@@ -239,17 +241,26 @@ export default function Profile() {
                           </div>
 
                           <div className="space-y-2">
-                             <Label htmlFor="location" className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Operational Base (District)</Label>
-                             <Input
-                               id="location"
-                               value={formData.location}
-                               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                               className="bg-earth-main border-earth-border focus:border-gold-400 text-gold-100 h-11 rounded-xl"
-                             />
+                             <Label htmlFor="location" className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">District</Label>
+                              <Select
+                                value={formData.location}
+                                onValueChange={(val) => setFormData({ ...formData, location: val })}
+                              >
+                                <SelectTrigger id="location" className="bg-earth-main border-earth-border focus:ring-gold-400 text-gold-100 rounded-xl h-11 uppercase text-[11px] font-bold tracking-widest notranslate" translate="no">
+                                  <SelectValue placeholder="Select District" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-earth-elevated border-earth-border max-h-[300px] notranslate" translate="no">
+                                  {Object.keys(DISTRICTS).map((d) => (
+                                    <SelectItem key={d} value={d} className="text-gold-100/80 hover:bg-earth-card hover:text-gold-100">
+                                      {d}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                           </div>
 
                           <div className="space-y-2">
-                             <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Linguistic Protocol</Label>
+                             <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Language</Label>
                              <Select
                                value={formData.language_preference}
                                onValueChange={(value) => setFormData({ ...formData, language_preference: value })}
@@ -266,7 +277,7 @@ export default function Profile() {
                           </div>
 
                           <Button type="submit" disabled={loading} className="btn-gold w-full h-12 shadow-gold-glow">
-                             {loading ? 'Synchronizing...' : 'Commit Changes'}
+                             {loading ? 'Loading...' : 'Save'}
                           </Button>
                        </form>
                     </CardContent>
@@ -277,17 +288,22 @@ export default function Profile() {
                  <Card className="card-premium">
                     <CardHeader className="border-b border-earth-border/50">
                        <CardTitle className="text-gold-100 font-black tracking-tight flex items-center">
-                          <Sprout className="h-5 w-5 mr-3 text-gold-400" /> Regional Assets (Farms)
+                          <Sprout className="h-5 w-5 mr-3 text-gold-400" /> My Farms
                        </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
                        {loadingFarms ? (
                           <div className="p-4 animate-pulse bg-earth-elevated/50 rounded-xl border border-earth-border"></div>
                        ) : farms.length === 0 ? (
-                          <div className="text-center py-8">
-                             <p className="text-xs text-gold-100/40 italic mb-4">No registered land assets detected.</p>
-                             <Button variant="outline" className="border-gold-400/20 text-gold-400 hover:bg-gold-400/5" onClick={() => navigate('/my-farm')}>Initialize Farm</Button>
-                          </div>
+                          <EmptyState
+                             icon={Sprout}
+                             title="No farms added yet"
+                             description="Add your farm to analyze soil and get crop recommendations."
+                             action={{
+                                label: "Add Farm",
+                                onClick: () => navigate('/my-farm')
+                             }}
+                          />
                        ) : (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              {farms.map((farm) => (
@@ -312,14 +328,22 @@ export default function Profile() {
                  <Card className="card-premium">
                     <CardHeader className="border-b border-earth-border/50">
                        <CardTitle className="text-gold-100 font-black tracking-tight flex items-center">
-                          <Clock className="h-5 w-5 mr-3 text-gold-400" /> Interaction Log (Broadcasts)
+                          <Clock className="h-5 w-5 mr-3 text-gold-400" /> My Posts
                        </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
                        {loadingPosts && posts.length === 0 ? (
                           <div className="p-4 animate-pulse bg-earth-elevated/50 rounded-xl border border-earth-border"></div>
                        ) : posts.length === 0 ? (
-                          <p className="text-center py-8 text-xs text-gold-100/40 italic">No broadcast activity recorded.</p>
+                          <EmptyState
+                             icon={MessageSquare}
+                             title="No posts found"
+                             description="Share harvest updates, agricultural questions, or advice with other farmers."
+                             action={{
+                                label: "Share Post",
+                                onClick: () => navigate('/community')
+                             }}
+                          />
                        ) : (
                           <div className="space-y-4">
                              {posts.map((p) => (
@@ -330,13 +354,13 @@ export default function Profile() {
                                    </div>
                                    <p className="text-sm text-gold-100/60 group-hover:text-gold-100 transition-colors line-clamp-2 leading-relaxed italic">"{p.content}"</p>
                                    <div className="mt-3 flex items-center gap-4 text-[10px] font-black text-gold-400/40 uppercase tracking-tighter">
-                                      <span>{p.likes_count} Reactions</span>
-                                      <span>{p.comments_count} Transmissions</span>
+                                      <span>{p.likes_count} Likes</span>
+                                      <span>{p.comments_count} Comments</span>
                                    </div>
                                 </div>
                              ))}
                              <Button variant="ghost" className="w-full text-gold-400 hover:bg-gold-400/5 text-[10px] font-black uppercase tracking-[0.2em]" onClick={() => loadUserPosts(page + 1)} disabled={loadingPosts}>
-                                {loadingPosts ? 'Retrieving...' : 'Fetch More Data'}
+                                {loadingPosts ? 'Loading...' : 'Load more'}
                              </Button>
                           </div>
                        )}
@@ -347,7 +371,7 @@ export default function Profile() {
               <ScrollReveal direction="up" delay={0.7}>
                  <Card className="card-premium overflow-hidden border-none shadow-premium bg-earth-elevated/20">
                     <CardHeader className="bg-earth-elevated border-b border-earth-border p-6">
-                       <CardTitle className="text-xl font-black text-gold-100 tracking-tight">System Architecture</CardTitle>
+                       <CardTitle className="text-xl font-black text-gold-100 tracking-tight">About</CardTitle>
                        <CardDescription className="text-gold-100/40 font-medium">Technology stack powering the Agri Compass ecosystem</CardDescription>
                     </CardHeader>
                     <div className="p-6 opacity-80 grayscale hover:grayscale-0 transition-all duration-700">
@@ -361,3 +385,4 @@ export default function Profile() {
     </Layout>
   );
 }
+

@@ -1,18 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sprout, User, Shield, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, MOCK_USERS } from '@/contexts/AuthContext';
+import { useUser, MOCK_USERS } from '@/store';
 import { Card } from '@/components/ui/card';
 
 export default function Auth() {
-  const { user, switchUser } = useAuth();
+  const { user, switchUser } = useUser();
   const navigate = useNavigate();
 
   // If already logged in (mock), redirect
-  if (user) {
-    navigate('/dashboard');
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
+  if (user) return null;
+
 
   return (
     <div className="min-h-screen bg-earth-main flex flex-col items-center justify-center p-6 relative overflow-hidden">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser, MOCK_USERS } from '@/store';
 import { PostsAPI, Comment } from '@/lib/api/posts'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -15,7 +15,7 @@ interface CommentSectionProps {
 }
 
 export default function CommentSection({ postId, commentsCount, onCommentsCountChange }: CommentSectionProps) {
-  const { user } = useAuth()
+  const { user } = useUser()
   const { toast } = useToast()
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')

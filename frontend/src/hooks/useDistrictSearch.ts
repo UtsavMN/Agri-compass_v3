@@ -116,6 +116,8 @@ export function useDistrictSearch(
   };
 }
 
+import Papa from 'papaparse';
+
 /**
  * Load districts from CSV file
  */
@@ -124,21 +126,19 @@ export async function loadDistrictsFromCSV(csvPath: string = '/districts.csv'): 
     const response = await fetch(csvPath);
     const csvText = await response.text();
     
-    const lines = csvText.split('\n').filter(line => line.trim());
-    const headers = lines[0].split(',').map(h => h.trim());
-    
-    const districts = lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim());
-      const district: any = {};
-      
-      headers.forEach((header, index) => {
-        district[header] = values[index] || '';
+    return new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          resolve(results.data as DistrictData[]);
+        },
+        error: (error: any) => {
+          console.error('Error parsing CSV:', error);
+          reject(error);
+        }
       });
-      
-      return district as DistrictData;
     });
-    
-    return districts;
   } catch (error) {
     console.error('Error loading districts:', error);
     return [];
@@ -150,21 +150,11 @@ export async function loadDistrictsFromCSV(csvPath: string = '/districts.csv'): 
  */
 export function parseDistrictCSV(csvContent: string): DistrictData[] {
   try {
-    const lines = csvContent.split('\n').filter(line => line.trim());
-    const headers = lines[0].split(',').map(h => h.trim());
-    
-    const districts = lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim());
-      const district: any = {};
-      
-      headers.forEach((header, index) => {
-        district[header] = values[index] || '';
-      });
-      
-      return district as DistrictData;
+    const results = Papa.parse(csvContent, {
+      header: true,
+      skipEmptyLines: true
     });
-    
-    return districts;
+    return results.data as DistrictData[];
   } catch (error) {
     console.error('Error parsing CSV:', error);
     return [];
