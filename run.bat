@@ -44,12 +44,29 @@ if "!PORT!"=="" set PORT=8080
 if "!DB_URL!"=="" set DB_URL=jdbc:sqlite:agri.db
 
 echo.
-echo 🚀 Starting Spring Boot Backend...
+echo 🚀 Starting Spring Boot Backend (separate window — keep it open)...
 pushd agri-compass-api
-:: Ensure mvnw uses the correct Java
-start "Agri-Compass Backend" cmd /c "set JAVA_HOME=%JAVA_HOME% && set PATH=%JAVA_HOME%\bin;%PATH% && mvnw.cmd spring-boot:run"
+:: /k keeps the window open if the server exits, so errors are visible
+start "Agri-Compass Backend" cmd /k "set "JAVA_HOME=%JAVA_HOME%"&&set "PATH=%JAVA_HOME%\bin;%PATH%"&&mvnw.cmd spring-boot:run"
 popd
 
+echo ⏳ Waiting for backend on http://localhost:8080 (first run may take 1-2 min)...
+set /a RETRIES=0
+:wait_backend
+curl.exe -s -o nul -w "%%{http_code}" http://localhost:8080/api/economics/all 2>nul | findstr /b "200" >nul && goto backend_ready
+set /a RETRIES+=1
+if !RETRIES! geq 90 (
+    echo ⚠️  Backend not responding yet. Check the "Agri-Compass Backend" window for errors.
+    echo    Then refresh the app once you see "Started AgriCompassApiApplication".
+    goto start_frontend
+)
+timeout /t 2 /nobreak >nul
+goto wait_backend
+
+:backend_ready
+echo ✅ Backend is ready on port 8080
+
+:start_frontend
 echo 🎨 Starting Vite Frontend...
 pushd frontend
 :: Check for node_modules

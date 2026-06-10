@@ -90,7 +90,10 @@ export class CropRecommender {
       }];
     }
 
-    const crops = districtData.recommended_crops.split(',').map(c => c.trim());
+    const crops = districtData.recommended_crops
+      .split(/[,/]/)
+      .map((c) => c.trim())
+      .filter(Boolean);
     const recommendations: CropRecommendation[] = [];
 
     for (const crop of crops.slice(0, 4)) { // Limit to 4 recommendations

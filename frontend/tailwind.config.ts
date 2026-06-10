@@ -64,6 +64,9 @@ export default {
           border: 'rgba(255,255,255,0.06)',
         },
       },
+      spacing: {
+        card: '1.5rem',
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',

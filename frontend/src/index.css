@@ -148,6 +148,12 @@
     transition: all var(--transition-normal);
   }
 
+  /* Stat / metric cells inside premium cards — room for labels + values */
+  .card-premium .metric-cell {
+    padding: 1.25rem 1rem;
+    min-height: 4.5rem;
+  }
+
   .card-premium:hover {
     border-color: var(--border-medium);
     box-shadow: var(--shadow-premium);

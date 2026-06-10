@@ -1,6 +1,7 @@
 // src/components/Layout.tsx
 import { ReactNode, useState, useEffect } from 'react';
 import { KrishiMitraFloat } from '@/components/ai/KrishiMitraFloat';
+import { VoiceCommandModal } from '@/components/ai/VoiceCommandModal';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '@/store';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -31,6 +32,7 @@ import {
   MessageSquare,
   Leaf,
   MapPin,
+  Mic,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -56,6 +58,7 @@ export default function Layout({
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isVoiceOpen, setIsVoiceOpen] = useState(false);
 
 
   const handleSignOut = async () => {
@@ -121,6 +124,18 @@ export default function Layout({
             >
               <Languages className="h-3.5 w-3.5 text-gold-400" />
               <span className="text-[10px] font-bold uppercase">{language === 'en' ? 'EN' : 'KN'}</span>
+            </Button>
+
+            {/* Voice Command Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsVoiceOpen(true)}
+              className="h-8 px-2.5 rounded-full border border-earth-border/40 text-gold-100/60 hover:text-gold-200 flex items-center gap-1.5 bg-[#1a1a14]/60 hover:bg-[#1a1a14]/90 transition-colors animate-pulse"
+              title="Voice Commands / ಧ್ವನಿ ಆಜ್ಞೆಗಳು"
+            >
+              <Mic className="h-3.5 w-3.5 text-gold-400" />
+              <span className="text-[10px] font-bold uppercase">ಧ್ವನಿ</span>
             </Button>
 
             {/* Global District Selector */}
@@ -262,6 +277,23 @@ export default function Layout({
                   </Button>
                 </div>
 
+                {/* Voice Navigation Selection */}
+                <div className="flex items-center justify-between p-3.5 bg-[#1a1a14]/60 border border-earth-border/40 rounded-xl">
+                  <span className="text-[10px] text-gold-100/40 font-bold uppercase tracking-widest">Voice Control</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsVoiceOpen(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="border-gold-400/30 text-gold-400 hover:bg-gold-400/10 text-[10px] font-bold uppercase rounded-lg flex items-center gap-1.5"
+                  >
+                    <Mic className="h-3.5 w-3.5 text-gold-400" />
+                    ಮಾತನಾಡಿ / Speak
+                  </Button>
+                </div>
+
 
 
                 {/* Profile Link and Sign Out */}
@@ -295,6 +327,9 @@ export default function Layout({
 
       {/* Floating KrishiMitra Assistant */}
       <KrishiMitraFloat />
+
+      {/* Voice Command Dialog Overlay */}
+      <VoiceCommandModal isOpen={isVoiceOpen} onClose={() => setIsVoiceOpen(false)} />
     </div>
   );
 }

@@ -119,7 +119,10 @@ export default function MarketPrices() {
       const data = await apiGet('/api/economics/all');
       setEconomics(data || []);
     } catch (error) {
-      toast({ title: 'Error loading crop economics', variant: 'destructive' });
+      const message = error instanceof Error && error.message.includes('Failed to fetch')
+        ? 'Cannot reach the API. Start the backend (run run.bat or mvnw spring-boot:run in agri-compass-api).'
+        : 'Could not load crop economics. Try again.';
+      toast({ title: 'Error loading crop economics', description: message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -132,7 +135,10 @@ export default function MarketPrices() {
       const data = await apiGet(`/api/market-prices/live?commodity=${selectedCommodity}&state=Karnataka${districtQuery}&limit=20`);
       setMandiPrices(data?.records || []);
     } catch (error) {
-      toast({ title: 'Error loading live prices', variant: 'destructive' });
+      const message = error instanceof Error && error.message.includes('Failed to fetch')
+        ? 'Cannot reach the API. Ensure the backend is running on port 8080.'
+        : 'Could not load live mandi prices. Check DATA_GOV_API_KEY if configured.';
+      toast({ title: 'Error loading live prices', description: message, variant: 'destructive' });
     } finally {
       setMandiLoading(false);
     }
@@ -302,17 +308,17 @@ export default function MarketPrices() {
                           
                           <CardContent className="space-y-4 pt-0">
                             <div className="grid grid-cols-2 gap-4">
-                              <div className="bg-earth-elevated/40 rounded-2xl p-4 border border-earth-border/40 text-center">
+                              <div className="bg-earth-elevated/40 rounded-2xl p-5 min-h-[4.5rem] border border-earth-border/40 text-center flex flex-col justify-center">
                                 <p className="text-[10px] text-gold-100/30 font-black uppercase tracking-wider">Input Cost</p>
-                                <p className="text-base font-black text-gold-100 mt-1">{formatINR(crop.investmentPerAcre)}</p>
+                                <p className="text-base font-black text-gold-100 mt-2">{formatINR(crop.investmentPerAcre)}</p>
                               </div>
-                              <div className="bg-gold-400/5 rounded-2xl p-4 border border-gold-400/10 text-center">
+                              <div className="bg-gold-400/5 rounded-2xl p-5 min-h-[4.5rem] border border-gold-400/10 text-center flex flex-col justify-center">
                                 <p className="text-[10px] text-gold-400 font-black uppercase tracking-wider">Gross Return</p>
-                                <p className="text-base font-black text-gold-100 mt-1">{formatINR(crop.expectedReturn)}</p>
+                                <p className="text-base font-black text-gold-100 mt-2">{formatINR(crop.expectedReturn)}</p>
                               </div>
                             </div>
                             
-                            <div className="flex items-center justify-between bg-earth-main/55 rounded-2xl p-4 border border-earth-border/60">
+                            <div className="flex items-center justify-between bg-earth-main/55 rounded-2xl p-5 py-6 border border-earth-border/60 min-h-[5rem]">
                               <div className="text-center flex-1">
                                 <p className="text-[10px] text-gold-100/30 font-black uppercase">Avg Yield</p>
                                 <p className="text-xs font-bold text-gold-100 mt-0.5">{crop.yieldQuintal} q/acre</p>

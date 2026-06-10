@@ -456,9 +456,9 @@ export default function MyFarm() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
-                                className={`p-5 bg-earth-main/30 rounded-[2rem] border border-earth-border group hover:border-gold-400/30 transition-all duration-500 ${cropRecommendations.length === 1 ? 'md:col-span-2' : ''}`}
+                                className={`p-6 md:p-7 bg-earth-main/30 rounded-[2rem] border border-earth-border group hover:border-gold-400/30 transition-all duration-500 min-h-[12rem] ${cropRecommendations.length === 1 ? 'md:col-span-2' : ''}`}
                               >
-                                <div className="flex justify-between items-start mb-4">
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-5">
                                   <div>
                                     <h4 className="font-black text-xl text-gold-100 tracking-tighter uppercase group-hover:text-gold-400 transition-colors">{rec.cropName}</h4>
                                     <Badge className="bg-gold-400/10 text-gold-400 border-none text-[9px] uppercase tracking-widest mt-1">
@@ -471,10 +471,10 @@ export default function MyFarm() {
                                 </div>
                                 <p className="text-xs text-gold-100/40 leading-relaxed italic mb-6">"{rec.reason}"</p>
 
-                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-earth-border/50">
-                                  <div>
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-gold-100/30">Target Yield</span>
-                                    <p className="text-sm font-black text-gold-400 mt-1">{rec.expectedYield}</p>
+                                <div className="grid grid-cols-2 gap-5 pt-5 pb-1 border-t border-earth-border/50">
+                                  <div className="min-w-0">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-gold-100/30 block mb-2">Target Yield</span>
+                                    <p className="text-sm font-black text-gold-400 break-words leading-snug">{rec.expectedYield}</p>
                                   </div>
                                   <div>
                                     <span className="text-[9px] font-black uppercase tracking-widest text-gold-100/30">District Compatibility</span>

@@ -217,9 +217,7 @@ export default function Community() {
   return (
     <Layout>
       <div className="py-12 px-4 md:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Feed Column */}
-          <div className="lg:col-span-3 space-y-8">
+        <div className="max-w-4xl mx-auto space-y-8">
             {/* Tab switch bar */}
             <div className="flex gap-2 border-b border-earth-border/40 pb-4 mb-4 select-none">
               {COMMUNITY_TABS.map(tab => {
@@ -447,39 +445,6 @@ export default function Community() {
               <Marketplace />
             )}
           </div>
-
-          <button
-            onClick={() => setIsCreatingPost(true)}
-            className={cn(
-              "fixed bottom-10 right-10 z-50 bg-gradient-to-br from-gold-primary to-gold-hover text-black p-6 rounded-[2.5rem] shadow-premium hover:scale-110 active:scale-95 transition-all lg:hidden",
-              activeTab === 'feed' ? 'block' : 'hidden'
-            )}
-          >
-            <Plus className="h-6 w-6" strokeWidth={3} />
-          </button>
-
-        {/* Right Sidebar - Trending Topics */}
-        <div className="lg:col-span-1 hidden lg:block">
-          <div className="sticky top-24 space-y-8">
-            <Card className="card-premium">
-              <div className="p-6 border-b border-border">
-                <h3 className="text-sm font-black text-gold-primary uppercase tracking-widest flex items-center">
-                  <Activity className="mr-2 h-4 w-4" /> Trending Topics
-                </h3>
-              </div>
-              <div className="p-4 space-y-2">
-                {['#MonsoonPreparation', '#OrganicFarming', '#GovtSubsidy2026', '#PestControl', '#MarketRates'].map((tag, i) => (
-                  <button key={i} className="w-full text-left p-3 hover:bg-surface rounded-xl transition-colors group border border-transparent hover:border-border">
-                    <div className="font-bold text-text-primary text-sm group-hover:text-gold-primary transition-colors">{tag}</div>
-                    <div className="text-text-secondary text-xs mt-1">{Math.floor(Math.random() * 50) + 10} posts this week</div>
-                  </button>
-                ))}
-              </div>
-            </Card>
-
-          </div>
-        </div>
-      </div>
     </div>
     </Layout>
   )

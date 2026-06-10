@@ -54,20 +54,20 @@ export const SeasonAdvisoryCard = ({ district }: { district: string }) => {
         ))}
       </motion.div>
 
-      <div className="pt-4 mt-auto border-t border-earth-border/40 grid grid-cols-2 gap-4 relative z-10">
-        <div className="bg-[#1a1a14]/60 p-3 rounded-xl border border-earth-border/30">
-          <div className="flex items-center gap-1.5 mb-1.5">
+      <div className="pt-5 mt-auto border-t border-earth-border/40 grid grid-cols-2 gap-4 relative z-10">
+        <div className="bg-[#1a1a14]/60 p-4 min-h-[4.5rem] rounded-xl border border-earth-border/30 flex flex-col justify-center">
+          <div className="flex items-center gap-1.5 mb-2">
             <MapPin className="h-3 w-3 text-amber-500/80" />
             <p className="text-[9px] text-gold-100/40 uppercase font-black tracking-widest">Soil Type</p>
           </div>
-          <p className="text-xs font-semibold text-gold-100/90 pl-4">{advice?.soil}</p>
+          <p className="text-xs font-semibold text-gold-100/90 pl-4 break-words leading-snug">{advice?.soil}</p>
         </div>
-        <div className="bg-[#1a1a14]/60 p-3 rounded-xl border border-earth-border/30">
-          <div className="flex items-center gap-1.5 mb-1.5">
+        <div className="bg-[#1a1a14]/60 p-4 min-h-[4.5rem] rounded-xl border border-earth-border/30 flex flex-col justify-center">
+          <div className="flex items-center gap-1.5 mb-2">
             <Droplets className="h-3 w-3 text-blue-400/80" />
             <p className="text-[9px] text-gold-100/40 uppercase font-black tracking-widest">Rainfall</p>
           </div>
-          <p className="text-xs font-semibold text-gold-100/90 pl-4">{advice?.rainfall}</p>
+          <p className="text-xs font-semibold text-gold-100/90 pl-4 break-words leading-snug">{advice?.rainfall}</p>
         </div>
       </div>
     </div>

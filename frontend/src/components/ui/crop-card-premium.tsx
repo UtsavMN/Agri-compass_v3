@@ -39,25 +39,25 @@ const slugify = (text: string) => {
 };
 
 const SEASON_ACCENTS: Record<string, { border: string; bg: string }> = {
-  Kharif:    { border: 'rgba(74,154,106,0.3)',  bg: 'rgba(74,154,106,0.05)'  },
-  Rabi:      { border: 'rgba(74,122,196,0.3)',  bg: 'rgba(74,122,196,0.05)'  },
-  Perennial: { border: 'rgba(196,154,42,0.3)',  bg: 'rgba(196,154,42,0.05)'  },
-  Summer:    { border: 'rgba(196,90,74,0.3)',   bg: 'rgba(196,90,74,0.05)'   },
+  Kharif: { border: 'rgba(74,154,106,0.3)', bg: 'rgba(74,154,106,0.05)' },
+  Rabi: { border: 'rgba(74,122,196,0.3)', bg: 'rgba(74,122,196,0.05)' },
+  Perennial: { border: 'rgba(196,154,42,0.3)', bg: 'rgba(196,154,42,0.05)' },
+  Summer: { border: 'rgba(196,90,74,0.3)', bg: 'rgba(196,90,74,0.05)' },
 };
 
 export const CropCardPremium = React.memo(function CropCardPremium({ crop }: CropCardPremiumProps) {
   const navigate = useNavigate();
   const displayImage = resolveCropImage(crop);
   const profitScore = crop.aiScore?.profitabilityScore || 80;
-  
+
   const seasonKey = crop.season || '';
   const accent = SEASON_ACCENTS[seasonKey] || { border: 'rgba(255,255,255,0.07)', bg: '#1e1e16' };
 
   return (
     <Card
       className="group overflow-hidden cursor-pointer h-full flex flex-col card-hover"
-      style={{ 
-        borderColor: accent.border, 
+      style={{
+        borderColor: accent.border,
         backgroundColor: accent.bg,
         borderWidth: '1px',
         borderStyle: 'solid',
@@ -79,9 +79,9 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-earth-main/90 via-earth-main/20 to-transparent" />
-        
+
         <div className="absolute top-4 left-4 flex gap-2 max-w-[50%]">
-          <Badge 
+          <Badge
             title={crop.season || 'Annual'}
             className="bg-gold-400 text-earth-main border-none font-black text-[10px] px-2 py-0.5 truncate block"
           >
@@ -104,16 +104,16 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
         </div>
       </div>
 
-      <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1 p-3 bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
+      <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-5">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1.5 p-4 min-h-[4.5rem] bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
             <div className="text-[9px] uppercase tracking-widest text-gold-100/40 font-black">Capital</div>
             <div className="text-sm font-bold text-gold-200">
               {formatCurrency(crop.investmentPerAcre || 0)}
             </div>
           </div>
 
-          <div className="flex flex-col gap-1 p-3 bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
+          <div className="flex flex-col gap-1.5 p-4 min-h-[4.5rem] bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
             <div className="text-[9px] uppercase tracking-widest text-gold-100/40 font-black">Returns</div>
             <div className="text-sm font-black text-gold-400 flex items-center gap-1">
               {formatCurrency(crop.expectedReturns || 0)}
@@ -127,15 +127,14 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
             <Zap className="h-3 w-3 text-gold-400" /> {crop.durationDays || '120'} Day Cycle
           </div>
           {crop.difficultyLevel ? (
-            <Badge 
-              variant="outline" 
-              className={`text-[9px] font-black uppercase px-2 py-0.5 ${
-                crop.difficultyLevel.toLowerCase() === 'easy' 
-                  ? 'border-green-500/30 text-green-400 bg-green-500/10' 
+            <Badge
+              variant="outline"
+              className={`text-[9px] font-black uppercase px-2 py-0.5 ${crop.difficultyLevel.toLowerCase() === 'easy'
+                  ? 'border-green-500/30 text-green-400 bg-green-500/10'
                   : crop.difficultyLevel.toLowerCase() === 'hard'
-                  ? 'border-red-500/30 text-red-400 bg-red-500/10'
-                  : 'border-gold-400/30 text-gold-300 bg-gold-400/10'
-              }`}
+                    ? 'border-red-500/30 text-red-400 bg-red-500/10'
+                    : 'border-gold-400/30 text-gold-300 bg-gold-400/10'
+                }`}
             >
               {crop.difficultyLevel}
             </Badge>
@@ -146,7 +145,7 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
           )}
         </div>
 
-        <Button 
+        <Button
           className="w-full btn-gold h-12 rounded-xl transition-all group-hover:shadow-gold-glow mt-2 font-black uppercase tracking-widest text-[10px]"
           onClick={(e) => {
             e.stopPropagation();

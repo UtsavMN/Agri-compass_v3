@@ -54,7 +54,7 @@ interface HeroStatCardProps {
 
 const HeroStatCard = ({ icon, label, value, sub, onClick }: HeroStatCardProps) => (
   <TiltCard className="h-full animate-fade-in" onClick={onClick}>
-    <div className="card-premium bg-[#12120e]/85 backdrop-blur-md border-t-2 border-gold-400/80 p-5 flex items-center gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
+    <div className="card-premium bg-[#12120e]/85 backdrop-blur-md border-t-2 border-gold-400/80 p-6 min-h-[5.5rem] flex items-center gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
       <div className="w-10 h-10 rounded-xl bg-gold-400/10 flex items-center justify-center flex-shrink-0">
         <span className="text-gold-400">{icon}</span>
       </div>
@@ -234,46 +234,46 @@ export default function Dashboard() {
                 {/* Recommendations */}
                 <TiltCard>
                   <Card className="card-premium overflow-hidden h-full border-earth-border/55 hover:shadow-[0_0_20px_rgba(196,154,42,0.15)]">
-                    <CardHeader className="pb-2 border-b border-earth-border/50">
+                    <CardHeader className="pb-4 border-b border-earth-border/50">
                       <CardTitle className="flex items-center text-gold-100">
                         <Leaf className="h-5 w-5 mr-2 text-gold-400" />
                         Recommended Crops for {selectedDistrict}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-6 pb-6">
                       {cropRecommendations.length > 0 ? (
-                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-5 max-h-[520px] overflow-y-auto pr-2 custom-scrollbar">
                           {cropRecommendations.slice(0, 4).map((rec, index) => {
                             const districtInfo = districtData.find(d => d.district === selectedDistrict);
-                            const recommendedCrops = districtInfo?.recommended_crops?.split(' / ') || [];
+                            const recommendedCrops = districtInfo?.recommended_crops?.split(/[,/]/).map((c: string) => c.trim()).filter(Boolean) || [];
                             const isRecommended = recommendedCrops.includes(rec.cropName);
 
                             return (
-                              <div key={index} className="border border-earth-border rounded-xl p-4 bg-earth-elevated hover:border-gold-400/30 transition-all">
-                                <div className="flex justify-between items-start mb-3">
-                                  <h4 className="font-bold text-gold-200 text-lg">{rec.cropName}</h4>
-                                  <div className="flex gap-2">
+                              <div key={index} className="border border-earth-border rounded-xl p-5 md:p-6 bg-earth-elevated hover:border-gold-400/30 transition-all min-h-[11rem]">
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
+                                  <h4 className="font-bold text-gold-200 text-lg break-words flex-1 min-w-0">{rec.cropName}</h4>
+                                  <div className="flex flex-wrap gap-2 shrink-0">
                                     {isRecommended && <Badge className="bg-gold-400 text-earth-main font-bold">Recommended</Badge>}
                                     <Badge variant="outline" className="border-gold-400/30 text-gold-400">{rec.season}</Badge>
                                   </div>
                                 </div>
-                                <p className="text-sm text-gold-100/60 mb-3 leading-relaxed">{rec.reason}</p>
+                                <p className="text-sm text-gold-100/60 mb-4 leading-relaxed">{rec.reason}</p>
 
-                                <div className="flex items-center gap-2 mb-3 text-xs font-bold text-gold-400 uppercase tracking-wider">
-                                  <Zap className="h-3 w-3" />
+                                <div className="flex items-center gap-2 mb-4 text-xs font-bold text-gold-400 uppercase tracking-wider">
+                                  <Zap className="h-3 w-3 shrink-0" />
                                   <span>Expected: {rec.expectedYield}</span>
                                 </div>
 
                                 {/* District info */}
                                 {districtInfo && (
-                                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-earth-border/50 text-[11px]">
-                                    <div>
-                                      <span className="text-gold-100/40 uppercase tracking-tighter">Soil Type</span>
-                                      <p className="text-gold-100/80 truncate">{districtInfo.soil_type}</p>
+                                  <div className="grid grid-cols-2 gap-4 pt-4 pb-1 border-t border-earth-border/50 text-[11px]">
+                                    <div className="min-w-0">
+                                      <span className="text-gold-100/40 uppercase tracking-tighter block mb-1.5">Soil Type</span>
+                                      <p className="text-gold-100/80 break-words leading-snug">{districtInfo.soil_type}</p>
                                     </div>
-                                    <div>
-                                      <span className="text-gold-100/40 uppercase tracking-tighter">Weather Pattern</span>
-                                      <p className="text-gold-100/80 truncate">{districtInfo.weather_pattern}</p>
+                                    <div className="min-w-0">
+                                      <span className="text-gold-100/40 uppercase tracking-tighter block mb-1.5">Weather Pattern</span>
+                                      <p className="text-gold-100/80 break-words leading-snug">{districtInfo.weather_pattern}</p>
                                     </div>
                                   </div>
                                 )}
