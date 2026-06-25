@@ -21,10 +21,10 @@ export interface CropImageMap {
 
 export interface MarketTrend {
   name: string
-  price: number        // ₹ per quintal
-  changePercent: number
+  price: number | null        // ₹ per quintal (null if not live)
+  changePercent: number | null
   unit: string
-  sparkline: number[]  // 7 data points
+  sparkline: number[] | null  // 7 data points
 }
 
 export interface SeasonCrops {
@@ -40,7 +40,7 @@ export const DISTRICTS: Record<string, DistrictData> = {
   "Belagavi":          { crops: ["Sugarcane","Cotton","Soybean"],     soil: "Black & Red",     rainfall: "800mm",  color: "#7B8B55", season: "Both"   },
   "Bengaluru Rural":   { crops: ["Ragi","Maize","Grapes"],            soil: "Red Loam",        rainfall: "850mm",  color: "#6B8B6B", season: "Both"   },
   "Bengaluru Urban":   { crops: ["Vegetables","Flowers","Ragi"],      soil: "Red Loam",        rainfall: "900mm",  color: "#5B7B5B", season: "Both"   },
-  "Bidar":             { crops: ["Soybean","Pigeon Pea","Sorghum"],   soil: "Medium Black",    rainfall: "750mm",  color: "#8B6B35", season: "Kharif" },
+  "Bidar":             { crops: ["Soybean","Pigeon Pea","Sorghum"],   soil: "Medium Black",    rainfall: "750mm",  color: "#8B6B5B", season: "Kharif" },
   "Chamarajanagar":    { crops: ["Sugarcane","Ragi","Turmeric"],      soil: "Red Sandy",       rainfall: "700mm",  color: "#7B9B55", season: "Both"   },
   "Chikkaballapura":   { crops: ["Tomato","Groundnut","Ragi"],        soil: "Red Sandy",       rainfall: "750mm",  color: "#8B7B4B", season: "Both"   },
   "Chikkamagaluru":    { crops: ["Coffee","Arecanut","Pepper"],       soil: "Laterite",        rainfall: "1800mm", color: "#5B8B5B", season: "Both"   },
@@ -103,7 +103,7 @@ export const CROP_IMAGES: CropImageMap = {
 export const getCropImage = (name = ''): string => {
   const key = name.toLowerCase().trim()
     .replace(/\s*\(.*?\)\s*/g, '')  // remove parenthetical like "(Pearl Millet)"
-    .replace(/[\\s-]+/g, '_')
+    .replace(/[\s-]+/g, '_')
     .replace(/[^a-z_]/g, '')
   return CROP_IMAGES[key] ?? CROP_IMAGES.default
 }
@@ -124,18 +124,18 @@ export const getCurrentSeason = (): keyof SeasonCrops => {
 }
 
 // ─── MARKET TREND FALLBACK DATA ─────────────────────────────
-// Replace these values when live APMC API data is available
+// TODO: fetch real data from APMC/data.gov.in API
 export const MARKET_TRENDS: MarketTrend[] = [
-  { name: "Cotton",      price: 6620,  changePercent:  2.1, unit: "₹/quintal", sparkline: [6400,6480,6520,6580,6540,6600,6620] },
-  { name: "Tomato",      price: 1800,  changePercent: -5.4, unit: "₹/quintal", sparkline: [2200,2100,2000,1950,1900,1850,1800] },
-  { name: "Onion",       price: 1400,  changePercent:  1.8, unit: "₹/quintal", sparkline: [1300,1320,1350,1380,1360,1390,1400] },
-  { name: "Sugarcane",   price: 3150,  changePercent:  0.0, unit: "₹/quintal", sparkline: [3150,3160,3140,3155,3145,3150,3150] },
-  { name: "Ragi",        price: 3846,  changePercent:  0.8, unit: "₹/quintal", sparkline: [3810,3820,3830,3825,3840,3835,3846] },
-  { name: "Maize",       price: 2225,  changePercent: -1.2, unit: "₹/quintal", sparkline: [2280,2260,2250,2240,2235,2230,2225] },
-  { name: "Groundnut",   price: 6377,  changePercent:  3.2, unit: "₹/quintal", sparkline: [6100,6150,6200,6280,6320,6360,6377] },
-  { name: "Pomegranate", price: 8000,  changePercent:  1.5, unit: "₹/quintal", sparkline: [7800,7850,7900,7920,7960,7980,8000] },
-  { name: "Banana",      price: 1200,  changePercent:  0.5, unit: "₹/quintal", sparkline: [1180,1185,1190,1195,1190,1195,1200] },
-  { name: "Wheat",       price: 2275,  changePercent:  0.2, unit: "₹/quintal", sparkline: [2265,2268,2270,2272,2270,2273,2275] },
+  { name: "Cotton",      price: null,  changePercent: null, unit: "₹/quintal", sparkline: null },
+  { name: "Tomato",      price: null,  changePercent: null, unit: "₹/quintal", sparkline: null },
+  { name: "Onion",       price: null,  changePercent: null, unit: "₹/quintal", sparkline: null },
+  { name: "Sugarcane",   price: null,  changePercent: null, unit: "₹/quintal", sparkline: null },
+  { name: "Ragi",        price: null,  changePercent: null, unit: "₹/quintal", sparkline: null },
+  { name: "Maize",       price: null,  changePercent: null, unit: "₹/quintal", sparkline: null },
+  { name: "Groundnut",   price: null,  changePercent: null, unit: "₹/quintal", sparkline: null },
+  { name: "Pomegranate", price: null,  changePercent: null, unit: "₹/quintal", sparkline: null },
+  { name: "Banana",      price: null,  changePercent: null, unit: "₹/quintal", sparkline: null },
+  { name: "Wheat",       price: null,  changePercent: null, unit: "₹/quintal", sparkline: null },
 ]
 
 // ─── UTILITY FUNCTIONS ──────────────────────────────────────

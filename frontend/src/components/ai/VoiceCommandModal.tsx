@@ -469,6 +469,8 @@ Do NOT wrap the response in markdown code blocks like \`\`\`. Output plain text 
         setIsListening(false);
         if (event.error === 'not-allowed') {
           setErrorMsg('ಮೈಕ್ರೊಫೋನ್ ಅನುಮತಿಯನ್ನು ನಿರಾಕರಿಸಲಾಗಿದೆ. ದಯವಿಟ್ಟು ಬ್ರೌಸರ್ ಸೆಟ್ಟಿಂಗ್ಸ್ ಪರಿಶೀಲಿಸಿ. / Microphone access denied. Please check your browser permissions.');
+        } else if (event.error === 'network') {
+          setErrorMsg('Network Error: If you are using Brave Browser, please disable Brave Shields for this site, or use Chrome/Edge.');
         } else {
           setErrorMsg(`ದೋಷ ಸಂಭವಿಸಿದೆ: ${event.error} / Error: ${event.error}`);
         }

@@ -13,13 +13,13 @@ export interface Crop {
   season?: string;
   imageUrl?: string;
   image_url?: string;
-  investmentPerAcre?: number;
-  expectedReturns?: number;
-  durationDays?: number;
+  investmentPerAcre?: number | null;
+  expectedReturns?: number | null;
+  durationDays?: number | null;
   aiScore?: {
-    profitabilityScore: number;
-    climateSuitabilityScore: number;
-  };
+    profitabilityScore: number | null;
+    climateSuitabilityScore: number | null;
+  } | null;
   scientificName?: string;
   difficultyLevel?: string;
 }
@@ -48,7 +48,8 @@ const SEASON_ACCENTS: Record<string, { border: string; bg: string }> = {
 export const CropCardPremium = React.memo(function CropCardPremium({ crop }: CropCardPremiumProps) {
   const navigate = useNavigate();
   const displayImage = resolveCropImage(crop);
-  const profitScore = crop.aiScore?.profitabilityScore || 80;
+  // TODO: fetch real data from AI model
+  const profitScore = crop.aiScore?.profitabilityScore ?? null;
 
   const seasonKey = crop.season || '';
   const accent = SEASON_ACCENTS[seasonKey] || { border: 'rgba(255,255,255,0.07)', bg: '#1e1e16' };
@@ -92,7 +93,11 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
         <div className="absolute top-4 right-4">
           <div className="flex items-center gap-1 bg-earth-main/80 backdrop-blur-md px-2 py-1 rounded-lg border border-gold-400/30 shadow-lg">
             <Star className="h-3 w-3 text-gold-400 fill-gold-400" />
-            <span className="text-[10px] font-black text-gold-100">{profitScore}% AI SCORE</span>
+            {profitScore !== null ? (
+              <span className="text-[10px] font-black text-gold-100">{profitScore}% AI SCORE</span>
+            ) : (
+              <span className="text-[10px] font-black text-gold-100/40">N/A</span>
+            )}
           </div>
         </div>
 
@@ -108,23 +113,23 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5 p-4 min-h-[4.5rem] bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
             <div className="text-[9px] uppercase tracking-widest text-gold-100/40 font-black">Capital</div>
-            <div className="text-sm font-bold text-gold-200">
-              {formatCurrency(crop.investmentPerAcre || 0)}
+            <div className={`text-sm ${crop.investmentPerAcre ? 'font-bold text-gold-200' : 'font-medium text-gold-200/40'}`}>
+              {crop.investmentPerAcre ? formatCurrency(crop.investmentPerAcre) : 'N/A'}
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5 p-4 min-h-[4.5rem] bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
             <div className="text-[9px] uppercase tracking-widest text-gold-100/40 font-black">Returns</div>
-            <div className="text-sm font-black text-gold-400 flex items-center gap-1">
-              {formatCurrency(crop.expectedReturns || 0)}
-              <TrendingUp className="h-3 w-3" />
+            <div className={`text-sm flex items-center gap-1 ${crop.expectedReturns ? 'font-black text-gold-400' : 'font-medium text-gold-400/40'}`}>
+              {crop.expectedReturns ? formatCurrency(crop.expectedReturns) : 'N/A'}
+              {!!crop.expectedReturns && <TrendingUp className="h-3 w-3" />}
             </div>
           </div>
         </div>
 
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-gold-100/60 uppercase tracking-tight">
-            <Zap className="h-3 w-3 text-gold-400" /> {crop.durationDays || '120'} Day Cycle
+            <Zap className="h-3 w-3 text-gold-400" /> {crop.durationDays ? `${crop.durationDays} Day Cycle` : 'N/A'}
           </div>
           {crop.difficultyLevel ? (
             <Badge

@@ -1,20 +1,23 @@
 import React from 'react'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { MARKET_TRENDS, getCropImage, formatIndianNumber, MarketTrend } from '@/data/masterData'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export const MarketTrendCard = React.memo(() => {
+  const [expanded, setExpanded] = React.useState(false)
   const trends = MARKET_TRENDS
   const isLoading = false
 
   if (isLoading) return <MarketTrendSkeleton />
 
+  const displayTrends = expanded ? trends?.slice(0, 8) : trends?.slice(0, 4)
+
   return (
-    <div className="relative p-6 h-full bg-[#0f0f0b]/80 backdrop-blur-xl border border-earth-border/60 rounded-2xl shadow-premium overflow-hidden group">
+    <div className="relative p-6 h-full bg-[#0f0f0b]/80 backdrop-blur-xl border border-earth-border/60 rounded-2xl shadow-premium overflow-hidden group flex flex-col">
       {/* Decorative gradient orb */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-gold-400/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none group-hover:bg-gold-400/10 transition-colors duration-700" />
 
-      <div className="flex items-center justify-between mb-6 relative z-10">
+      <div className="flex items-center justify-between mb-6 relative z-10 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="p-2 bg-gold-400/10 rounded-lg border border-gold-400/20 shadow-[0_0_10px_rgba(196,154,42,0.1)]">
             <TrendingUp size={16} className="text-gold-400" />
@@ -28,14 +31,25 @@ export const MarketTrendCard = React.memo(() => {
       </div>
 
       {/* Animated ticker-style rows */}
-      <div className="space-y-1 relative z-10">
-        {trends?.slice(0, 8).map((crop, i) => (
-          <MarketTrendRow key={crop.name} crop={crop} index={i} />
-        ))}
+      <div className="space-y-1 relative z-10 flex-1">
+        <AnimatePresence mode="popLayout">
+          {displayTrends?.map((crop, i) => (
+            <MarketTrendRow key={crop.name} crop={crop} index={i} />
+          ))}
+        </AnimatePresence>
+      </div>
+      
+      <div className="relative z-10 mt-3 pt-3 border-t border-earth-border/20 flex justify-center shrink-0">
+        <button 
+          onClick={() => setExpanded(!expanded)}
+          className="text-[10px] uppercase tracking-widest text-gold-400/60 hover:text-gold-400 font-bold transition-colors flex items-center gap-1"
+        >
+          {expanded ? 'Show Less' : 'Show More'}
+        </button>
       </div>
 
       {/* Last updated */}
-      <div className="flex items-center justify-between mt-5 pt-4 border-t border-earth-border/40 relative z-10">
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-earth-border/40 relative z-10 shrink-0">
         <p className="text-[10px] text-gold-100/40 font-bold uppercase tracking-widest">
           APMC Data
         </p>
@@ -49,16 +63,18 @@ export const MarketTrendCard = React.memo(() => {
 })
 
 export const MarketTrendRow = React.memo(({ crop, index }: { crop: MarketTrend; index: number }) => {
-  const isUp   = crop.changePercent > 0
-  const isDown = crop.changePercent < 0
-  const isFlat = crop.changePercent === 0
+  const hasData = crop.changePercent !== null && crop.price !== null;
+  const isUp   = hasData && crop.changePercent! > 0
+  const isDown = hasData && crop.changePercent! < 0
+  const isFlat = hasData && crop.changePercent === 0
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1, type: "spring", stiffness: 300, damping: 24 }}
-      className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#1a1a14]/80 hover:scale-[1.02] border border-transparent hover:border-earth-border/60 transition-all cursor-pointer group shadow-sm hover:shadow-md"
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+      className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#1a1a14]/80 hover:scale-[1.02] border border-transparent hover:border-earth-border/60 transition-all cursor-pointer group shadow-sm hover:shadow-md overflow-hidden"
       onClick={() => window.location.href = `/market-prices?crop=${crop.name}`}
     >
       {/* Crop name + season */}
@@ -78,11 +94,11 @@ export const MarketTrendRow = React.memo(({ crop, index }: { crop: MarketTrend; 
       </div>
 
       {/* Sparkline mini chart — CSS animated bars */}
-      <div className="flex items-end gap-[3px] h-6 mx-4">
-        {crop.sparkline?.map((val, i) => {
-          const max = Math.max(...crop.sparkline)
+      <div className="flex items-end gap-[3px] h-6 mx-4 w-12">
+        {crop.sparkline ? crop.sparkline.map((val, i) => {
+          const max = Math.max(...crop.sparkline!)
           const height = Math.max(4, Math.round((val / max) * 22))
-          const isLast = i === crop.sparkline.length - 1
+          const isLast = i === crop.sparkline!.length - 1
           return (
             <div
               key={i}
@@ -96,23 +112,32 @@ export const MarketTrendRow = React.memo(({ crop, index }: { crop: MarketTrend; 
               style={{ height: `${height}px` }}
             />
           )
-        })}
+        }) : (
+          <div className="w-full h-0.5 bg-earth-border/40 mb-1" />
+        )}
       </div>
 
       {/* Price + change */}
       <div className="text-right flex-shrink-0">
-        <p className="text-[13px] font-black text-gold-100 tracking-tight">
-          ₹{formatIndianNumber(crop.price)}
+        <p className={`text-[13px] font-black tracking-tight ${hasData ? 'text-gold-100' : 'text-gold-100/40'}`}>
+          {hasData ? `₹${formatIndianNumber(crop.price!)}` : 'N/A'}
         </p>
         <div className={`flex items-center justify-end gap-1 text-[10px] font-black uppercase tracking-widest mt-0.5 ${
-          isUp   ? 'text-green-400'
+          !hasData ? 'text-gold-100/40'
+          : isUp   ? 'text-green-400'
           : isDown ? 'text-red-400'
           : 'text-gold-100/50'
         }`}>
-          {isUp   && <TrendingUp size={10} className="stroke-[3]" />}
-          {isDown && <TrendingDown size={10} className="stroke-[3]" />}
-          {isFlat && <Minus size={10} className="stroke-[3]" />}
-          {isFlat ? 'Stable' : `${isUp ? '+' : ''}${crop.changePercent.toFixed(1)}%`}
+          {hasData ? (
+            <>
+              {isUp   && <TrendingUp size={10} className="stroke-[3]" />}
+              {isDown && <TrendingDown size={10} className="stroke-[3]" />}
+              {isFlat && <Minus size={10} className="stroke-[3]" />}
+              {isFlat ? 'Stable' : `${isUp ? '+' : ''}${crop.changePercent!.toFixed(1)}%`}
+            </>
+          ) : (
+            '--'
+          )}
         </div>
       </div>
     </motion.div>

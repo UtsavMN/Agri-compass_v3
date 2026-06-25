@@ -3,7 +3,8 @@ import { ReactNode, useState, useEffect } from 'react';
 import { KrishiMitraFloat } from '@/components/ai/KrishiMitraFloat';
 import { VoiceCommandModal } from '@/components/ai/VoiceCommandModal';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useUser } from '@/store';
+import { useUser, UserButton } from '@clerk/clerk-react';
+import { DMPanel } from '@/components/DMPanel';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDistrict } from '@/store';
 import { apiGet } from '@/lib/httpClient';
@@ -157,37 +158,14 @@ export default function Layout({
 
 
 
-            {/* Profile Avatar Dropdown */}
+            {/* DMPanel */}
+            {user && <DMPanel />}
+
+            {/* Profile Avatar Button (Clerk) */}
             {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <div 
-                    className="h-8 w-8 rounded-full border border-gold-400/30 flex items-center justify-center cursor-pointer hover:border-gold-400 transition-colors bg-gold-400/10 text-gold-400"
-                    title="Profile & Settings"
-                  >
-                    <User className="h-4 w-4" />
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-earth-elevated border-earth-border text-gold-100" style={{ background: '#1e1e16', borderColor: 'rgba(255,255,255,0.08)' }}>
-                  <DropdownMenuLabel className="border-b border-earth-border/40 pb-2 mb-1">
-                    <div className="flex flex-col space-y-0.5">
-                      <p className="text-xs font-bold text-[#f0ece0]">
-                        {profile?.full_name || profile?.username || 'Farmer'}
-                      </p>
-                      <p className="text-[10px] text-gold-100/40 truncate">{profile?.email || 'farmer@agricompass.in'}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => navigate('/profile')} className="text-xs hover:bg-earth-card cursor-pointer flex items-center gap-2 py-2">
-                    <Settings className="h-3.5 w-3.5 text-gold-400" />
-                    Profile & Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-earth-border/40" />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-xs text-red-400 hover:bg-earth-card cursor-pointer flex items-center gap-2 py-2">
-                    <LogOut className="h-3.5 w-3.5" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="h-8 w-8 flex items-center justify-center">
+                <UserButton afterSignOutUrl="/auth" />
+              </div>
             )}
 
             {/* Mobile Hamburger Button */}
@@ -321,7 +299,7 @@ export default function Layout({
       </AnimatePresence>
 
       {/* ===== MAIN CONTENT ===== */}
-      <main className={cn("flex-1 w-full z-10", fullBleed ? "w-full" : "pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto")}>
+      <main className="flex-1 w-full z-10 relative">
         {children}
       </main>
 

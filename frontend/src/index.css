@@ -14,45 +14,45 @@
 @layer base {
   :root {
     /* Backgrounds */
-    --bg-main: #0f0f0b;
-    --bg-card: #1a1a14;
-    --bg-elevated: #1e1e16;
+    --bg-main: #0A0A0A;
+    --bg-card: #111111;
+    --bg-elevated: #1E1E1E;
 
     /* Text */
-    --text-primary: #E8ECEA;
+    --text-primary: #F5F0E8;
     --text-secondary: #A6B0AA;
     --text-muted: #6F7873;
 
     /* Accent (Premium Gold) */
-    --accent: #c49a2a;
-    --accent-soft: rgba(196, 154, 42, 0.15);
-    --accent-hover: #d4aa3a;
-    --accent-dark: #8a6a1a;
+    --accent: #C9A84C;
+    --accent-soft: rgba(201, 168, 76, 0.15);
+    --accent-hover: #D4B86A;
+    --accent-dark: #8A6A1A;
 
     /* Borders */
-    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-subtle: #1E1E1E;
     --border-medium: rgba(255, 255, 255, 0.12);
 
     /* Mapped to Tailwind/shadcn tokens */
-    --background: #0f0f0b;
-    --foreground: #E8ECEA;
-    --card: #1a1a14;
-    --card-foreground: #E8ECEA;
-    --popover: #1e1e16;
-    --popover-foreground: #E8ECEA;
-    --primary: #c49a2a;
+    --background: #0A0A0A;
+    --foreground: #F5F0E8;
+    --card: #111111;
+    --card-foreground: #F5F0E8;
+    --popover: #111111;
+    --popover-foreground: #F5F0E8;
+    --primary: #C9A84C;
     --primary-foreground: #000000;
-    --secondary: #1e1e16;
+    --secondary: #1E1E1E;
     --secondary-foreground: #A6B0AA;
-    --muted: #1e1e16;
+    --muted: #1E1E1E;
     --muted-foreground: #6F7873;
-    --accent-tw: #c49a2a;
+    --accent-tw: #C9A84C;
     --accent-foreground: #000000;
     --destructive: #DC263E;
     --destructive-foreground: #FFFFFF;
-    --border: rgba(255, 255, 255, 0.08);
-    --input: #0f0f0b;
-    --ring: #c49a2a;
+    --border: #1E1E1E;
+    --input: #0A0A0A;
+    --ring: #C9A84C;
     --radius: 0.875rem;
 
     /* Typography */
@@ -468,3 +468,39 @@
   cursor: pointer;
 }
 
+/* Gold glow utility */
+.glow-gold { box-shadow: 0 0 24px rgba(201, 168, 76, 0.2); }
+
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(17, 17, 17, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(201, 168, 76, 0.1);
+}
+
+/* Custom Webkit Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0A0A;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E1E1E;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 168, 76, 0.5);
+}
+
+/* Glowing Border Animation */
+@keyframes borderGlow {
+  0% { border-color: rgba(201, 168, 76, 0.1); }
+  50% { border-color: rgba(201, 168, 76, 0.6); box-shadow: 0 0 15px rgba(201, 168, 76, 0.2); }
+  100% { border-color: rgba(201, 168, 76, 0.1); }
+}
+.animate-border-glow {
+  animation: borderGlow 3s infinite;
+}

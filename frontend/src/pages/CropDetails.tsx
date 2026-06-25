@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -151,15 +150,15 @@ export default function CropDetails() {
 
   if (loading) {
     return (
-      <Layout>
+      <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
         <CropDetailsShimmer />
-      </Layout>
+      </div>
     );
   }
 
   if (!crop) {
     return (
-      <Layout>
+      <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
         <div className="text-center py-24 bg-earth-card rounded-2xl border border-earth-border shadow-2xl">
           <AlertTriangle className="h-20 w-20 text-gold-400 mx-auto mb-6 opacity-20" />
           <h2 className="text-3xl font-black text-gold-100 mb-4 tracking-tighter">ANALYTICS UNAVAILABLE</h2>
@@ -171,14 +170,14 @@ export default function CropDetails() {
             Explore Registry
           </Button>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   const displayImage = resolveCropImage(crop);
 
   return (
-    <Layout>
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       {/* Stylesheet for print report */}
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -707,6 +706,6 @@ export default function CropDetails() {
           </ScrollReveal>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }

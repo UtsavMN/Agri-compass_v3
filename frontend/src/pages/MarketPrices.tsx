@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { apiGet } from '@/lib/httpClient';
-import Layout from '@/components/Layout';
 import { useDistrict } from '@/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,9 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Sprout, TrendingUp, Search, BarChart3, Leaf, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { ScrollReveal, FadeIn, StaggerContainer, StaggerItem } from '@/components/ui/animations';
+import { GoldCard } from '@/components/ui/GoldCard';
+import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { CropCardShimmer, TableShimmer } from '@/components/ui/loading-shimmer';
+import { MarketPricesSection } from '@/components/dashboard/MarketPricesSection';
 
 interface CropEconomic {
   id: number;
@@ -158,7 +160,7 @@ export default function MarketPrices() {
   }));
 
   return (
-    <Layout>
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       <div className="space-y-8 pb-12">
         {/* Header */}
         <ScrollReveal>
@@ -280,17 +282,17 @@ export default function MarketPrices() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {filtered.map((crop) => (
                       <StaggerItem key={crop.id}>
-                        <Card className="card-premium h-full flex flex-col justify-between group hover:border-gold-400/30 transition-all duration-300">
-                          <CardHeader className="pb-3">
+                        <GoldCard className="h-full flex flex-col justify-between group">
+                          <div className="pb-3">
                             <div className="flex justify-between items-start gap-4">
                               <div>
-                                <CardTitle className="text-lg text-gold-100 font-bold flex items-center gap-2 group-hover:text-gold-400 transition-colors">
+                                <h3 className="text-lg text-gold-100 font-bold flex items-center gap-2 group-hover:text-gold-400 transition-colors">
                                   <Leaf className="h-4 w-4 text-gold-400 flex-shrink-0" />
                                   {crop.name}
-                                </CardTitle>
-                                <CardDescription className="text-[10px] text-gold-100/40 uppercase tracking-wider mt-1">
+                                </h3>
+                                <p className="text-[10px] text-gold-100/40 uppercase tracking-wider mt-1">
                                   {crop.season} Cycle • {crop.durationDays > 0 ? `${crop.durationDays} Days` : 'Perennial'}
-                                </CardDescription>
+                                </p>
                               </div>
                               <Badge
                                 className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
@@ -304,17 +306,21 @@ export default function MarketPrices() {
                                 {crop.profitMargin > 50000 ? 'High Profit' : crop.profitMargin > 0 ? 'Moderate' : 'Low margin'}
                               </Badge>
                             </div>
-                          </CardHeader>
+                          </div>
                           
-                          <CardContent className="space-y-4 pt-0">
+                          <div className="space-y-4 pt-0">
                             <div className="grid grid-cols-2 gap-4">
                               <div className="bg-earth-elevated/40 rounded-2xl p-5 min-h-[4.5rem] border border-earth-border/40 text-center flex flex-col justify-center">
                                 <p className="text-[10px] text-gold-100/30 font-black uppercase tracking-wider">Input Cost</p>
-                                <p className="text-base font-black text-gold-100 mt-2">{formatINR(crop.investmentPerAcre)}</p>
+                                <p className="text-base font-black text-gold-100 mt-2">
+                                  <AnimatedCounter end={crop.investmentPerAcre} prefix="₹" />
+                                </p>
                               </div>
                               <div className="bg-gold-400/5 rounded-2xl p-5 min-h-[4.5rem] border border-gold-400/10 text-center flex flex-col justify-center">
                                 <p className="text-[10px] text-gold-400 font-black uppercase tracking-wider">Gross Return</p>
-                                <p className="text-base font-black text-gold-100 mt-2">{formatINR(crop.expectedReturn)}</p>
+                                <p className="text-base font-black text-gold-100 mt-2">
+                                  <AnimatedCounter end={crop.expectedReturn} prefix="₹" />
+                                </p>
                               </div>
                             </div>
                             
@@ -326,19 +332,21 @@ export default function MarketPrices() {
                               <div className="h-8 w-px bg-earth-border/80"></div>
                               <div className="text-center flex-1">
                                 <p className="text-[10px] text-gold-100/30 font-black uppercase">Mandi MSP</p>
-                                <p className="text-xs font-bold text-gold-100 mt-0.5">{formatINR(crop.marketPrice)}/q</p>
+                                <p className="text-xs font-bold text-gold-100 mt-0.5">
+                                  <AnimatedCounter end={crop.marketPrice} prefix="₹" suffix="/q" />
+                                </p>
                               </div>
                               <div className="h-8 w-px bg-earth-border/80"></div>
                               <div className="text-center flex-1">
                                 <p className="text-[10px] text-gold-100/30 font-black uppercase">Est. Profit</p>
                                 <p className={`text-xs font-black mt-0.5 flex items-center justify-center gap-0.5 ${crop.profitMargin > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                                   {crop.profitMargin > 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                                  {formatINR(Math.abs(crop.profitMargin))}
+                                  <AnimatedCounter end={Math.abs(crop.profitMargin)} prefix="₹" />
                                 </p>
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
+                          </div>
+                        </GoldCard>
                       </StaggerItem>
                     ))}
                   </div>
@@ -353,86 +361,25 @@ export default function MarketPrices() {
             <ScrollReveal delay={0.1}>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 bg-earth-elevated/20 p-6 rounded-3xl border border-earth-border/40 items-center">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-gold-100/40 uppercase font-black tracking-widest block">Commodity</label>
-                  <Select value={selectedCommodity} onValueChange={setSelectedCommodity}>
-                    <SelectTrigger className="bg-earth-main border-earth-border text-gold-100 focus:border-gold-400 h-12 rounded-xl text-sm">
-                      <SelectValue placeholder="Select commodity" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-earth-card border-earth-border text-gold-100">
-                      {commodities.map(c => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
                   <label className="text-[10px] text-gold-100/40 uppercase font-black tracking-widest block">District</label>
                   <Select value={selectedDistrict} onValueChange={handleDistrictChange}>
                     <SelectTrigger className="bg-earth-main border-earth-border text-gold-100 focus:border-gold-400 h-12 rounded-xl text-sm">
                       <SelectValue placeholder="All Districts" />
                     </SelectTrigger>
                     <SelectContent className="bg-earth-card border-earth-border text-gold-100">
-                      {districts.map(d => (
+                       {districts.map(d => (
                         <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="lg:pt-6 flex justify-end">
-                  <Badge variant="outline" className="text-[10px] font-black uppercase border-gold-400/20 text-gold-400 bg-gold-400/5 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                    <TrendingUp className="h-3 w-3" /> Source: data.gov.in Live API
-                  </Badge>
-                </div>
               </div>
             </ScrollReveal>
-
-            {mandiLoading ? (
-              <TableShimmer rows={6} />
-            ) : mandiPrices.length === 0 ? (
-              <EmptyState
-                icon={TrendingUp}
-                title="No Mandi Records"
-                description={`No arrivals reported for ${selectedCommodity} in Karnataka recently.`}
-              />
-            ) : (
-              <ScrollReveal delay={0.2}>
-                <div className="overflow-x-auto rounded-2xl border border-earth-border bg-earth-card">
-                  <table className="w-full text-sm border-collapse">
-                    <thead>
-                      <tr className="bg-earth-elevated/40 border-b border-earth-border">
-                        <th className="text-left p-4 font-black uppercase tracking-widest text-[10px] text-gold-400">Market</th>
-                        <th className="text-left p-4 font-black uppercase tracking-widest text-[10px] text-gold-400">District</th>
-                        <th className="text-left p-4 font-black uppercase tracking-widest text-[10px] text-gold-400">Variety</th>
-                        <th className="text-right p-4 font-black uppercase tracking-widest text-[10px] text-gold-400">Min Price</th>
-                        <th className="text-right p-4 font-black uppercase tracking-widest text-[10px] text-gold-400">Max Price</th>
-                        <th className="text-right p-4 font-black uppercase tracking-widest text-[10px] text-gold-400">Modal Price</th>
-                        <th className="text-left p-4 font-black uppercase tracking-widest text-[10px] text-gold-400">Arrival Date</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-earth-border/60">
-                      {mandiPrices.map((rec, i) => (
-                        <tr key={i} className="hover:bg-earth-elevated/10 transition-colors">
-                          <td className="p-4 font-bold text-gold-100">{rec.market}</td>
-                          <td className="p-4 text-gold-100/70">{rec.district}</td>
-                          <td className="p-4 text-gold-100/60 font-medium italic">
-                            {!rec.variety || rec.variety.toLowerCase() === 'unknown' ? '-' : `"${rec.variety}"`}
-                          </td>
-                          <td className="p-4 text-right font-mono text-gold-100/80">{formatINR(Number(rec.min_price))}</td>
-                          <td className="p-4 text-right font-mono text-gold-100/80">{formatINR(Number(rec.max_price))}</td>
-                          <td className="p-4 text-right font-mono font-black text-gold-400">{formatINR(Number(rec.modal_price))}</td>
-                          <td className="p-4 text-gold-100/40 text-xs">{rec.arrival_date}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </ScrollReveal>
-            )}
+            
+            <MarketPricesSection district={selectedDistrict === 'all' ? 'Bengaluru Urban' : selectedDistrict} />
           </>
         )}
       </div>
-    </Layout>
+    </div>
   );
 }

@@ -4,7 +4,6 @@ import { useUser, MOCK_USERS } from '@/store';
 import { FarmsAPI, type Farm } from '@/lib/api/farms';
 import { cropRecommender } from '@/lib/ai/cropRecommender';
 import { SeasonAdvisoryCard } from '@/components/farm/SeasonAdvisoryCard';
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -240,16 +239,16 @@ export default function MyFarm() {
 
   if (!user) {
     return (
-      <Layout>
+      <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
         <div className="text-center py-24">
           <p className="text-gold-100/40 font-medium italic">Please sign in to access your farms.</p>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       <div className="space-y-12 pb-12 max-w-7xl mx-auto">
         <ScrollReveal>
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
@@ -625,7 +624,7 @@ export default function MyFarm() {
           </DialogContent>
         </Dialog>
       </div>
-    </Layout>
+    </div>
   );
 }
 

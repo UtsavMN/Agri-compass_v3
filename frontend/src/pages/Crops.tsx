@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { apiGet } from '@/lib/httpClient';
-import Layout from '@/components/Layout';
 import { DISTRICTS } from '@/data/masterData';
 import { CropCardPremium } from '@/components/ui/crop-card-premium';
 import { CropCardShimmer } from '@/components/ui/loading-shimmer';
@@ -74,7 +73,7 @@ export default function Crops() {
   const districts = DISTRICTS;
 
   return (
-    <Layout>
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       <div className="space-y-8 pb-12">
         <ScrollReveal direction="down">
           <div className="relative overflow-hidden rounded-3xl border border-earth-border/40 bg-earth-elevated/10 mb-6">
@@ -230,7 +229,7 @@ export default function Crops() {
           </div>
         )}
       </div>
-    </Layout>
+    </div>
   );
 }
 

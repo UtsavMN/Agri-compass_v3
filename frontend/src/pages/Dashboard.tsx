@@ -6,14 +6,15 @@ import { useDistrict } from '@/store';
 import { apiGet } from '@/lib/httpClient';
 import { cropRecommender } from '@/lib/ai/cropRecommender';
 import { WeatherAPI, WeatherResponse } from '@/lib/api/weather';
-import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { CardShimmer, CropCardShimmer } from '@/components/ui/loading-shimmer';
 import { CropCardPremium, Crop } from '@/components/ui/crop-card-premium';
-import { ScrollReveal, StaggerContainer, StaggerItem, TiltCard, CountUp } from '@/components/ui/animations';
+import { AnimatedSection } from '@/components/ui/AnimatedSection';
+import { StaggerContainer, StaggerItem, TiltCard, CountUp } from '@/components/ui/animations';
 import { LottieEmptyState } from '@/components/ui/lottie-loading';
 import { PostsAPI, Post } from '@/lib/api/posts';
 import { Sprout, TrendingUp, Users, FileText, Cloud, Leaf, MapPin, Zap, Droplets, Thermometer, MessageSquare, AlertTriangle, RefreshCw, Clock, User, Menu } from 'lucide-react';
@@ -21,7 +22,7 @@ import { useScroll, useTransform, motion, AnimatePresence } from 'framer-motion'
 import { MarketTrendCard } from '@/components/dashboard/MarketTrendCard';
 import { KarnatakaMap } from '@/components/dashboard/KarnatakaMap';
 import { HeroCarousel } from '@/components/dashboard/HeroCarousel';
-
+import { DashboardHero } from '@/components/dashboard/DashboardHero';
 
 interface CropRecommendation {
   cropName: string;
@@ -202,29 +203,25 @@ export default function Dashboard() {
     }
   };
 
-
-
-
-
   if (!user) return null;
 
   return (
-    <Layout fullBleed>
+    <div className="w-full relative animate-fade-in">
       <div className="min-h-screen bg-[#0f0f0b]">
 
-        {/* ===== DYNAMIC HERO CAROUSEL (FULL BLEED) ===== */}
-        <HeroCarousel
-          temp={34}
-          condition={'Partly Cloudy'}
-          cropsCount={crops.length || 6}
-          newsCount={newsItems.length || 4}
+        {/* ===== HERO CAROUSEL (FULL BLEED) ===== */}
+        <HeroCarousel 
+          temp={28} 
+          condition="Clear" 
+          cropsCount={24} 
+          newsCount={newsItems.length || 0} 
         />
 
         {/* ===== MAIN CONTENT GRID ===== */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
           
           {selectedDistrict && (
-            <ScrollReveal direction="up" delay={0.1}>
+            <AnimatedSection delay={0.1}>
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 {/* Market Trend */}
                 <TiltCard>
@@ -242,45 +239,49 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent className="pt-6 pb-6">
                       {cropRecommendations.length > 0 ? (
-                        <div className="space-y-5 max-h-[520px] overflow-y-auto pr-2 custom-scrollbar">
+                        <Accordion type="single" collapsible className="w-full space-y-3">
                           {cropRecommendations.slice(0, 4).map((rec, index) => {
                             const districtInfo = districtData.find(d => d.district === selectedDistrict);
                             const recommendedCrops = districtInfo?.recommended_crops?.split(/[,/]/).map((c: string) => c.trim()).filter(Boolean) || [];
                             const isRecommended = recommendedCrops.includes(rec.cropName);
 
                             return (
-                              <div key={index} className="border border-earth-border rounded-xl p-5 md:p-6 bg-earth-elevated hover:border-gold-400/30 transition-all min-h-[11rem]">
-                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
-                                  <h4 className="font-bold text-gold-200 text-lg break-words flex-1 min-w-0">{rec.cropName}</h4>
-                                  <div className="flex flex-wrap gap-2 shrink-0">
-                                    {isRecommended && <Badge className="bg-gold-400 text-earth-main font-bold">Recommended</Badge>}
-                                    <Badge variant="outline" className="border-gold-400/30 text-gold-400">{rec.season}</Badge>
-                                  </div>
-                                </div>
-                                <p className="text-sm text-gold-100/60 mb-4 leading-relaxed">{rec.reason}</p>
-
-                                <div className="flex items-center gap-2 mb-4 text-xs font-bold text-gold-400 uppercase tracking-wider">
-                                  <Zap className="h-3 w-3 shrink-0" />
-                                  <span>Expected: {rec.expectedYield}</span>
-                                </div>
-
-                                {/* District info */}
-                                {districtInfo && (
-                                  <div className="grid grid-cols-2 gap-4 pt-4 pb-1 border-t border-earth-border/50 text-[11px]">
-                                    <div className="min-w-0">
-                                      <span className="text-gold-100/40 uppercase tracking-tighter block mb-1.5">Soil Type</span>
-                                      <p className="text-gold-100/80 break-words leading-snug">{districtInfo.soil_type}</p>
-                                    </div>
-                                    <div className="min-w-0">
-                                      <span className="text-gold-100/40 uppercase tracking-tighter block mb-1.5">Weather Pattern</span>
-                                      <p className="text-gold-100/80 break-words leading-snug">{districtInfo.weather_pattern}</p>
+                              <AccordionItem value={`item-${index}`} key={index} className="border border-earth-border rounded-xl bg-earth-elevated hover:border-gold-400/30 transition-all px-2 border-b-0 data-[state=open]:border-gold-400/50">
+                                <AccordionTrigger className="hover:no-underline py-4 px-3">
+                                  <div className="flex flex-1 items-center justify-between gap-3 mr-4">
+                                    <h4 className="font-bold text-gold-200 text-lg break-words">{rec.cropName}</h4>
+                                    <div className="flex flex-wrap justify-end gap-2 shrink-0">
+                                      {isRecommended && <Badge className="bg-gold-400 text-earth-main font-bold hidden sm:inline-flex">Recommended</Badge>}
+                                      <Badge variant="outline" className="border-gold-400/30 text-gold-400">{rec.season}</Badge>
                                     </div>
                                   </div>
-                                )}
-                              </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="px-3 pb-4">
+                                  <p className="text-sm text-gold-100/60 mb-4 leading-relaxed">{rec.reason}</p>
+
+                                  <div className="flex items-center gap-2 mb-4 text-xs font-bold text-gold-400 uppercase tracking-wider bg-gold-400/5 p-2.5 rounded-lg border border-gold-400/10">
+                                    <Zap className="h-3 w-3 shrink-0" />
+                                    <span>Expected: {rec.expectedYield}</span>
+                                  </div>
+
+                                  {/* District info */}
+                                  {districtInfo && (
+                                    <div className="grid grid-cols-2 gap-4 pt-3 border-t border-earth-border/50 text-[11px]">
+                                      <div className="min-w-0">
+                                        <span className="text-gold-100/40 uppercase tracking-tighter block mb-1.5">Soil Type</span>
+                                        <p className="text-gold-100/80 break-words leading-snug">{districtInfo.soil_type}</p>
+                                      </div>
+                                      <div className="min-w-0">
+                                        <span className="text-gold-100/40 uppercase tracking-tighter block mb-1.5">Weather Pattern</span>
+                                        <p className="text-gold-100/80 break-words leading-snug">{districtInfo.weather_pattern}</p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </AccordionContent>
+                              </AccordionItem>
                             );
                           })}
-                        </div>
+                        </Accordion>
                       ) : (
                         <CardShimmer />
                       )}
@@ -288,11 +289,11 @@ export default function Dashboard() {
                   </Card>
                 </TiltCard>
               </div>
-            </ScrollReveal>
+            </AnimatedSection>
           )}
 
           {/* Popular crops grid */}
-          <ScrollReveal direction="up" delay={0.15}>
+          <AnimatedSection delay={0.15}>
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gold-100">Popular Crops</h2>
@@ -323,7 +324,7 @@ export default function Dashboard() {
                 <LottieEmptyState message="No crops available at the moment" />
               )}
             </div>
-          </ScrollReveal>
+          </AnimatedSection>
 
           {/* ══════════════════════════════════════════
               ZONE 4 — MARKET NEWS + COMMUNITY SNIPPET
@@ -432,6 +433,6 @@ export default function Dashboard() {
 
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }

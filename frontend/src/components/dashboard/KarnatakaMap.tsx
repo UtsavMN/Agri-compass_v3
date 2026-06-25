@@ -1,7 +1,7 @@
 // src/components/dashboard/KarnatakaMap.tsx
 // Renders ONLY the selected district as a transparent, glowing silhouette
 // that blends seamlessly into whichever background it sits on.
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { DISTRICT_CROP_DATA } from '@/data/masterData';
 import { DISTRICT_PATHS } from '@/data/districtPaths';
 import { useDistrict } from '@/store';
@@ -36,7 +36,7 @@ const getCentroid = (pts: { x: number; y: number }[]) => {
   return { x: sx / pts.length, y: sy / pts.length };
 };
 
-export const KarnatakaMap = () => {
+export const KarnatakaMap = React.memo(() => {
   const { selectedDistrict } = useDistrict();
   const name = selectedDistrict || 'Bagalkot';
   const pointsStr = DISTRICT_PATHS[name];
@@ -136,5 +136,5 @@ export const KarnatakaMap = () => {
       </p>
     </div>
   );
-};
+});
 

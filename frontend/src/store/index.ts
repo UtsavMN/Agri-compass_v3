@@ -15,9 +15,9 @@ export interface Profile {
 }
 
 export const MOCK_USERS = [
-  { id: 'dev_user', username: 'dev_user', name: 'Dev User' },
-  { id: 'user_a', username: 'user_a', name: 'Farmer A' },
-  { id: 'user_b', username: 'user_b', name: 'Farmer B' },
+  { id: 'dev_user', username: null as string | null, name: null as string | null }, // TODO: fetch real user from auth provider
+  { id: 'user_a', username: null as string | null, name: null as string | null },
+  { id: 'user_b', username: null as string | null, name: null as string | null },
 ];
 
 export interface Notification {
@@ -59,11 +59,11 @@ const getDerivedAuth = (activeUserId: string, profileOverrides: Partial<Profile>
   const mockUser = {
     id: activeMock.id,
     username: activeMock.username,
-    firstName: activeMock.name.split(' ')[0],
-    lastName: activeMock.name.split(' ')[1] || '',
+    firstName: activeMock.name ? activeMock.name.split(' ')[0] : null,
+    lastName: activeMock.name ? activeMock.name.split(' ')[1] || '' : null,
     fullName: activeMock.name,
-    email: `${activeMock.id}@example.com`,
-    primaryEmailAddress: { emailAddress: `${activeMock.id}@example.com` }
+    email: null, // TODO: fetch from real auth provider
+    primaryEmailAddress: { emailAddress: null }
   };
   const profile: Profile = {
     id: mockUser.id,

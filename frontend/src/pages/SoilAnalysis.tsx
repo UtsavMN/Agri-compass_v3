@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import Layout from '@/components/Layout';
 import { apiPost } from '@/lib/httpClient';
 import { Button } from '@/components/ui/button';
 import {
@@ -144,44 +143,8 @@ export function SoilAnalysisContent() {
       }
     } catch (error) {
       console.error('Soil recommendation error:', error);
-      // Fallback in case of server connection error
-      const mockFallback: RecommendationResponse = {
-        recommended_crops: [
-          {
-            crop_name: 'Rice (Paddy)',
-            suitability_score: 88,
-            expected_yield_per_acre_tons: 2.8,
-            growing_guide: {
-              sowing_details: 'Raise seedlings in nursery for 21-25 days. Transplant in puddled soils spaced at 20x15 cm. Highly recommended for command areas.',
-              fertilizer_npk_schedule_per_acre: 'Basal: 50 kg DAP + 50 kg MOP. Active Tillering: 130 kg Urea. Panicle Initiation: 65 kg Urea + 50 kg MOP.',
-              irrigation_plan: 'Maintain continuous submergence (5 cm depth) until vegetative stage. Keep soil saturated during flowering.',
-              pest_disease_management: 'Spray Tricyclazole (0.6g/L) for Blast disease. Keep watch for Stem Borer.',
-              harvesting_tips: 'Harvest when 80-85% of panicles turn golden straw-colored. Sun-dry grains to 14% moisture.'
-            }
-          },
-          {
-            crop_name: 'Maize',
-            suitability_score: 82,
-            expected_yield_per_acre_tons: 3.2,
-            growing_guide: {
-              sowing_details: 'Sow seeds at 5 cm depth. Optimal seed rate is 20 kg/ha. Excellent choice for well-drained soils.',
-              fertilizer_npk_schedule_per_acre: 'Basal: 75 kg complex fertilizer. Knee-high: 60 kg Urea. Tasseling: 60 kg Urea + 30 kg MOP.',
-              irrigation_plan: 'Irrigate at critical growth phases: tasseling, silking, and grain milking. Avoid waterlogging.',
-              pest_disease_management: 'Spray Emamectin Benzoate (0.4g/L) against Fall Armyworm infestation.',
-              harvesting_tips: 'Harvest when grains form a black layer at the base (physiological maturity). De-husk cobs and dry fully.'
-            }
-          }
-        ],
-        soil_health_report: {
-          status: 'Good',
-          limiting_factors: ['Moderate nitrogen deficiency', 'Minor soil compaction'],
-          soil_amendment_recommendations: 'Apply 10 tonnes of Farmyard Manure (FYM) per hectare and plant green manure crops in off-season.'
-        },
-        warnings: ['Slightly low moisture level recorded. Schedule light irrigation around crop vegetative stages.'],
-        confidence_level: 95
-      };
-      setResults(mockFallback);
-      setExpandedCrop('Rice (Paddy)');
+      alert("AI Soil Diagnostic Model is currently unavailable. Please connect a valid endpoint.");
+      setResults(null);
     } finally {
       clearInterval(stepInterval);
       setLoading(false);
@@ -917,8 +880,8 @@ export function SoilAnalysisContent() {
 
 export default function SoilAnalysis() {
   return (
-    <Layout>
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       <SoilAnalysisContent />
-    </Layout>
+    </div>
   );
 }

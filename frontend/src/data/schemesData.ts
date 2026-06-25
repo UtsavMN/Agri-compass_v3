@@ -25,7 +25,7 @@ export const GOVERNMENT_SCHEMES: Scheme[] = [
     category: 'Financial Support',
     level: 'National',
     benefit: '₹6,000/year in 3 instalments of ₹2,000 each',
-    benefitAmount: 6000,
+    benefitAmount: null, // TODO: fetch real data from official government data
     eligibility: 'Small and marginal farmers with cultivable land. Excludes institutional landholders and those paying income tax.',
     howToApply: 'Visit pmkisan.gov.in or nearest Common Service Centre (CSC). Need: Aadhaar, bank account, land records.',
     deadline: null,
@@ -46,7 +46,7 @@ export const GOVERNMENT_SCHEMES: Scheme[] = [
     deadline: 'Before sowing — check crop cutoff dates',
     applyUrl: 'https://pmfby.gov.in',
     tags: ['Insurance', 'Kharif', 'Rabi', 'Natural Disaster'],
-    subsidyPercent: 50,
+    subsidyPercent: null, // TODO: fetch real data from official government data
   },
   {
     id: 'pm-kusum',
@@ -61,7 +61,7 @@ export const GOVERNMENT_SCHEMES: Scheme[] = [
     deadline: null,
     applyUrl: 'https://pmkusum.mnre.gov.in',
     tags: ['Solar', 'Irrigation', 'Electricity', 'Subsidy 90%'],
-    subsidyPercent: 90,
+    subsidyPercent: null, // TODO: fetch real data from official government data
   },
   {
     id: 'rkvy',
@@ -100,7 +100,7 @@ export const GOVERNMENT_SCHEMES: Scheme[] = [
     category: 'Credit',
     level: 'National',
     benefit: 'Revolving crop credit up to ₹3 lakh at 2% interest (after 3% interest subvention). RuPay debit card included.',
-    benefitAmount: 300000,
+    benefitAmount: null, // TODO: fetch real data from official government data
     eligibility: 'All farmers, tenant farmers, share croppers, SHGs and JLGs of farmers.',
     howToApply: 'Apply at any nationalized bank, RRB, or cooperative bank. Online: pmkisan.gov.in or bank website.',
     deadline: null,
@@ -151,7 +151,7 @@ export const GOVERNMENT_SCHEMES: Scheme[] = [
     deadline: 'December 31 (Rabi cutoff)',
     applyUrl: 'https://pmfby.gov.in',
     tags: ['Rabi', 'Insurance', 'Wheat', 'Mustard'],
-    subsidyPercent: 50,
+    subsidyPercent: null, // TODO: fetch real data from official government data
   },
 
   // ══ KARNATAKA STATE SCHEMES ══
@@ -183,7 +183,7 @@ export const GOVERNMENT_SCHEMES: Scheme[] = [
     deadline: null,
     applyUrl: 'https://raitamitra.karnataka.gov.in',
     tags: ['Irrigation', 'Farm Pond', 'Sprinkler', '90% SC/ST', 'Karnataka'],
-    subsidyPercent: 80,
+    subsidyPercent: null, // TODO: fetch real data from official government data
   },
   {
     id: 'kisan-mitra',
@@ -213,7 +213,7 @@ export const GOVERNMENT_SCHEMES: Scheme[] = [
     deadline: null,
     applyUrl: 'https://raitamitra.karnataka.gov.in',
     tags: ['Drip', 'Sprinkler', '90% Subsidy', 'Karnataka', 'Irrigation'],
-    subsidyPercent: 90,
+    subsidyPercent: null, // TODO: fetch real data from official government data
   },
   {
     id: 'farm-mechanization',
@@ -228,7 +228,7 @@ export const GOVERNMENT_SCHEMES: Scheme[] = [
     deadline: null,
     applyUrl: 'https://agrimachinery.nic.in',
     tags: ['Tractor', 'Harvester', '50% Subsidy', 'Equipment', 'SC/ST 90%'],
-    subsidyPercent: 50,
+    subsidyPercent: null, // TODO: fetch real data from official government data
   },
   {
     id: 'raitha-shakti',
@@ -237,7 +237,7 @@ export const GOVERNMENT_SCHEMES: Scheme[] = [
     category: 'Input Subsidy',
     level: 'Karnataka',
     benefit: 'Diesel subsidy ₹250 per acre for farm mechanization (up to 5 acres).',
-    benefitAmount: 1250,
+    benefitAmount: null, // TODO: fetch real data from official government data
     eligibility: 'Karnataka farmers with up to 5 acres cultivated land.',
     howToApply: 'Auto-applied via PM-KISAN enrolled farmers. Contact local RSK for status.',
     deadline: null,
@@ -252,7 +252,7 @@ export const GOVERNMENT_SCHEMES: Scheme[] = [
     category: 'Crop Incentive',
     level: 'Karnataka',
     benefit: '₹10,000 per hectare incentive for millet cultivation. Free quality seeds. Market linkage support.',
-    benefitAmount: 10000,
+    benefitAmount: null, // TODO: fetch real data from official government data
     eligibility: 'Karnataka farmers growing ragi, bajra, jowar, or other millets.',
     howToApply: 'Apply at local Agriculture Department office before Kharif sowing.',
     deadline: 'Before Kharif sowing (May-June)',
@@ -267,7 +267,7 @@ export const GOVERNMENT_SCHEMES: Scheme[] = [
     category: 'Women Farmers',
     level: 'Karnataka',
     benefit: '₹2,000/month direct to bank account for women in agriculture households.',
-    benefitAmount: 24000,
+    benefitAmount: null, // TODO: fetch real data from official government data
     eligibility: 'Women who are housewives, homeless women, or agricultural workers in Karnataka.',
     howToApply: 'Apply at sevasindhu.karnataka.gov.in or nearest Bangalore One / Karnataka One centre.',
     deadline: null,

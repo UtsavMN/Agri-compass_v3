@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 :: List of potential JDK root paths to check
-set "SEARCH_PATHS="C:\Program Files\Java" "C:\Program Files\Eclipse Adoptium" "C:\Program Files\Eclipse Foundation" "C:\Program Files\Adoptium" "C:\Program Files\Microsoft" "C:\Program Files\RedHat" "C:\Program Files\Amazon Corretto" "C:\Program Files\BellSoft" "C:\jdk-21" "C:\jdk-17" "C:\openjdk-21" "C:\openjdk-17""
+set "SEARCH_PATHS="C:\Program Files\Java" "C:\Program Files\Eclipse Adoptium" "C:\Program Files\Eclipse Foundation" "C:\Program Files\Adoptium" "C:\Program Files\Microsoft" "C:\Program Files\RedHat" "C:\Program Files\Amazon Corretto" "C:\Program Files\BellSoft" "C:\jdk-21" "C:\jdk-17" "C:\openjdk-21" "C:\openjdk-17" "%~dp0jdk-17""
 
 set "BEST_JAVA_HOME="
 set "BEST_VERSION=0"

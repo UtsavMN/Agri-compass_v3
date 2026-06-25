@@ -4,7 +4,6 @@ import { useUser, MOCK_USERS } from '@/store';
 import { useDistrict } from '@/store';
 import { PostsAPI, Post } from '@/lib/api/posts'
 import { UploadAPI } from '@/lib/api/upload'
-import Layout from '@/components/Layout'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -32,7 +31,7 @@ const TOPICS = [
 
 const COMMUNITY_TABS = [
   { id: 'feed',      label: 'Kisan Feed',   icon: MessageSquare },
-  { id: 'marketplace', label: 'Buy & Sell', icon: ShoppingCart, badge: 'New' },
+  { id: 'marketplace', label: 'Buy & Sell', icon: ShoppingCart },
 ]
 
 export default function Community() {
@@ -215,7 +214,7 @@ export default function Community() {
   }
 
   return (
-    <Layout>
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       <div className="py-12 px-4 md:px-8 max-w-7xl mx-auto">
         <div className="max-w-4xl mx-auto space-y-8">
             {/* Tab switch bar */}
@@ -236,11 +235,6 @@ export default function Community() {
                   >
                     <IconComponent size={14} />
                     <span>{tab.label}</span>
-                    {tab.badge && (
-                      <span className="text-[9px] bg-red-500/20 border border-red-500/30 text-red-400 font-extrabold px-1.5 py-0.5 rounded-full ml-1 animate-pulse">
-                        {tab.badge}
-                      </span>
-                    )}
                   </button>
                 );
               })}
@@ -446,6 +440,6 @@ export default function Community() {
             )}
           </div>
     </div>
-    </Layout>
+    </div>
   )
 }

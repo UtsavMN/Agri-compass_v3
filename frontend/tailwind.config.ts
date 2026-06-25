@@ -42,7 +42,7 @@ export default {
           100: '#f9edd4',
           200: '#f2d9a8',
           300: '#e9c072',
-          400: '#C6A96B',
+          400: '#C9A84C',
           500: '#B8965A',
           600: '#a07c3f',
           700: '#856335',
@@ -58,10 +58,10 @@ export default {
           muted: 'var(--text-muted)',
         },
         earth: {
-          main: '#0E1110',
-          card: '#151A18',
-          elevated: '#1B211F',
-          border: 'rgba(255,255,255,0.06)',
+          main: '#0A0A0A',
+          card: '#111111',
+          elevated: '#1E1E1E',
+          border: '#1E1E1E',
         },
       },
       spacing: {

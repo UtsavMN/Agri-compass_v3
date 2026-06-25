@@ -4,7 +4,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { translateToKannada, containsKannada } from '@/lib/ai/translator';
 import { cropRecommender, DetailedCropData } from '@/lib/ai/cropRecommender';
 import { PostsAPI, Post } from '@/lib/api/posts';
-import Layout from '@/components/Layout';
 import Onboarding from '@/components/Onboarding';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -242,7 +241,7 @@ export default function Home() {
   }
 
   return (
-    <Layout>
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
 
       <div className="space-y-6">
@@ -450,7 +449,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }
 

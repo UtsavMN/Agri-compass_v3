@@ -17,7 +17,7 @@ export const LISTING_CATEGORIES: ListingCategory[] = [
     icon: '🌾',
     color: 'rgba(196,154,42,0.15)',
     subTypes: ['Agricultural Land for Sale', 'Land for Lease', 'Land for Rent', 'Land Lease Exchange'],
-    requiredFields: ['area_acres', 'location_taluk', 'soil_type', 'water_source', 'price'],
+    requiredFields: ['area_acres', 'soil_type', 'water_source', 'price'],
     priceLabel: '₹ per acre or total price',
   },
   {
@@ -26,7 +26,7 @@ export const LISTING_CATEGORIES: ListingCategory[] = [
     icon: '🌽',
     color: 'rgba(74,154,106,0.15)',
     subTypes: ['Crop for Bulk Sale', 'Vegetables', 'Fruits', 'Grains & Pulses', 'Spices'],
-    requiredFields: ['crop_name', 'quantity_kg', 'quality_grade', 'location', 'price_per_kg'],
+    requiredFields: ['crop_name', 'quantity_kg', 'quality_grade', 'price_per_kg'],
     priceLabel: '₹ per kg or per quintal',
   },
   {
@@ -44,7 +44,7 @@ export const LISTING_CATEGORIES: ListingCategory[] = [
     icon: '♻️',
     color: 'rgba(139,115,85,0.2)',
     subTypes: ['Farm Yard Manure (FYM)', 'Vermicompost', 'Poultry Manure', 'Green Manure', 'Biochar'],
-    requiredFields: ['type', 'quantity_kg', 'location', 'price'],
+    requiredFields: ['type', 'quantity_kg', 'price'],
     priceLabel: '₹ per kg or per tractor load',
   },
   {
@@ -71,7 +71,7 @@ export const LISTING_CATEGORIES: ListingCategory[] = [
     icon: '👷',
     color: 'rgba(139,115,85,0.15)',
     subTypes: ['Farm Labour', 'Tractor Operator', 'Harvesting Service', 'Ploughing Service', 'Spraying Service'],
-    requiredFields: ['service_type', 'availability', 'location', 'rate_per_day'],
+    requiredFields: ['service_type', 'availability', 'rate_per_day'],
     priceLabel: '₹ per day or per acre',
   },
   {

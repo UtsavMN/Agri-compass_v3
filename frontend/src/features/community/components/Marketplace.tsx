@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiGet, apiPost, apiDelete } from '@/lib/httpClient';
-import { useUser } from '@/store';
+import { useUser } from '@clerk/clerk-react';
 import { LISTING_CATEGORIES } from '@/data/marketplaceCategories';
 import { 
   Plus, 
@@ -36,6 +36,14 @@ export interface Listing {
   sellerVerified: boolean;
   createdAt: string;
 }
+
+export const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(value);
+};
 
 export function Marketplace() {
   const { user } = useUser();
@@ -97,13 +105,7 @@ export function Marketplace() {
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+
 
   const timeAgo = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -343,8 +345,6 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
   
   // Custom Dynamic Fields
   const [subType, setSubType] = useState('');
-  const [customField1, setCustomField1] = useState('');
-  const [customField2, setCustomField2] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -372,14 +372,9 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
 
     setIsSubmitting(true);
     try {
-      // Build detailed description utilizing custom fields
       let finalDescription = description.trim();
       if (selectedCategory) {
-        const specs: string[] = [];
-        specs.push(`Type: ${subType}`);
-        if (customField1) specs.push(`${selectedCategory.requiredFields[0].replace('_', ' ')}: ${customField1}`);
-        if (customField2) specs.push(`${selectedCategory.requiredFields[1].replace('_', ' ')}: ${customField2}`);
-        finalDescription = `[${specs.join(' | ')}] \n\n${finalDescription}`;
+        finalDescription = `[Type: ${subType}] \n\n${finalDescription}`;
       }
 
       const payload = {
@@ -496,37 +491,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                 </select>
               </div>
 
-              {/* Required/Custom Fields */}
-              <div className="grid grid-cols-2 gap-4">
-                {selectedCategory.requiredFields[0] && (
-                  <div className="space-y-1">
-                    <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">
-                      {selectedCategory.requiredFields[0].replace('_', ' ')}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 5 acres, Urea, Tractor model"
-                      value={customField1}
-                      onChange={(e) => setCustomField1(e.target.value)}
-                      className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-10 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"
-                    />
-                  </div>
-                )}
-                {selectedCategory.requiredFields[1] && (
-                  <div className="space-y-1">
-                    <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">
-                      {selectedCategory.requiredFields[1].replace('_', ' ')}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Borewell, Grade A, Year"
-                      value={customField2}
-                      onChange={(e) => setCustomField2(e.target.value)}
-                      className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-10 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"
-                    />
-                  </div>
-                )}
-              </div>
+              {/* Removed Custom Fields */}
 
               {/* Core Details */}
               <div className="space-y-1">
@@ -563,7 +528,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Description Details</label>
+                <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Description Details (Optional)</label>
                 <textarea
                   placeholder="Describe your produce, equipment or services..."
                   value={description}
@@ -650,9 +615,11 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
             <div />
           )}
 
-          {step < 3 ? (
+          {step === 1 ? (
+            <div />
+          ) : step === 2 ? (
             <button onClick={() => {
-              if (step === 2 && (!title.trim() || !price || !location.trim())) {
+              if (!title.trim() || !price || !location.trim()) {
                 toast({
                   title: 'Validation failed',
                   description: 'Title, price and location are required fields.',
@@ -660,7 +627,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                 });
                 return;
               }
-              setStep(step + 1);
+              setStep(3);
             }}
               className="flex items-center gap-1.5 bg-[#c49a2a] hover:bg-[#d4aa3a] text-[#0f0f0b] px-5 py-2.5 rounded-lg text-[11px] uppercase tracking-wider font-extrabold transition-all shadow shrink-0">
               Next

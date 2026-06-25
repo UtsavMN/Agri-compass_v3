@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import Layout from '@/components/Layout';
+import { useState, useEffect, useMemo } from 'react';
+import { useUser } from '@clerk/clerk-react';
+import { apiGet } from '@/lib/httpClient';
 import { GOVERNMENT_SCHEMES } from '@/data/schemesData';
 import { BANK_SCHEMES } from '@/data/bankSchemes';
 import { 
@@ -18,6 +19,7 @@ import { ScrollReveal, StaggerContainer, StaggerItem } from '@/components/ui/ani
 import { Input } from '@/components/ui/input';
 
 const SCHEME_TABS = [
+  { id: 'for-you',   label: 'For You',          count: 0,  icon: Bookmark },
   { id: 'central',   label: 'Central Schemes',  count: 9,  icon: Flag },
   { id: 'karnataka', label: 'Karnataka Schemes', count: 8,  icon: MapPin },
   { id: 'banks',     label: 'Bank Benefits',     count: 8,  icon: Building2 },
@@ -175,19 +177,52 @@ export const BankCard = ({ scheme }: { scheme: typeof BANK_SCHEMES[0] }) => {
 };
 
 export default function GovSchemes() {
-  const [activeTab, setActiveTab] = useState<'central' | 'karnataka' | 'banks'>('central');
+  const [activeTab, setActiveTab] = useState<'for-you' | 'central' | 'karnataka' | 'banks'>('for-you');
   const [searchTerm, setSearchTerm] = useState('');
+  const { user, profile } = useUser();
+  const [farms, setFarms] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user?.id) {
+       apiGet('/api/farms').then(setFarms).catch(console.error);
+    }
+  }, [user?.id]);
+
+  const calculateEligibilityScore = (scheme: typeof GOVERNMENT_SCHEMES[0]) => {
+     let score = 50; // base score
+     const totalAcres = farms.reduce((sum, f) => sum + (f.areaAcres || 0), 0);
+     
+     // Benefit those with small acreage for subsidy schemes
+     if (scheme.subsidyPercent && totalAcres < 5) score += 30;
+     else if (scheme.subsidyPercent && totalAcres < 10) score += 15;
+     
+     // Specific match
+     const schemeText = `${scheme.name} ${scheme.benefit} ${scheme.category}`.toLowerCase();
+     if (profile?.location && schemeText.includes(profile.location.toLowerCase())) score += 20;
+     if (farms.some(f => f.cropFocus && schemeText.includes(f.cropFocus.toLowerCase()))) score += 25;
+     
+     return Math.min(100, score);
+  };
 
   // Filter logic
-  const filteredGovSchemes = GOVERNMENT_SCHEMES.filter(scheme => {
-    const isLevelMatch = activeTab === 'central' ? scheme.level === 'National' : scheme.level === 'Karnataka';
-    const isSearchMatch = !searchTerm ||
-      scheme.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      scheme.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      scheme.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      scheme.benefit.toLowerCase().includes(searchTerm.toLowerCase());
-    return isLevelMatch && isSearchMatch;
-  });
+  const filteredGovSchemes = useMemo(() => {
+    return GOVERNMENT_SCHEMES.filter(scheme => {
+      const isLevelMatch = activeTab === 'central' ? scheme.level === 'National' : scheme.level === 'Karnataka';
+      const isSearchMatch = !searchTerm ||
+        scheme.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        scheme.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        scheme.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        scheme.benefit.toLowerCase().includes(searchTerm.toLowerCase());
+      return isLevelMatch && isSearchMatch;
+    });
+  }, [activeTab, searchTerm]);
+
+  const personalizedSchemes = useMemo(() => {
+    return GOVERNMENT_SCHEMES
+      .map(scheme => ({ ...scheme, score: calculateEligibilityScore(scheme) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6);
+  }, [farms, profile]);
 
   const filteredBankSchemes = BANK_SCHEMES.filter(scheme => {
     const isSearchMatch = !searchTerm ||
@@ -199,7 +234,7 @@ export default function GovSchemes() {
   });
 
   return (
-    <Layout>
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       <div className="space-y-8 pb-12">
         {/* Header Band */}
         <ScrollReveal direction="down">
@@ -249,7 +284,7 @@ export default function GovSchemes() {
                     <span className={`text-[10px] ml-1.5 px-2 py-0.5 rounded-full ${
                       isActive ? 'bg-black/10 text-black font-extrabold' : 'bg-white/5 text-[#6a6050]'
                     }`}>
-                      {tab.id === 'banks' ? BANK_SCHEMES.length : (tab.id === 'central' ? 9 : 8)}
+                      {tab.id === 'banks' ? BANK_SCHEMES.length : (tab.id === 'central' ? 9 : (tab.id === 'for-you' ? '★' : 8))}
                     </span>
                   </button>
                 );
@@ -282,6 +317,21 @@ export default function GovSchemes() {
                   ))}
                 </div>
               </StaggerContainer>
+            ) : activeTab === 'for-you' ? (
+               <StaggerContainer staggerDelay={0.05}>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   {personalizedSchemes.map(scheme => (
+                     <StaggerItem key={scheme.id}>
+                       <div className="relative">
+                          <div className="absolute -top-3 -right-3 bg-[#c49a2a] text-[#0f0f0b] font-black text-[10px] px-3 py-1 rounded-full z-10 shadow-lg border-2 border-[#1E1E1E]">
+                             {scheme.score}% Match
+                          </div>
+                          <SchemeCard scheme={scheme} />
+                       </div>
+                     </StaggerItem>
+                   ))}
+                 </div>
+               </StaggerContainer>
             ) : (
               <div className="text-center py-16 border border-dashed border-earth-border/40 rounded-2xl bg-earth-elevated/10">
                 <Flag className="h-12 w-12 text-[#6a6050] mx-auto mb-3" />
@@ -310,6 +360,6 @@ export default function GovSchemes() {
           )}
         </ScrollReveal>
       </div>
-    </Layout>
+    </div>
   );
 }

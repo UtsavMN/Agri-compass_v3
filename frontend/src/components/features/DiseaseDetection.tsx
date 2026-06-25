@@ -28,41 +28,7 @@ interface DetectionResult {
   prevention: string[];
 }
 
-// Mock disease database (replace with actual AI model)
-const mockDiseases: DetectionResult[] = [
-  {
-    disease: 'Leaf Blight',
-    confidence: 87,
-    severity: 'high',
-    treatment: [
-      'Remove and destroy infected leaves',
-      'Apply copper-based fungicide',
-      'Ensure proper drainage',
-      'Apply neem oil spray'
-    ],
-    prevention: [
-      'Avoid overhead irrigation',
-      'Maintain proper spacing',
-      'Use disease-resistant varieties',
-      'Practice crop rotation'
-    ]
-  },
-  {
-    disease: 'Powdery Mildew',
-    confidence: 82,
-    severity: 'medium',
-    treatment: [
-      'Apply sulfur-based fungicide',
-      'Improve air circulation',
-      'Remove infected parts'
-    ],
-    prevention: [
-      'Avoid water stress',
-      'Plant in full sun',
-      'Regular monitoring'
-    ]
-  }
-];
+// Removed mockDiseases as per data accuracy audit
 
 export function DiseaseDetection() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -70,17 +36,15 @@ export function DiseaseDetection() {
   const [result, setResult] = useState<DetectionResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Mock AI analysis (replace with actual API call)
+  // TODO: connect to real AI analysis API
   const analyzeImage = async () => {
     setIsAnalyzing(true);
     setResult(null);
 
-    // Simulate AI processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Simulate network delay before failing
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Mock result (replace with actual AI model prediction)
-    const mockResult = mockDiseases[Math.floor(Math.random() * mockDiseases.length)];
-    setResult(mockResult);
+    alert("AI Disease Model is currently unavailable. Please connect a valid endpoint.");
     setIsAnalyzing(false);
   };
 

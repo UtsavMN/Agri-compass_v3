@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import { useUser, MOCK_USERS } from '@/store';
 import { useDistrict } from '@/store';
-import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -145,7 +144,7 @@ export default function Weather() {
   };
 
   return (
-    <Layout>
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       <div className="space-y-8 pb-12">
         {/* Header */}
         <ScrollReveal>
@@ -337,6 +336,6 @@ export default function Weather() {
           </div>
         )}
       </div>
-    </Layout>
+    </div>
   );
 }

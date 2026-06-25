@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import Layout from '@/components/Layout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -176,7 +175,7 @@ export default function AirAgent() {
   };
 
   return (
-    <Layout>
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       <div className="max-w-3xl mx-auto space-y-4">
         <ScrollReveal>
           <div>
@@ -292,7 +291,7 @@ export default function AirAgent() {
         </Card>
         </ScrollReveal>
       </div>
-    </Layout>
+    </div>
   );
 }
 

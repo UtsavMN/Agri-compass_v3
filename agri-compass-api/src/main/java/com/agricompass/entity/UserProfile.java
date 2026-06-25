@@ -1,157 +1,80 @@
 package com.agricompass.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-    name = "profiles",
-    indexes = {
-        @Index(name = "idx_userprofile_district", columnList = "district")
-    }
-)
+@Table(name = "user_profiles")
 public class UserProfile {
 
     @Id
-    private String id;
+    @Column(name = "clerk_user_id")
+    private String clerkUserId;
 
-    @JsonIgnore
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
-
-    @Column(name = "district")
-    private String district;
-
-    @Column(columnDefinition = "TEXT")
-    private String preferences; // JSON string
-
-    private String username;
-
-    @Column(name = "full_name")
-    @JsonProperty("full_name")
+    @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    @Column(name = "avatar_url")
-    @JsonProperty("avatar_url")
-    private String avatarUrl;
-
-    private String email;
+    @Column(name = "username_handle", unique = true, nullable = false)
+    private String usernameHandle;
 
     private String phone;
 
-    private String location;
+    @Column(nullable = false)
+    private String district;
 
-    @Column(name = "language_preference")
-    @JsonProperty("language_preference")
-    private String languagePreference;
+    private String state = "Karnataka";
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private String bio;
+
+    private String language = "kn";
+
+    @Column(name = "onboarding_completed")
+    private Integer onboardingCompleted = 0;
+
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private String createdAt;
+
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private String updatedAt;
 
     public UserProfile() {}
 
-    public UserProfile(String id, User user, String district, String preferences, String username, String fullName, String avatarUrl, String email, String phone, String location, String languagePreference, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.user = user;
-        this.district = district;
-        this.preferences = preferences;
-        this.username = username;
-        this.fullName = fullName;
-        this.avatarUrl = avatarUrl;
-        this.email = email;
-        this.phone = phone;
-        this.location = location;
-        this.languagePreference = languagePreference;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-
-    public String getDistrict() { return district; }
-    public void setDistrict(String district) { this.district = district; }
-
-    public String getPreferences() { return preferences; }
-    public void setPreferences(String preferences) { this.preferences = preferences; }
-
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public String getClerkUserId() { return clerkUserId; }
+    public void setClerkUserId(String clerkUserId) { this.clerkUserId = clerkUserId; }
 
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
-
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getUsernameHandle() { return usernameHandle; }
+    public void setUsernameHandle(String usernameHandle) { this.usernameHandle = usernameHandle; }
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
+    public String getDistrict() { return district; }
+    public void setDistrict(String district) { this.district = district; }
 
-    public String getLanguagePreference() { return languagePreference; }
-    public void setLanguagePreference(String languagePreference) { this.languagePreference = languagePreference; }
+    public String getState() { return state; }
+    public void setState(String state) { this.state = state; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public String getProfilePictureUrl() { return profilePictureUrl; }
+    public void setProfilePictureUrl(String profilePictureUrl) { this.profilePictureUrl = profilePictureUrl; }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
 
-    public static UserProfileBuilder builder() {
-        return new UserProfileBuilder();
-    }
+    public String getLanguage() { return language; }
+    public void setLanguage(String language) { this.language = language; }
 
-    public static class UserProfileBuilder {
-        private String id;
-        private User user;
-        private String district;
-        private String preferences;
-        private String username;
-        private String fullName;
-        private String avatarUrl;
-        private String email;
-        private String phone;
-        private String location;
-        private String languagePreference;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
+    public Integer getOnboardingCompleted() { return onboardingCompleted; }
+    public void setOnboardingCompleted(Integer onboardingCompleted) { this.onboardingCompleted = onboardingCompleted; }
 
-        UserProfileBuilder() {}
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 
-        public UserProfileBuilder id(String id) { this.id = id; return this; }
-        public UserProfileBuilder user(User user) { this.user = user; return this; }
-        public UserProfileBuilder district(String district) { this.district = district; return this; }
-        public UserProfileBuilder preferences(String preferences) { this.preferences = preferences; return this; }
-        public UserProfileBuilder username(String username) { this.username = username; return this; }
-        public UserProfileBuilder fullName(String fullName) { this.fullName = fullName; return this; }
-        public UserProfileBuilder avatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; return this; }
-        public UserProfileBuilder email(String email) { this.email = email; return this; }
-        public UserProfileBuilder phone(String phone) { this.phone = phone; return this; }
-        public UserProfileBuilder location(String location) { this.location = location; return this; }
-        public UserProfileBuilder languagePreference(String languagePreference) { this.languagePreference = languagePreference; return this; }
-        public UserProfileBuilder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
-        public UserProfileBuilder updatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; return this; }
-
-        public UserProfile build() {
-            return new UserProfile(id, user, district, preferences, username, fullName, avatarUrl, email, phone, location, languagePreference, createdAt, updatedAt);
-        }
-    }
+    public String getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
 }

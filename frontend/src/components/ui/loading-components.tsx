@@ -188,9 +188,9 @@ export function ThemedSpinner({
 
   return (
     <motion.div
-      animate={{ rotate: 360 }}
-      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-      className={sizes[size]}
+      animate={{ scale: [1, 1.15, 1] }}
+      transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+      className={`${sizes[size]} mx-auto flex items-center justify-center`}
     >
       <Sprout className={`${sizes[size]} text-leaf-600 ${className}`} />
     </motion.div>

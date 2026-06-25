@@ -1,72 +1,57 @@
 package com.agricompass.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import java.time.LocalDateTime;
+import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
-@Table(name = "post_likes", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"post_id", "user_id"})
-})
+@Table(name = "post_likes")
+@IdClass(PostLike.PostLikeId.class)
 public class PostLike {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @Column(name = "post_id")
+    private String postId;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
-
-    @Column(name = "user_id", nullable = false)
-    private String userId;
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    @Id
+    @Column(name = "clerk_user_id")
+    private String clerkUserId;
 
     public PostLike() {}
 
-    public PostLike(String id, Post post, String userId, LocalDateTime createdAt) {
-        this.id = id;
-        this.post = post;
-        this.userId = userId;
-        this.createdAt = createdAt;
+    public PostLike(String postId, String clerkUserId) {
+        this.postId = postId;
+        this.clerkUserId = clerkUserId;
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public String getPostId() { return postId; }
+    public void setPostId(String postId) { this.postId = postId; }
 
-    public Post getPost() { return post; }
-    public void setPost(Post post) { this.post = post; }
+    public String getClerkUserId() { return clerkUserId; }
+    public void setClerkUserId(String clerkUserId) { this.clerkUserId = clerkUserId; }
 
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
+    public static class PostLikeId implements Serializable {
+        private String postId;
+        private String clerkUserId;
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+        public PostLikeId() {}
 
-    public static PostLikeBuilder builder() {
-        return new PostLikeBuilder();
-    }
+        public PostLikeId(String postId, String clerkUserId) {
+            this.postId = postId;
+            this.clerkUserId = clerkUserId;
+        }
 
-    public static class PostLikeBuilder {
-        private String id;
-        private Post post;
-        private String userId;
-        private LocalDateTime createdAt;
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PostLikeId that = (PostLikeId) o;
+            return Objects.equals(postId, that.postId) && Objects.equals(clerkUserId, that.clerkUserId);
+        }
 
-        PostLikeBuilder() {}
-
-        public PostLikeBuilder id(String id) { this.id = id; return this; }
-        public PostLikeBuilder post(Post post) { this.post = post; return this; }
-        public PostLikeBuilder userId(String userId) { this.userId = userId; return this; }
-        public PostLikeBuilder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
-
-        public PostLike build() {
-            return new PostLike(id, post, userId, createdAt);
+        @Override
+        public int hashCode() {
+            return Objects.hash(postId, clerkUserId);
         }
     }
 }

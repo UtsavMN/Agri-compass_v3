@@ -433,7 +433,7 @@ public class AiController {
             return "To optimize soil health, it is essential to maintain a balanced NPK ratio. For nitrogen deficiencies, apply Urea in split doses. For phosphorus, use DAP at the time of sowing. A soil pH between 6.0 and 7.5 is ideal for most crops; if your soil is too acidic (pH < 5.5), you can amend it with lime, and if it's too alkaline (pH > 8.0), you can use gypsum. Let me know your specific NPK values for a custom plan!";
         }
         
-        if (msg.contains("rice") || msg.contains("paddy") || msg.contains("bpt") || msg.contains("ir-64")) {
+        if (msg.matches(".*\\brice\\b.*") || msg.contains("paddy") || msg.contains("bpt") || msg.contains("ir-64")) {
             return "Rice (Paddy) is a staple Kharif crop in Karnataka. It thrives in clayey or loamy soils that can retain moisture. Popular varieties include IR-64, Swarna, and BPT-5204. Ensure you maintain 5cm of water submergence during tillering, and apply a balanced fertilizer schedule (e.g. 50kg DAP + 50kg MOP basal, followed by Urea top-dressing).";
         }
         
