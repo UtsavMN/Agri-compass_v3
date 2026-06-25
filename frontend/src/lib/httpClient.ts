@@ -6,6 +6,28 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL ??
   (import.meta.env.DEV ? '' : 'http://localhost:8080');
 
+/**
+ * Get the Clerk session token from the active session.
+ * Uses the global Clerk instance injected by ClerkProvider.
+ */
+async function getClerkToken(): Promise<string | null> {
+  try {
+    // Access the global Clerk instance
+    const clerk = (window as any).__clerk_frontend_api
+      ? (window as any).Clerk
+      : (window as any).Clerk;
+
+    if (clerk?.session) {
+      const token = await clerk.session.getToken();
+      return token;
+    }
+    return null;
+  } catch (e) {
+    console.warn('Could not get Clerk token:', e);
+    return null;
+  }
+}
+
 async function getAuthHeaders(isFormData = false): Promise<Record<string, string>> {
   const headers: Record<string, string> = {};
   
@@ -13,29 +35,21 @@ async function getAuthHeaders(isFormData = false): Promise<Record<string, string
     headers['Content-Type'] = 'application/json';
   }
 
-  // Retrieve active mock user ID from Zustand store or fallback key
-  let mockUser = localStorage.getItem('mockUserId');
-  if (!mockUser) {
-    const storeStr = localStorage.getItem('agri-compass-store');
-    if (storeStr) {
-      try {
-        const parsed = JSON.parse(storeStr);
-        mockUser = parsed.state?.activeUserId || '';
-      } catch (e) {
-        // ignore
-      }
-    }
-  }
-
-  if (mockUser) {
-    headers['X-Mock-User-Id'] = mockUser;
+  // Get Clerk JWT token for authenticated requests
+  const token = await getClerkToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   return headers;
 }
 
-export async function apiGet<T = any>(endpoint: string): Promise<T> {
+export async function apiGet<T = any>(endpoint: string, token?: string | null): Promise<T> {
   const headers = await getAuthHeaders();
+  // Allow manually passed token to override
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method: 'GET',
     headers,
@@ -47,13 +61,16 @@ export async function apiGet<T = any>(endpoint: string): Promise<T> {
   return response.json();
 }
 
-export async function apiPost<T = any>(endpoint: string, body: any, options?: RequestInit): Promise<T> {
+export async function apiPost<T = any>(endpoint: string, body: any, token?: string | null): Promise<T> {
   const headers = await getAuthHeaders();
+  // Allow manually passed token to override
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
-    ...options
   });
   if (!response.ok) {
     const errorBody = await response.text().catch(() => response.statusText);
@@ -64,8 +81,11 @@ export async function apiPost<T = any>(endpoint: string, body: any, options?: Re
   return response.json();
 }
 
-export async function apiPut<T = any>(endpoint: string, body: any): Promise<T> {
+export async function apiPut<T = any>(endpoint: string, body: any, token?: string | null): Promise<T> {
   const headers = await getAuthHeaders();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method: 'PUT',
     headers,

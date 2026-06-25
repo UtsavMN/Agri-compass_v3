@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/profiles")
+@RequestMapping("/api")
 public class ProfileController {
 
     private final UserService userService;
@@ -17,17 +17,60 @@ public class ProfileController {
         this.userService = userService;
     }
 
-    @GetMapping
+    // GET /api/profiles - get own profile (legacy)
+    @GetMapping("/profiles")
     public ResponseEntity<UserProfile> getProfile() {
         return ResponseEntity.ok(userService.syncUserProfile(null));
     }
 
-    @GetMapping("/{id}")
+    // GET /api/profile/me - get own profile (used by onboarding check)
+    @GetMapping("/profile/me")
+    public ResponseEntity<UserProfile> getMyProfile() {
+        return ResponseEntity.ok(userService.syncUserProfile(null));
+    }
+
+    // GET /api/profiles/{id} - get profile by ID
+    @GetMapping("/profiles/{id}")
     public ResponseEntity<UserProfile> getProfileById(@PathVariable String id) {
         return ResponseEntity.ok(userService.getProfileById(id));
     }
 
-    @PutMapping("/{id}")
+    // POST /api/profile/setup - onboarding setup
+    @PostMapping("/profile/setup")
+    public ResponseEntity<UserProfile> setupProfile(@RequestBody Map<String, Object> body) {
+        // First sync (create) the user profile from JWT
+        UserProfile profile = userService.syncUserProfile(null);
+        
+        String fullName = (String) body.get("full_name");
+        if (fullName == null) fullName = (String) body.get("fullName");
+        
+        String district = (String) body.get("district");
+        String profilePictureUrl = (String) body.get("profile_picture_url");
+        if (profilePictureUrl == null) profilePictureUrl = (String) body.get("profilePictureUrl");
+        
+        String usernameHandle = (String) body.get("username_handle");
+        if (usernameHandle == null) usernameHandle = (String) body.get("usernameHandle");
+        
+        // Update the profile fields
+        UserProfile updated = userService.updateProfileForUser(
+            profile.getClerkUserId(),
+            fullName,
+            profilePictureUrl,
+            null, // location
+            null, // phone
+            null, // language
+            district
+        );
+        
+        // Mark onboarding as completed
+        updated.setOnboardingCompleted(1);
+        updated = userService.updateProfile(updated);
+        
+        return ResponseEntity.ok(updated);
+    }
+
+    // PUT /api/profiles/{id} - update profile by ID
+    @PutMapping("/profiles/{id}")
     public ResponseEntity<UserProfile> updateProfile(@PathVariable String id, @RequestBody Map<String, Object> body) {
         String fullName = (String) body.get("fullName");
         if (fullName == null) fullName = (String) body.get("full_name");
@@ -45,7 +88,8 @@ public class ProfileController {
         return ResponseEntity.ok(profile);
     }
     
-    @PutMapping
+    // PUT /api/profiles - update own profile
+    @PutMapping("/profiles")
     public ResponseEntity<UserProfile> updateProfile(@RequestBody Map<String, Object> body) {
         String fullName = (String) body.get("fullName");
         if (fullName == null) fullName = (String) body.get("full_name");
