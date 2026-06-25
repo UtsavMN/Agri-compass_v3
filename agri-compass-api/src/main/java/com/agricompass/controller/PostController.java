@@ -8,7 +8,6 @@ import com.agricompass.repository.PostLikeRepository;
 import com.agricompass.repository.PostRepository;
 import com.agricompass.repository.UserProfileRepository;
 import com.agricompass.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.agricompass.dto.CommentResponseDTO;
 import com.agricompass.dto.UserSummaryDTO;
 import org.springframework.http.ResponseEntity;
@@ -63,14 +62,7 @@ public class PostController {
             dto.put("content", post.getBody());
             dto.put("location", post.getLocation());
             
-            ObjectMapper mapper = new ObjectMapper();
-            List<String> imageList = new ArrayList<>();
-            if (post.getImages() != null && post.getImages().startsWith("[")) {
-                try {
-                    imageList = mapper.readValue(post.getImages(), List.class);
-                } catch (Exception e) {}
-            }
-            dto.put("images", imageList);
+            dto.put("images", post.getImages());
             dto.put("video_url", post.getVideoUrl());
             dto.put("kn_caption", post.getKnCaption());
             dto.put("created_at", post.getCreatedAt() != null ? post.getCreatedAt().toString() : null);
@@ -82,10 +74,11 @@ public class PostController {
             ));
             dto.put("likes_count", postLikeRepository.countByPostId(post.getId()));
             dto.put("comments_count", commentRepository.countByPostId(post.getId()));
-            dto.put("category", post.getCropTags() != null ? post.getCropTags() : "General");
+            List<String> cropTags = post.getCropTags();
+            dto.put("category", (cropTags != null && !cropTags.isEmpty()) ? cropTags.get(0) : "General");
 
             dto.put("isLiked", currentUserId != null &&
-                postLikeRepository.findByPostIdAndUserId(post.getId(), currentUserId).isPresent());
+                postLikeRepository.findByPostIdAndClerkUserId(post.getId(), currentUserId).isPresent());
 
             dto.put("user", userDtoFromProfile(post.getUserId(), post.getUserProfile()));
 
@@ -99,23 +92,17 @@ public class PostController {
     public ResponseEntity<Post> createPost(@RequestBody Map<String, Object> body) {
         String userId = userService.syncUser(null).getId();
 
-        ObjectMapper mapper = new ObjectMapper();
-        String imagesJson = null;
-        if (body.get("images") != null) {
-            try {
-                imagesJson = mapper.writeValueAsString(body.get("images"));
-            } catch (Exception e) {}
-        }
+        String bodyContent = body.get("body") != null ? (String) body.get("body") : (String) body.get("content");
+        String category = (String) body.get("category");
 
         Post post = Post.builder()
             .userId(userId)
-            .title((String) body.get("title"))
-            .body((String) body.get("body") != null ? (String) body.get("body") : (String) body.get("content"))
+            .body(bodyContent)
             .location((String) body.get("location"))
-            .images(imagesJson)
-            .videoUrl((String) body.get("video_url"))
-            .cropTags((String) body.get("category"))
             .build();
+        if (category != null) {
+            post.setCategory(category);
+        }
         return ResponseEntity.ok(postRepository.save(post));
     }
 
@@ -132,21 +119,14 @@ public class PostController {
         dto.put("content", post.getBody());
         dto.put("location", post.getLocation());
         
-        ObjectMapper mapper = new ObjectMapper();
-        List<String> imageList = new ArrayList<>();
-        if (post.getImages() != null && post.getImages().startsWith("[")) {
-            try {
-                imageList = mapper.readValue(post.getImages(), List.class);
-            } catch (Exception e) {}
-        }
-        dto.put("images", imageList);
+        dto.put("images", post.getImages());
         dto.put("video_url", post.getVideoUrl());
         dto.put("kn_caption", post.getKnCaption());
         dto.put("created_at", post.getCreatedAt() != null ? post.getCreatedAt().toString() : null);
         
         dto.put("likes_count", postLikeRepository.countByPostId(post.getId()));
         dto.put("isLiked", currentUserId != null &&
-            postLikeRepository.findByPostIdAndUserId(post.getId(), currentUserId).isPresent());
+            postLikeRepository.findByPostIdAndClerkUserId(post.getId(), currentUserId).isPresent());
         
         dto.put("user", userDtoFromProfile(post.getUserId(), post.getUserProfile()));
         
@@ -154,9 +134,10 @@ public class PostController {
             Map<String, Object> c = new HashMap<>();
             c.put("id", comment.getId());
             c.put("content", comment.getContent());
-            c.put("user_id", comment.getUserId());
+            c.put("user_id", comment.getClerkUserId());
             c.put("created_at", comment.getCreatedAt() != null ? comment.getCreatedAt().toString() : null);
-            c.put("user", userDtoFromProfile(comment.getUserId(), comment.getUserProfile()));
+            com.agricompass.entity.UserProfile commentProfile = profileRepository.findById(comment.getClerkUserId()).orElse(null);
+            c.put("user", userDtoFromProfile(comment.getClerkUserId(), commentProfile));
             return c;
         }).toList();
         
@@ -171,12 +152,12 @@ public class PostController {
         String userId = userService.syncUser(null).getId();
         Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
         
-        Optional<PostLike> existing = postLikeRepository.findByPostIdAndUserId(id, userId);
+        Optional<PostLike> existing = postLikeRepository.findByPostIdAndClerkUserId(id, userId);
         if (existing.isPresent()) {
             postLikeRepository.delete(existing.get());
             return ResponseEntity.ok(Map.of("liked", false, "count", postLikeRepository.countByPostId(id)));
         } else {
-            postLikeRepository.save(PostLike.builder().post(post).userId(userId).build());
+            postLikeRepository.save(new PostLike(id, userId));
             return ResponseEntity.ok(Map.of("liked", true, "count", postLikeRepository.countByPostId(id)));
         }
     }
@@ -184,7 +165,8 @@ public class PostController {
     @GetMapping("/{id}/comments")
     public ResponseEntity<List<CommentResponseDTO>> getComments(@PathVariable String id) {
         List<CommentResponseDTO> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(id).stream().map(comment -> {
-            Map<String, Object> userMap = userDtoFromProfile(comment.getUserId(), comment.getUserProfile());
+            com.agricompass.entity.UserProfile commentProfile = profileRepository.findById(comment.getClerkUserId()).orElse(null);
+            Map<String, Object> userMap = userDtoFromProfile(comment.getClerkUserId(), commentProfile);
             UserSummaryDTO userDto = new UserSummaryDTO(
                 (String) userMap.get("id"),
                 (String) userMap.get("username"),
@@ -205,11 +187,10 @@ public class PostController {
         String userId = userService.syncUser(null).getId();
         Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
         
-        Comment comment = Comment.builder()
-            .post(post)
-            .userId(userId)
-            .content(body.get("content"))
-            .build();
+        Comment comment = new Comment();
+        comment.setPostId(post.getId());
+        comment.setUserId(userId);
+        comment.setContent(body.get("content"));
         comment = commentRepository.save(comment);
 
         // Fetch user profile properly for response

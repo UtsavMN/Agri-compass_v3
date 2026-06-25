@@ -37,4 +37,31 @@ public class Comment {
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    // --- Alias convenience methods for controller layer ---
+    public String getUserId() { return clerkUserId; }
+    public void setUserId(String userId) { this.clerkUserId = userId; }
+
+    public UserProfile getUserProfile() { return null; }
+
+    // --- Builder ---
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+        private Long postId;
+        private String userId;
+        private String content;
+
+        public Builder postId(Long postId) { this.postId = postId; return this; }
+        public Builder userId(String userId) { this.userId = userId; return this; }
+        public Builder content(String content) { this.content = content; return this; }
+
+        public Comment build() {
+            Comment comment = new Comment();
+            comment.postId = this.postId != null ? String.valueOf(this.postId) : null;
+            comment.clerkUserId = this.userId;
+            comment.content = this.content;
+            return comment;
+        }
+    }
 }

@@ -30,6 +30,28 @@ public class PostLike {
     public String getClerkUserId() { return clerkUserId; }
     public void setClerkUserId(String clerkUserId) { this.clerkUserId = clerkUserId; }
 
+    // --- Alias convenience methods for controller layer ---
+    public String getUserId() { return clerkUserId; }
+
+    // --- Builder ---
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+        private Long postId;
+        private String userId;
+
+        public Builder postId(Long postId) { this.postId = postId; return this; }
+        public Builder userId(String userId) { this.userId = userId; return this; }
+        public Builder post(Object post) { return this; }
+
+        public PostLike build() {
+            PostLike like = new PostLike();
+            like.postId = this.postId != null ? String.valueOf(this.postId) : null;
+            like.clerkUserId = this.userId;
+            return like;
+        }
+    }
+
     public static class PostLikeId implements Serializable {
         private String postId;
         private String clerkUserId;

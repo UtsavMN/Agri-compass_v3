@@ -77,4 +77,9 @@ public class UserProfile {
 
     public String getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+
+    // --- Alias convenience methods for controller layer ---
+    public String getId() { return clerkUserId; }
+    public String getUsername() { return usernameHandle; }
+    public String getAvatarUrl() { return profilePictureUrl; }
 }
