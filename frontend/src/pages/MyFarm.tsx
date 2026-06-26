@@ -126,8 +126,10 @@ export default function MyFarm() {
   const initializePage = async () => {
     try {
       const loadedDistrictData = await loadDistrictDataFromCSV();
-      const defaultDistrict = profile?.location || profile?.district || loadedDistrictData[0]?.district || '';
-      setSelectedDistrict(defaultDistrict);
+      if (!selectedDistrict) {
+        const defaultDistrict = profile?.location || profile?.district || loadedDistrictData[0]?.district || '';
+        setSelectedDistrict(defaultDistrict);
+      }
       await loadFarms();
     } catch (error) {
       console.error('Error initializing page:', error);

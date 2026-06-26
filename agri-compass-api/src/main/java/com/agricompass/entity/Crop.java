@@ -65,10 +65,10 @@ public class Crop {
     @Column(name = "difficulty_level")
     private String difficultyLevel;
 
-    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private CropSoilRequirement soilRequirement;
 
-    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private CropNutrient nutrient;
 
     @OneToMany(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -77,16 +77,16 @@ public class Crop {
     @OneToMany(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<CropIrrigation> irrigations;
 
-    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private CropMarketInfo marketInfo;
 
-    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private CropYieldInfo yieldInfo;
 
-    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private CropPostHarvest postHarvest;
 
-    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private CropAiScore aiScore;
 
     @OneToMany(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

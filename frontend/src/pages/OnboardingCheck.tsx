@@ -1,12 +1,15 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import { apiGet } from '@/lib/httpClient';
 import { LoadingOverlay } from '@/components/ui/loading-components';
+import { useStore } from '@/store';
 
 export default function OnboardingCheck() {
   const { getToken } = useAuth();
+  const { user: clerkUser } = useUser();
   const navigate = useNavigate();
+  const setClerkUserAndProfile = useStore(state => (state as any).setClerkUserAndProfile);
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -19,8 +22,13 @@ export default function OnboardingCheck() {
         }
 
         const profile = await apiGet('/api/profile/me');
-        if (profile && profile.onboarding_completed) {
-          navigate('/dashboard');
+        if (profile) {
+          setClerkUserAndProfile(clerkUser, profile);
+          if (profile.onboarding_completed) {
+            navigate('/dashboard');
+          } else {
+            navigate('/onboarding');
+          }
         } else {
           navigate('/onboarding');
         }
@@ -30,8 +38,10 @@ export default function OnboardingCheck() {
       }
     };
 
-    checkStatus();
-  }, [getToken, navigate]);
+    if (clerkUser) {
+      checkStatus();
+    }
+  }, [getToken, navigate, clerkUser, setClerkUserAndProfile]);
 
   return <LoadingOverlay message="Checking profile..." transparent />;
 }

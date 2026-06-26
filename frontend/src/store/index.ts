@@ -14,11 +14,7 @@ export interface Profile {
   language_preference: string | null;
 }
 
-export const MOCK_USERS = [
-  { id: 'dev_user', username: null as string | null, name: null as string | null }, // TODO: fetch real user from auth provider
-  { id: 'user_a', username: null as string | null, name: null as string | null },
-  { id: 'user_b', username: null as string | null, name: null as string | null },
-];
+export const MOCK_USERS: any[] = [];
 
 export interface Notification {
   id: string;
@@ -37,6 +33,7 @@ interface AuthSlice {
   switchUser: (userId: string) => void;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   signOut: () => Promise<void>;
+  setClerkUserAndProfile: (clerkUser: any, profile: any) => void;
 }
 
 interface DistrictSlice {
@@ -53,49 +50,17 @@ interface NotificationSlice {
 
 type StoreState = AuthSlice & DistrictSlice & NotificationSlice;
 
-// Helper to compute derived user/profile from activeUserId
-const getDerivedAuth = (activeUserId: string, profileOverrides: Partial<Profile> = {}) => {
-  const activeMock = MOCK_USERS.find(u => u.id === activeUserId) || MOCK_USERS[0];
-  const mockUser = {
-    id: activeMock.id,
-    username: activeMock.username,
-    firstName: activeMock.name ? activeMock.name.split(' ')[0] : null,
-    lastName: activeMock.name ? activeMock.name.split(' ')[1] || '' : null,
-    fullName: activeMock.name,
-    email: null, // TODO: fetch from real auth provider
-    primaryEmailAddress: { emailAddress: null }
-  };
-  const profile: Profile = {
-    id: mockUser.id,
-    username: mockUser.username,
-    full_name: mockUser.fullName,
-    email: mockUser.primaryEmailAddress.emailAddress,
-    district: null,
-    phone: null,
-    location: null,
-    language_preference: null,
-    ...profileOverrides,
-  };
-  return { user: mockUser, profile, session: { id: "mock-session-123", getToken: async () => "mock-token" } };
-};
-
 export const useStore = create<StoreState>()(
   persist(
     (set, get) => {
-      const initialAuth = getDerivedAuth('dev_user');
-
       return {
         // Auth Slice
-        activeUserId: 'dev_user',
-        ...initialAuth,
+        activeUserId: '',
+        user: null,
+        profile: null,
+        session: null,
         loading: false,
-        switchUser: (userId: string) => {
-          set(() => {
-             const derived = getDerivedAuth(userId);
-             return { activeUserId: userId, ...derived };
-          });
-          window.location.reload();
-        },
+        switchUser: (userId: string) => {},
         updateProfile: async (data: Partial<Profile>) => {
           const { user, profile } = get();
           if (!user) return;
@@ -108,14 +73,25 @@ export const useStore = create<StoreState>()(
           }
         },
         signOut: async () => {
-          get().switchUser('dev_user');
+          set({ activeUserId: '', user: null, profile: null, session: null });
+        },
+        setClerkUserAndProfile: (clerkUser: any, profile: any) => {
+          set({
+            activeUserId: clerkUser?.id || '',
+            user: clerkUser,
+            profile: profile,
+            selectedDistrict: profile?.district && profile.district !== 'Unknown' ? profile.district : get().selectedDistrict || 'Bagalkot'
+          });
         },
 
         // District Slice
         selectedDistrict: '',
         setSelectedDistrict: async (district: string) => {
           set({ selectedDistrict: district });
-          const { user } = get();
+          const { user, profile } = get();
+          if (profile) {
+            set({ profile: { ...profile, district } });
+          }
           if (user?.id && district) {
             try {
               await apiPut(`/api/profiles/${user.id}`, { location: district });
