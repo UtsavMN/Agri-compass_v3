@@ -3,10 +3,10 @@ import { ReactNode, useState, useEffect } from 'react';
 import { KrishiMitraFloat } from '@/components/ai/KrishiMitraFloat';
 import { VoiceCommandModal } from '@/components/ai/VoiceCommandModal';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useUser, UserButton } from '@clerk/clerk-react';
+import { useClerk } from '@clerk/clerk-react';
 import { DMPanel } from '@/components/DMPanel';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useDistrict } from '@/store';
+import { useDistrict, useUser } from '@/store';
 import { apiGet } from '@/lib/httpClient';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,7 @@ export default function Layout({
   hideHeader = false,
 }: LayoutProps) {
   const { user, profile, signOut } = useUser();
+  const { openUserProfile } = useClerk();
   const { language, toggleLanguage, t } = useLanguage();
   const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const navigate = useNavigate();
@@ -161,11 +162,43 @@ export default function Layout({
             {/* DMPanel */}
             {user && <DMPanel />}
 
-            {/* Profile Avatar Button (Clerk) */}
+            {/* Profile Avatar Dropdown */}
             {user && (
-              <div className="h-8 w-8 flex items-center justify-center">
-                <UserButton afterSignOutUrl="/auth" />
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="h-8 w-8 rounded-full overflow-hidden border border-earth-border/60 hover:border-gold-400/50 transition-colors focus:outline-none">
+                    <img src={user.imageUrl} alt="Profile" className="h-full w-full object-cover" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-earth-elevated border-earth-border text-gold-100 mt-2 p-2 rounded-xl">
+                  <DropdownMenuLabel className="font-black tracking-widest uppercase text-xs text-gold-400">
+                    {user.fullName || user.username || 'Farmer'}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-earth-border/40 my-2" />
+                  <DropdownMenuItem 
+                    onClick={() => navigate('/profile')}
+                    className="cursor-pointer text-xs font-bold hover:bg-earth-card focus:bg-earth-card rounded-lg transition-colors py-2.5"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    <span>My Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => openUserProfile()}
+                    className="cursor-pointer text-xs font-bold hover:bg-earth-card focus:bg-earth-card rounded-lg transition-colors py-2.5"
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Manage Account (Clerk)</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-earth-border/40 my-2" />
+                  <DropdownMenuItem 
+                    onClick={handleSignOut}
+                    className="cursor-pointer text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 rounded-lg transition-colors py-2.5"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign Out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
             {/* Mobile Hamburger Button */}
@@ -284,6 +317,15 @@ export default function Layout({
                     className="w-full bg-[#1a1a14] border border-earth-border/60 hover:bg-earth-card text-gold-100 text-xs font-black uppercase tracking-widest py-3 rounded-xl"
                   >
                     Profile Settings
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      openUserProfile();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full bg-[#1a1a14] border border-earth-border/60 hover:bg-earth-card text-gold-100 text-xs font-black uppercase tracking-widest py-3 rounded-xl"
+                  >
+                    Manage Account (Clerk)
                   </Button>
                   <Button
                     onClick={handleSignOut}

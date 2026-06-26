@@ -31,6 +31,13 @@ public class Post {
 
     public Post() {}
 
+    @PrePersist
+    public void generateId() {
+        if (this.id == null) {
+            this.id = java.util.UUID.randomUUID().toString();
+        }
+    }
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -109,6 +116,7 @@ public class Post {
 
         public Post build() {
             Post post = new Post();
+            post.id = java.util.UUID.randomUUID().toString();
             post.clerkUserId = this.userId;
             post.content = this.body;
             post.district = this.location;
