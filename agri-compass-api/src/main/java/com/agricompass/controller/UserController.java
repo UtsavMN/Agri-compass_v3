@@ -63,7 +63,7 @@ public class UserController {
     @GetMapping("/{userId}/public")
     public ResponseEntity<Map<String, Object>> getPublicProfile(@PathVariable String userId) {
         userId = userId.trim();
-        UserProfile profile = userProfileRepository.findById(userId).orElse(null);
+        UserProfile profile = userProfileRepository.findByIdIgnoreCase(userId).orElse(null);
         if (profile == null) {
             return ResponseEntity.notFound().build();
         }
