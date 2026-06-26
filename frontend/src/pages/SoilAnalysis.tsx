@@ -114,7 +114,7 @@ export function SoilAnalysisContent() {
         }
         return prev;
       });
-    }, 1200);
+    }, 50);
 
     try {
       const payload = {

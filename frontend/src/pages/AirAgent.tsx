@@ -145,7 +145,7 @@ export default function AirAgent() {
             m.id === assistantMsg.id ? { ...m, isTyping: false } : m
           )
         );
-      }, answer.length * 30 + 500);
+      }, 0);
     } catch (error) {
       const err = error as { message?: string };
       toast({

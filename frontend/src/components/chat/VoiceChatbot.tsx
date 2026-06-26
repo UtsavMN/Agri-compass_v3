@@ -17,10 +17,6 @@ export const VoiceChatbot = () => {
     setInput("");
     
     // Mock response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { text: "ನಾನು ನಿಮ್ಮ ಮಣ್ಣಿನ ಪರೀಕ್ಷೆಯನ್ನು ವಿಶ್ಲೇಷಿಸುತ್ತಿದ್ದೇನೆ...", sender: "bot" },
       ]);
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 1000);
