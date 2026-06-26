@@ -34,6 +34,13 @@ public class Message {
 
     public Message() {}
 
+    @PrePersist
+    public void generateId() {
+        if (this.id == null) {
+            this.id = java.util.UUID.randomUUID().toString();
+        }
+    }
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
