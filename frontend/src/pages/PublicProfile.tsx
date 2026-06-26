@@ -42,12 +42,25 @@ export const PublicProfile = () => {
     // Fetch public profile data
     apiGet(`/api/users/${userId}/public`)
       .then(data => {
-        setProfile(data.profile);
-        setPosts(data.posts || []);
-        setFollowerCount(data.followerCount || 0);
-        setFollowingCount(data.followingCount || 0);
+        if (data.profile) {
+          setProfile(data.profile);
+          setPosts(data.posts || []);
+          setFollowerCount(data.followerCount || 0);
+          setFollowingCount(data.followingCount || 0);
+        } else {
+          throw new Error("Profile empty");
+        }
       })
-      .catch(err => console.error("Failed to load profile", err))
+      .catch(err => {
+        console.error("Failed to load profile", err);
+        // Fallback generic profile
+        setProfile({
+          clerkUserId: userId,
+          fullName: "Farmer",
+          usernameHandle: "farmer",
+          district: "Unknown"
+        });
+      })
       .finally(() => setLoading(false));
 
     // Check follow status

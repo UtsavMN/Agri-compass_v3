@@ -62,6 +62,7 @@ public class UserController {
 
     @GetMapping("/{userId}/public")
     public ResponseEntity<Map<String, Object>> getPublicProfile(@PathVariable String userId) {
+        userId = userId.trim();
         UserProfile profile = userProfileRepository.findById(userId).orElse(null);
         if (profile == null) {
             return ResponseEntity.notFound().build();
@@ -75,16 +76,27 @@ public class UserController {
         profileMap.put("profilePictureUrl", profile.getAvatarUrl());
         profileMap.put("bio", profile.getBio());
 
-        List<com.agricompass.entity.Post> posts = postRepository.findByClerkUserId(userId);
-        List<Map<String, Object>> postsList = posts.stream().map(p -> {
-            Map<String, Object> pMap = new HashMap<>();
-            pMap.put("id", p.getId());
-            pMap.put("content", p.getBody());
-            return pMap;
-        }).collect(Collectors.toList());
+        List<Map<String, Object>> postsList = new java.util.ArrayList<>();
+        try {
+            List<com.agricompass.entity.Post> posts = postRepository.findByClerkUserId(userId);
+            postsList = posts.stream().map(p -> {
+                Map<String, Object> pMap = new HashMap<>();
+                pMap.put("id", p.getId());
+                pMap.put("content", p.getBody());
+                return pMap;
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-        int followerCount = followRepository.countByFollowingId(userId);
-        int followingCount = followRepository.countByFollowerId(userId);
+        int followerCount = 0;
+        int followingCount = 0;
+        try {
+            followerCount = followRepository.countByFollowingId(userId);
+            followingCount = followRepository.countByFollowerId(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("profile", profileMap);

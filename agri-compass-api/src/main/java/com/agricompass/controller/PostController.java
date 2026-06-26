@@ -61,6 +61,11 @@ public class PostController {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page - 1), limit);
         org.springframework.data.domain.Page<Post> postsPage = postRepository.findWithFilters(query, loc, userIdFilter, followedIds, pageable);
 
+        List<String> userIds = postsPage.getContent().stream().map(Post::getUserId).distinct().toList();
+        List<com.agricompass.entity.UserProfile> profiles = profileRepository.findAllById(userIds);
+        Map<String, com.agricompass.entity.UserProfile> profileMap = profiles.stream()
+                .collect(Collectors.toMap(com.agricompass.entity.UserProfile::getId, p -> p));
+
         List<Map<String, Object>> result = postsPage.map(post -> {
             Map<String, Object> dto = new HashMap<>();
             dto.put("id", post.getId());
@@ -88,7 +93,8 @@ public class PostController {
             dto.put("isLiked", currentUserId != null &&
                 postLikeRepository.findByPostIdAndClerkUserId(post.getId(), currentUserId).isPresent());
 
-            dto.put("user", userDtoFromProfile(post.getUserId(), post.getUserProfile()));
+            com.agricompass.entity.UserProfile p = profileMap.get(post.getUserId());
+            dto.put("user", userDtoFromProfile(post.getUserId(), p));
 
             return dto;
         }).getContent();

@@ -14,15 +14,11 @@ import org.springframework.data.jpa.repository.EntityGraph;
 public interface PostRepository extends JpaRepository<Post, String> {
     List<Post> findByClerkUserId(String clerkUserId);
 
-    @Query(value = "SELECT p FROM Post p LEFT JOIN FETCH p.userProfile WHERE " +
+    @Query("SELECT p FROM Post p WHERE " +
            "(:q IS NULL OR LOWER(p.content) LIKE LOWER(CONCAT('%', :q, '%'))) AND " +
            "(:district IS NULL OR LOWER(p.district) LIKE LOWER(CONCAT('%', :district, '%'))) AND " +
            "(:authorId IS NULL OR p.clerkUserId = :authorId) " +
-           "ORDER BY CASE WHEN p.clerkUserId IN :followedIds THEN 1 ELSE 0 END DESC, p.createdAt DESC",
-           countQuery = "SELECT COUNT(p) FROM Post p WHERE " +
-           "(:q IS NULL OR LOWER(p.content) LIKE LOWER(CONCAT('%', :q, '%'))) AND " +
-           "(:district IS NULL OR LOWER(p.district) LIKE LOWER(CONCAT('%', :district, '%'))) AND " +
-           "(:authorId IS NULL OR p.clerkUserId = :authorId)")
+           "ORDER BY CASE WHEN p.clerkUserId IN :followedIds THEN 1 ELSE 0 END DESC, p.createdAt DESC")
     Page<Post> findWithFilters(@Param("q") String q,
                                @Param("district") String district,
                                @Param("authorId") String authorId,
