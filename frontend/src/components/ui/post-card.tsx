@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Avatar, AvatarImage, AvatarFallback } from './avatar'
 import { Button } from './button'
@@ -57,6 +58,7 @@ export const PostCard = React.memo(function PostCard({
   const [isLoadingComments, setIsLoadingComments] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (isCommenting) {
@@ -101,7 +103,7 @@ export const PostCard = React.memo(function PostCard({
     <Card className="card-premium border-none shadow-premium mb-6 overflow-hidden">
       <div className="p-5">
         <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
+          <button className="flex items-center gap-3 text-left hover:opacity-80 transition-opacity" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (post.user?.id) navigate(`/profile/${post.user.id}`); }}>
             <Avatar className="h-10 w-10 border border-gold-400/20">
               <AvatarImage src={post.user?.avatar_url} />
               <AvatarFallback className="bg-gold-400/10 text-gold-400 font-bold">{((post.user?.username || post.user?.full_name || 'Farmer')[0] || 'F').toUpperCase()}</AvatarFallback>
@@ -119,7 +121,7 @@ export const PostCard = React.memo(function PostCard({
                 {post.created_at ? format(new Date(post.created_at), 'MMMM dd, yyyy') : 'Recently'}
               </p>
             </div>
-          </div>
+          </button>
           {currentUserId === post.user?.id && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -216,13 +218,17 @@ export const PostCard = React.memo(function PostCard({
                       animate={{ opacity: 1, x: 0 }}
                       className="flex gap-4 p-4 bg-earth-elevated/40 rounded-2xl border border-earth-border/50"
                     >
-                      <Avatar className="h-8 w-8 border border-gold-400/10">
-                        <AvatarImage src={comment.user?.avatar_url} />
-                        <AvatarFallback className="bg-gold-400/5 text-gold-400 text-[10px] font-black">{((comment.user?.username || comment.user?.full_name || 'F')[0] || 'F').toUpperCase()}</AvatarFallback>
-                      </Avatar>
+                      <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (comment.user?.id) navigate(`/profile/${comment.user.id}`); }} className="flex-shrink-0 hover:opacity-80 transition-opacity">
+                        <Avatar className="h-8 w-8 border border-gold-400/10">
+                          <AvatarImage src={comment.user?.avatar_url} />
+                          <AvatarFallback className="bg-gold-400/5 text-gold-400 text-[10px] font-black">{((comment.user?.username || comment.user?.full_name || 'F')[0] || 'F').toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                      </button>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-black text-[10px] text-gold-100 uppercase tracking-tighter">{comment.user?.full_name || comment.user?.username || 'Farmer'}</span>
+                          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (comment.user?.id) navigate(`/profile/${comment.user.id}`); }} className="font-black text-[10px] text-gold-100 uppercase tracking-tighter hover:text-gold-400">
+                            {comment.user?.full_name || comment.user?.username || 'Farmer'}
+                          </button>
                           <span className="text-[9px] font-bold text-gold-100/20 uppercase tracking-widest">{comment.created_at ? format(new Date(comment.created_at), 'MMM d') : 'Recently'}</span>
                         </div>
                         <p className="text-xs text-gold-100/60 leading-relaxed">{comment.content}</p>

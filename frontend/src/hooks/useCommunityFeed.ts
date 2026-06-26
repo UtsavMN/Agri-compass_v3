@@ -16,16 +16,20 @@ export interface Post {
   has_liked?: boolean;
 }
 
-export const useCommunityFeed = (category?: string) => {
+export const useCommunityFeed = (category?: string, feedScope: 'global' | 'local' = 'global', district?: string) => {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   const fetchPosts = useCallback(async () => {
     try {
-      const url = category && category !== 'All'
-        ? `/api/posts?category=${category}&page=1&limit=50`
-        : `/api/posts?page=1&limit=50`;
+      let url = '/api/posts?page=1&limit=50';
+      if (category && category !== 'All') {
+        url += `&category=${category}`;
+      }
+      if (feedScope === 'local' && district) {
+        url += `&location=${encodeURIComponent(district)}`;
+      }
       
       const res = await apiGet(url);
       setPosts(res || []);
@@ -35,7 +39,7 @@ export const useCommunityFeed = (category?: string) => {
     } finally {
       setLoading(false);
     }
-  }, [category]);
+  }, [category, feedScope, district]);
 
   useEffect(() => {
     fetchPosts(); // immediate first fetch

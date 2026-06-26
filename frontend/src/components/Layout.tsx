@@ -4,7 +4,6 @@ import { KrishiMitraFloat } from '@/components/ai/KrishiMitraFloat';
 import { VoiceCommandModal } from '@/components/ai/VoiceCommandModal';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useClerk } from '@clerk/clerk-react';
-import { DMPanel } from '@/components/DMPanel';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDistrict, useUser } from '@/store';
 import { apiGet } from '@/lib/httpClient';
@@ -158,8 +157,12 @@ export default function Layout({
                   ))}
                 </SelectContent>
               </Select>
-            </div>            {/* DMPanel */}
-            {user && <DMPanel />}
+            </div>            {/* Messages Button */}
+            {user && (
+              <button onClick={() => navigate('/messages')} className="relative p-2 text-gold-100/70 hover:text-gold-100 transition-colors">
+                <MessageSquare className="h-5 w-5" />
+              </button>
+            )}
 
             {/* Profile Avatar Button */}
             {user && (

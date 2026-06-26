@@ -31,6 +31,12 @@ const Crops = React.lazy(() => import('@/pages/Crops'));
 const SoilAnalysis = React.lazy(() => import('@/pages/SoilAnalysis'));
 const Onboarding = React.lazy(() => import('@/pages/Onboarding'));
 const OnboardingCheck = React.lazy(() => import('@/pages/OnboardingCheck'));
+const MessagesPage = React.lazy(() => import('@/pages/MessagesPage'));
+const ChatPage = React.lazy(() => import('@/pages/ChatPage'));
+const PublicProfile = React.lazy(() => import('@/pages/PublicProfile'));
+const FollowersPage = React.lazy(() => import('@/pages/FollowersPage'));
+const FollowingPage = React.lazy(() => import('@/pages/FollowingPage'));
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const MainLayout = () => {
   return (
@@ -63,9 +69,10 @@ function App() {
       <ThemeProvider>
         <Router>
           <LanguageProvider>
-            <Suspense fallback={<LoadingOverlay message="Loading Agri Compass..." transparent />}>
-              <Routes>
-                {/* Public Routes without persistent Layout */}
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingOverlay message="Loading Agri Compass..." transparent />}>
+                <Routes>
+                  {/* Public Routes without persistent Layout */}
                 <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
                 <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
                 <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
@@ -94,10 +101,16 @@ function App() {
                   <Route path="/post/:id" element={<PostDetail />} />
                   <Route path="/crops" element={<Crops />} />
                   <Route path="/soil-analysis" element={<SoilAnalysis />} />
+                  <Route path="/messages" element={<MessagesPage />} />
+                  <Route path="/messages/:userId" element={<ChatPage />} />
+                  <Route path="/profile/:userId" element={<PublicProfile />} />
+                  <Route path="/profile/:userId/followers" element={<FollowersPage />} />
+                  <Route path="/profile/:userId/following" element={<FollowingPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
-              </Routes>
-            </Suspense>
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
             <Toaster />
             <VoiceChatbot />
           </LanguageProvider>

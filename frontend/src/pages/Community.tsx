@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { useUser, MOCK_USERS } from '@/store';
+import { useUser } from '@clerk/clerk-react';
 import { useDistrict } from '@/store';
 import { PostsAPI, Post } from '@/lib/api/posts'
 import { UploadAPI } from '@/lib/api/upload'
@@ -49,10 +49,10 @@ export default function Community() {
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [filterDate, setFilterDate] = useState('')
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
-  const [showOnlyLocal, setShowOnlyLocal] = useState(false)
+  const [feedScope, setFeedScope] = useState<'global' | 'local'>('global')
   const [selectedTopic, setSelectedTopic] = useState('all')
 
-  const { posts, loading: isFetchingPosts, refetch: fetchPosts } = useCommunityFeed(selectedTopic === 'all' ? undefined : selectedTopic)
+  const { posts, loading: isFetchingPosts, refetch: fetchPosts } = useCommunityFeed(selectedTopic === 'all' ? undefined : selectedTopic, feedScope, selectedDistrict)
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
@@ -93,12 +93,6 @@ export default function Community() {
     const query = debouncedQuery.toLowerCase()
     return posts
       .filter(post => {
-        if (showOnlyLocal && selectedDistrict) {
-          return post.location?.toLowerCase().includes(selectedDistrict.toLowerCase())
-        }
-        return true
-      })
-      .filter(post => {
         if (selectedTopic === 'all') return true
         const topicObj = TOPICS.find(t => t.id === selectedTopic)
         if (!topicObj) return true
@@ -120,7 +114,7 @@ export default function Community() {
           return false
         }
       })
-  }, [posts, selectedDistrict, debouncedQuery, filterDate, showOnlyLocal, selectedTopic])
+  }, [posts, selectedDistrict, debouncedQuery, filterDate, feedScope, selectedTopic])
 
   const handleCreatePost = async () => {
     if (!newPostContent.trim() && mediaFiles.length === 0) return
@@ -272,16 +266,16 @@ export default function Community() {
                       </div>
                       <div className="md:col-span-2 border-t md:border-t-0 md:border-l border-earth-border/50 flex items-center justify-center bg-gold-400/5">
                          <button 
-                          onClick={() => setShowOnlyLocal(!showOnlyLocal)}
-                          className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${showOnlyLocal && selectedDistrict ? 'text-gold-400' : 'text-gold-100/20 hover:text-gold-100/40'}`}
+                          onClick={() => setFeedScope(feedScope === 'global' ? 'local' : 'global')}
+                          className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${feedScope === 'local' && selectedDistrict ? 'text-gold-400' : 'text-gold-100/20 hover:text-gold-100/40'}`}
                          >
-                            <Filter size={12} /> {showOnlyLocal ? 'Local' : 'Global'}
+                            <Filter size={12} /> {feedScope === 'local' ? 'Local' : 'Global'}
                          </button>
                       </div>
                     </div>
                   </Card>
                   
-                  {selectedDistrict && showOnlyLocal && (
+                  {selectedDistrict && feedScope === 'local' && (
                      <div className="flex items-center gap-2 mt-4 px-2">
                         <MapPin size={10} className="text-gold-400" />
                         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gold-100/30">Feed Restricted to district: <span className="text-gold-400">{selectedDistrict}</span></span>
@@ -408,7 +402,7 @@ export default function Community() {
                             onClick: () => {
                               setSearchQuery('')
                               setFilterDate('')
-                              setShowOnlyLocal(false)
+                              setFeedScope('global')
                               setSelectedTopic('all')
                             }
                           }}

@@ -4,6 +4,7 @@ import com.agricompass.entity.Comment;
 import com.agricompass.entity.Post;
 import com.agricompass.entity.PostLike;
 import com.agricompass.repository.CommentRepository;
+import com.agricompass.repository.FollowRepository;
 import com.agricompass.repository.PostLikeRepository;
 import com.agricompass.repository.PostRepository;
 import com.agricompass.repository.UserProfileRepository;
@@ -25,13 +26,15 @@ public class PostController {
     private final CommentRepository commentRepository;
     private final UserProfileRepository profileRepository;
     private final UserService userService;
+    private final FollowRepository followRepository;
 
-    public PostController(PostRepository postRepository, PostLikeRepository postLikeRepository, CommentRepository commentRepository, UserProfileRepository profileRepository, UserService userService) {
+    public PostController(PostRepository postRepository, PostLikeRepository postLikeRepository, CommentRepository commentRepository, UserProfileRepository profileRepository, UserService userService, FollowRepository followRepository) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.commentRepository = commentRepository;
         this.profileRepository = profileRepository;
         this.userService = userService;
+        this.followRepository = followRepository;
     }
 
     @GetMapping
@@ -49,9 +52,14 @@ public class PostController {
         String userIdFilter = (requestedUser != null && !requestedUser.trim().isEmpty()) ? requestedUser : null;
 
         String currentUserId = userService.syncUser(null).getId();
+        List<String> followedIds = followRepository.findByFollowerId(currentUserId)
+                .stream().map(f -> f.getFollowingId()).toList();
+        if (followedIds.isEmpty()) {
+            followedIds = List.of("dummy_id_no_match");
+        }
         
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page - 1), limit);
-        org.springframework.data.domain.Page<Post> postsPage = postRepository.findWithFilters(query, loc, userIdFilter, pageable);
+        org.springframework.data.domain.Page<Post> postsPage = postRepository.findWithFilters(query, loc, userIdFilter, followedIds, pageable);
 
         List<Map<String, Object>> result = postsPage.map(post -> {
             Map<String, Object> dto = new HashMap<>();
@@ -94,11 +102,16 @@ public class PostController {
 
         String bodyContent = body.get("body") != null ? (String) body.get("body") : (String) body.get("content");
         String category = (String) body.get("category");
+        
+        com.agricompass.entity.UserProfile userProfile = profileRepository.findById(userId).orElse(null);
+        String location = (userProfile != null && userProfile.getDistrict() != null && !userProfile.getDistrict().isEmpty()) 
+                ? userProfile.getDistrict() 
+                : (String) body.get("location");
 
         Post post = Post.builder()
             .userId(userId)
             .body(bodyContent)
-            .location((String) body.get("location"))
+            .location(location)
             .build();
         if (category != null) {
             post.setCategory(category);
