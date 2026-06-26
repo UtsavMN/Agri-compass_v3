@@ -6,7 +6,7 @@ import { staggerContainer, fadeUpVariants } from "@/lib/animations";
 import { useUser } from "@/store";
 import { apiGet } from "@/lib/httpClient";
 import { FarmIntelligenceCard } from "@/components/FarmIntelligenceCard";
-import { MoreVertical, Settings, LogOut, User } from "lucide-react";
+import { MoreVertical, Settings, LogOut, User, MessageSquare, Sprout } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,

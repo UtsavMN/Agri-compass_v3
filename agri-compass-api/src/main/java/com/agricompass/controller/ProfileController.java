@@ -59,7 +59,9 @@ public class ProfileController {
             null, // location
             null, // phone
             null, // language
-            district
+            district,
+            usernameHandle,
+            null // bio
         );
         
         // Mark onboarding as completed
@@ -84,7 +86,11 @@ public class ProfileController {
         if (languagePreference == null) languagePreference = (String) body.get("languagePreference");
         String district = (String) body.get("district");
         
-        UserProfile profile = userService.updateProfileForUser(id, fullName, avatarUrl, location, phone, languagePreference, district);
+        String usernameHandle = (String) body.get("usernameHandle");
+        if (usernameHandle == null) usernameHandle = (String) body.get("username_handle");
+        String bio = (String) body.get("bio");
+        
+        UserProfile profile = userService.updateProfileForUser(id, fullName, avatarUrl, location, phone, languagePreference, district, usernameHandle, bio);
         return ResponseEntity.ok(profile);
     }
     
@@ -103,7 +109,11 @@ public class ProfileController {
         if (languagePreference == null) languagePreference = (String) body.get("languagePreference");
         String district = (String) body.get("district");
         
-        UserProfile profile = userService.updateProfile(fullName, avatarUrl, location, phone, languagePreference, district);
+        String usernameHandle = (String) body.get("usernameHandle");
+        if (usernameHandle == null) usernameHandle = (String) body.get("username_handle");
+        String bio = (String) body.get("bio");
+        
+        UserProfile profile = userService.updateProfile(fullName, avatarUrl, location, phone, languagePreference, district, usernameHandle, bio);
         return ResponseEntity.ok(profile);
     }
 }

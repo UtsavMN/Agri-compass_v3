@@ -75,7 +75,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserProfile updateProfileForUser(String id, String fullName, String avatarUrl, String location, String phone, String languagePreference, String district) {
+    public UserProfile updateProfileForUser(String id, String fullName, String avatarUrl, String location, String phone, String languagePreference, String district, String usernameHandle, String bio) {
         UserProfile profile = userProfileRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Profile not found for id: " + id));
 
@@ -85,17 +85,19 @@ public class UserService {
         if (phone != null) profile.setPhone(phone);
         if (languagePreference != null) profile.setLanguage(languagePreference);
         if (district != null) profile.setDistrict(district);
+        if (usernameHandle != null) profile.setUsernameHandle(usernameHandle);
+        if (bio != null) profile.setBio(bio);
 
         return userProfileRepository.save(profile);
     }
 
     @Transactional
-    public UserProfile updateProfile(String fullName, String avatarUrl, String location, String phone, String languagePreference, String district) {
+    public UserProfile updateProfile(String fullName, String avatarUrl, String location, String phone, String languagePreference, String district, String usernameHandle, String bio) {
         UserProfile current = syncUser(null);
         if (current == null) {
             throw new RuntimeException("No authenticated user found");
         }
-        return updateProfileForUser(current.getId(), fullName, avatarUrl, location, phone, languagePreference, district);
+        return updateProfileForUser(current.getId(), fullName, avatarUrl, location, phone, languagePreference, district, usernameHandle, bio);
     }
 
     public UserProfile updateProfile(UserProfile profile) {
