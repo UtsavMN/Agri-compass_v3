@@ -14,14 +14,13 @@ import org.springframework.data.jpa.repository.EntityGraph;
 public interface PostRepository extends JpaRepository<Post, String> {
     List<Post> findByClerkUserId(String clerkUserId);
 
-    @Query("SELECT p FROM Post p LEFT JOIN p.userProfile up WHERE " +
-           "(:q IS NULL OR LOWER(p.content) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(up.fullName) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(up.usernameHandle) LIKE LOWER(CONCAT('%', :q, '%'))) AND " +
-           "(:district IS NULL OR LOWER(p.district) LIKE LOWER(CONCAT('%', :district, '%'))) AND " +
+    @Query("SELECT p FROM Post p WHERE " +
+           "(:q IS NULL OR LOWER(p.content) LIKE LOWER('%' || :q || '%')) AND " +
+           "(:district IS NULL OR LOWER(p.district) LIKE LOWER('%' || :district || '%')) AND " +
            "(:authorId IS NULL OR p.clerkUserId = :authorId) " +
-           "ORDER BY CASE WHEN p.clerkUserId IN :followedIds THEN 1 ELSE 0 END DESC, p.createdAt DESC")
+           "ORDER BY p.createdAt DESC")
     Page<Post> findWithFilters(@Param("q") String q,
                                @Param("district") String district,
                                @Param("authorId") String authorId,
-                               @Param("followedIds") java.util.List<String> followedIds,
                                Pageable pageable);
 }

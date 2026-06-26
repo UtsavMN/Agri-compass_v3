@@ -59,7 +59,7 @@ public class PostController {
         }
         
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page - 1), limit);
-        org.springframework.data.domain.Page<Post> postsPage = postRepository.findWithFilters(query, loc, userIdFilter, followedIds, pageable);
+        org.springframework.data.domain.Page<Post> postsPage = postRepository.findWithFilters(query, loc, userIdFilter, pageable);
 
         List<String> userIds = postsPage.getContent().stream().map(Post::getUserId).distinct().toList();
         List<com.agricompass.entity.UserProfile> profiles = profileRepository.findAllById(userIds);
