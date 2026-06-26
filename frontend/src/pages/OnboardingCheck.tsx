@@ -7,7 +7,7 @@ import { useStore } from '@/store';
 
 export default function OnboardingCheck() {
   const { getToken } = useAuth();
-  const { user: clerkUser } = useUser();
+  const { user: clerkUser, isLoaded: isUserLoaded } = useUser();
   const navigate = useNavigate();
   const setClerkUserAndProfile = useStore(state => (state as any).setClerkUserAndProfile);
 
@@ -38,10 +38,10 @@ export default function OnboardingCheck() {
       }
     };
 
-    if (clerkUser) {
+    if (isUserLoaded && clerkUser) {
       checkStatus();
     }
-  }, [getToken, navigate, clerkUser, setClerkUserAndProfile]);
+  }, [getToken, navigate, clerkUser, isUserLoaded, setClerkUserAndProfile]);
 
   return <LoadingOverlay message="Checking profile..." transparent />;
 }

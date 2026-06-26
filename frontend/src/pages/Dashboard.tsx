@@ -130,12 +130,6 @@ export default function Dashboard() {
       // Load districts from CSV before choosing a default district.
       const loadedDistrictData = await loadDistrictDataFromCSV();
 
-      // Set default district from profile or first available if not set
-      if (!selectedDistrict) {
-        const defaultDistrict = profile?.location || profile?.district || loadedDistrictData[0]?.district || '';
-        setSelectedDistrict(defaultDistrict);
-      }
-
       // Load crops — API returns Spring Page object with .content
       const data = await apiGet('/api/crops?page=0&size=6&sortBy=name');
       setCrops(data?.content || []);

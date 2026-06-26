@@ -80,7 +80,7 @@ export const useStore = create<StoreState>()(
             activeUserId: clerkUser?.id || '',
             user: clerkUser,
             profile: profile,
-            selectedDistrict: profile?.district && profile.district !== 'Unknown' ? profile.district : get().selectedDistrict || 'Bagalkot'
+            selectedDistrict: profile?.district && profile.district !== 'Unknown' ? profile.district : get().selectedDistrict || ''
           });
         },
 

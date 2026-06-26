@@ -6,10 +6,12 @@ import { useStore } from "@/store";
 import { apiGet } from "@/lib/httpClient";
 
 export const RouteGuard = ({ children }: { children: React.ReactNode }) => {
-  const { isSignedIn, isLoaded } = useAuth();
-  const { user: clerkUser } = useUser();
+  const { isSignedIn, isLoaded: isAuthLoaded } = useAuth();
+  const { user: clerkUser, isLoaded: isUserLoaded } = useUser();
   const [profileLoaded, setProfileLoaded] = useState(false);
   const setClerkUserAndProfile = useStore(state => (state as any).setClerkUserAndProfile);
+  
+  const isLoaded = isAuthLoaded && isUserLoaded;
 
   useEffect(() => {
     if (isLoaded && isSignedIn && clerkUser) {
