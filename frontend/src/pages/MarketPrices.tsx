@@ -239,26 +239,36 @@ export default function MarketPrices() {
                   <CardDescription className="text-gold-100/40">Comparing input costs directly against projected returns per acre</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <div className="h-80 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData} barGap={6}>
-                        <CartesianGrid stroke="#1e1e18" strokeDasharray="3 3" />
-                        <XAxis dataKey="name" stroke="#68685e" tick={{ fontSize: 10, fill: '#b5b5ad' }} />
-                        <YAxis stroke="#68685e" tick={{ fontSize: 10, fill: '#b5b5ad' }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#1a1a14', borderColor: '#333324', borderRadius: '12px' }}
-                          labelStyle={{ color: '#BA7517', fontWeight: 'bold' }}
-                          formatter={(value: number) => [formatINR(value)]} 
-                        />
-                        <Bar dataKey="investment" name="Investment" fill="#BA7517" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="profit" name="Net Profit" radius={[4, 4, 0, 0]}>
-                          {chartData.map((entry, i) => (
-                            <Cell key={i} fill={entry.profit > 0 ? '#10b981' : '#ef4444'} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  {loading ? (
+                    <div className="h-80 w-full flex items-center justify-center bg-earth-elevated/20 rounded-xl animate-pulse">
+                      <p className="text-gold-100/30 text-sm font-bold uppercase tracking-widest">Loading Economics Data...</p>
+                    </div>
+                  ) : chartData.length > 0 ? (
+                    <div className="h-80 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={chartData} barGap={6}>
+                          <CartesianGrid stroke="#1e1e18" strokeDasharray="3 3" />
+                          <XAxis dataKey="name" stroke="#68685e" tick={{ fontSize: 10, fill: '#b5b5ad' }} />
+                          <YAxis stroke="#68685e" tick={{ fontSize: 10, fill: '#b5b5ad' }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#1a1a14', borderColor: '#333324', borderRadius: '12px' }}
+                            labelStyle={{ color: '#BA7517', fontWeight: 'bold' }}
+                            formatter={(value: number) => [formatINR(value)]} 
+                          />
+                          <Bar dataKey="investment" name="Investment" fill="#BA7517" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="profit" name="Net Profit" radius={[4, 4, 0, 0]}>
+                            {chartData.map((entry, i) => (
+                              <Cell key={i} fill={entry.profit > 0 ? '#10b981' : '#ef4444'} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="h-80 w-full flex items-center justify-center bg-earth-elevated/20 rounded-xl">
+                      <p className="text-gold-100/30 text-sm font-bold uppercase tracking-widest">No Data Available</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </ScrollReveal>

@@ -57,8 +57,8 @@ function App() {
     <ClerkProvider 
       publishableKey={PUBLISHABLE_KEY}
       appearance={{ baseTheme: dark }}
-      afterSignInUrl="/onboarding-check"
-      afterSignUpUrl="/onboarding"
+      fallbackRedirectUrl="/onboarding-check"
+      signUpFallbackRedirectUrl="/onboarding"
     >
       <ThemeProvider>
         <Router>

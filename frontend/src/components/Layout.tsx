@@ -9,6 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useDistrict, useUser } from '@/store';
 import { apiGet } from '@/lib/httpClient';
 import { cn } from '@/lib/utils';
+import { useOnboardingGate } from '@/hooks/useOnboardingGate';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -61,6 +62,8 @@ export default function Layout({
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
+
+  useOnboardingGate();
 
 
   const handleSignOut = async () => {
@@ -140,65 +143,20 @@ export default function Layout({
               <span className="text-[10px] font-bold uppercase">ಧ್ವನಿ</span>
             </Button>
 
-            {/* Global District Selector */}
-            <div className="flex items-center gap-1.5 bg-[#1a1a14]/90 border border-earth-border/80 rounded-full px-2.5 py-1 text-[10px] font-bold text-gold-100 transition-all hover:border-gold-400/40">
-              <MapPin className="h-3.5 w-3.5 text-gold-400 animate-pulse" />
-              <Select value={selectedDistrict || 'Bengaluru Urban'} onValueChange={setSelectedDistrict}>
-                <SelectTrigger className="w-24 bg-transparent border-none focus:ring-0 h-auto p-0 text-[10px] font-bold text-gold-100 uppercase notranslate" translate="no">
-                  <SelectValue placeholder="Select District" />
-                </SelectTrigger>
-                <SelectContent className="bg-earth-elevated border-earth-border notranslate" translate="no">
-                  {Object.keys(DISTRICTS).sort().map((d) => (
-                    <SelectItem key={d} value={d} className="text-gold-100 hover:bg-earth-card text-[10px]">
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
+            {/* Removed Global District Selector per instructions */}
 
 
             {/* DMPanel */}
             {user && <DMPanel />}
 
-            {/* Profile Avatar Dropdown */}
+            {/* Profile Avatar Button */}
             {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="h-8 w-8 rounded-full overflow-hidden border border-earth-border/60 hover:border-gold-400/50 transition-colors focus:outline-none">
-                    <img src={user.imageUrl} alt="Profile" className="h-full w-full object-cover" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-earth-elevated border-earth-border text-gold-100 mt-2 p-2 rounded-xl">
-                  <DropdownMenuLabel className="font-black tracking-widest uppercase text-xs text-gold-400">
-                    {user.fullName || user.username || 'Farmer'}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-earth-border/40 my-2" />
-                  <DropdownMenuItem 
-                    onClick={() => navigate('/profile')}
-                    className="cursor-pointer text-xs font-bold hover:bg-earth-card focus:bg-earth-card rounded-lg transition-colors py-2.5"
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    <span>My Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => openUserProfile()}
-                    className="cursor-pointer text-xs font-bold hover:bg-earth-card focus:bg-earth-card rounded-lg transition-colors py-2.5"
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Manage Account (Clerk)</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-earth-border/40 my-2" />
-                  <DropdownMenuItem 
-                    onClick={handleSignOut}
-                    className="cursor-pointer text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 rounded-lg transition-colors py-2.5"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sign Out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <button 
+                onClick={() => navigate('/profile')}
+                className="h-8 w-8 rounded-full overflow-hidden border border-earth-border/60 hover:border-gold-400/50 transition-colors focus:outline-none"
+              >
+                <img src={user.imageUrl} alt="Profile" className="h-full w-full object-cover" />
+              </button>
             )}
 
             {/* Mobile Hamburger Button */}

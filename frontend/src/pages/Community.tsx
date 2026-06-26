@@ -4,6 +4,7 @@ import { useUser, MOCK_USERS } from '@/store';
 import { useDistrict } from '@/store';
 import { PostsAPI, Post } from '@/lib/api/posts'
 import { UploadAPI } from '@/lib/api/upload'
+import { useCommunityFeed } from '@/hooks/useCommunityFeed'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -40,19 +41,18 @@ export default function Community() {
   const navigate = useNavigate()
   const { selectedDistrict } = useDistrict()
   const [activeTab, setActiveTab] = useState<'feed' | 'marketplace'>('feed')
-
-  const [posts, setPosts] = useState<Post[]>([])
   const [newPostContent, setNewPostContent] = useState('')
   const [isCreatingPost, setIsCreatingPost] = useState(false)
   const [mediaFiles, setMediaFiles] = useState<File[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [isFetchingPosts, setIsFetchingPosts] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [filterDate, setFilterDate] = useState('')
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [showOnlyLocal, setShowOnlyLocal] = useState(false)
   const [selectedTopic, setSelectedTopic] = useState('all')
+
+  const { posts, loading: isFetchingPosts, refetch: fetchPosts } = useCommunityFeed(selectedTopic === 'all' ? undefined : selectedTopic)
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
@@ -63,28 +63,6 @@ export default function Community() {
       setMediaFiles([...mediaFiles, ...acceptedFiles])
     }
   })
-
-  useEffect(() => {
-    fetchPosts()
-  }, [])
-
-  const fetchPosts = async () => {
-    setIsFetchingPosts(true)
-    try {
-      const data = await PostsAPI.getPosts()
-      setPosts(data)
-    } catch (error) {
-      console.error('Error fetching posts:', error)
-      const msg = (error as any)?.message ?? String(error)
-      toast({
-        title: 'Connection error',
-        description: msg || 'Could not connect to community feed.',
-        variant: 'destructive'
-      })
-    } finally {
-      setIsFetchingPosts(false)
-    }
-  }
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -235,6 +213,11 @@ export default function Community() {
                   >
                     <IconComponent size={14} />
                     <span>{tab.label}</span>
+                    {tab.id === 'marketplace' && (
+                      <span className="ml-2 px-2 py-0.5 bg-yellow-500/20 text-yellow-500 text-[9px] rounded-full">
+                        Coming Soon
+                      </span>
+                    )}
                   </button>
                 );
               })}
