@@ -136,7 +136,7 @@ export const DMPanel = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="absolute top-14 right-0 w-[350px] h-[500px] bg-[#0A0A0A] border border-[#1E1E1E] rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col origin-top-right"
+            className="absolute top-14 right-0 w-[calc(100vw-32px)] sm:w-[350px] h-[500px] max-h-[calc(100vh-100px)] bg-[#0A0A0A] border border-[#1E1E1E] rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col origin-top-right"
           >
             {/* Header */}
             <div className="px-5 py-4 border-b border-[#1E1E1E] bg-[#111111] flex justify-between items-center shrink-0">

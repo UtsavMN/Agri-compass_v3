@@ -143,10 +143,22 @@ export default function Layout({
               <span className="text-[10px] font-bold uppercase">ಧ್ವನಿ</span>
             </Button>
 
-            {/* Removed Global District Selector per instructions */}
-
-
-            {/* DMPanel */}
+            {/* District Selector */}
+            <div className="hidden sm:block">
+              <Select value={selectedDistrict || ''} onValueChange={setSelectedDistrict}>
+                <SelectTrigger className="h-8 border-earth-border/40 bg-[#1a1a14]/60 hover:bg-[#1a1a14]/90 text-gold-100/90 text-[11px] font-bold tracking-widest uppercase rounded-xl w-[160px]">
+                  <MapPin className="w-3.5 h-3.5 mr-2 text-gold-400" />
+                  <SelectValue placeholder="Select District" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#12120e] border-earth-border/50 max-h-[300px]">
+                  {Object.keys(DISTRICTS).map((d) => (
+                    <SelectItem key={d} value={d} className="text-gold-100 hover:bg-gold-400/10 hover:text-gold-400 focus:bg-gold-400/10 focus:text-gold-400 cursor-pointer">
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>            {/* DMPanel */}
             {user && <DMPanel />}
 
             {/* Profile Avatar Button */}
