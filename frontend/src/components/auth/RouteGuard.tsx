@@ -3,7 +3,7 @@ import { useAuth, useUser } from "@clerk/clerk-react";
 import { Navigate } from "react-router-dom";
 import { LoadingOverlay } from "@/components/ui/loading-components";
 import { useStore } from "@/store";
-import { apiGet } from "@/lib/httpClient";
+import { apiGet, apiPut } from "@/lib/httpClient";
 
 export const RouteGuard = ({ children }: { children: React.ReactNode }) => {
   const { isSignedIn, isLoaded: isAuthLoaded } = useAuth();
@@ -19,6 +19,24 @@ export const RouteGuard = ({ children }: { children: React.ReactNode }) => {
         try {
           const profile = await apiGet('/api/profile/me');
           if (profile) {
+            const clerkName = clerkUser.fullName || clerkUser.username || '';
+            const clerkImage = clerkUser.imageUrl || '';
+            const backendName = profile.fullName || profile.full_name || '';
+            const backendImage = profile.profilePictureUrl || profile.avatar_url || '';
+
+            // If Clerk has a name/avatar and it differs from backend, auto-sync it
+            if ((clerkName && backendName !== clerkName) || (clerkImage && backendImage !== clerkImage)) {
+               try {
+                  const updatedProfile = await apiPut('/api/profiles', {
+                     fullName: clerkName,
+                     avatarUrl: clerkImage
+                  });
+                  setClerkUserAndProfile(clerkUser, updatedProfile);
+                  return;
+               } catch (e) {
+                  console.error('Failed to auto-sync Clerk data to backend profile', e);
+               }
+            }
             setClerkUserAndProfile(clerkUser, profile);
           }
         } catch (err) {
