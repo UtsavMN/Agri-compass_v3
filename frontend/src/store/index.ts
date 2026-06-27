@@ -143,26 +143,29 @@ export const useStore = create<StoreState>()(
 
 // Selector hooks
 export const useUser = () => {
-  const user = useStore((state) => state.user);
-  const profile = useStore((state) => state.profile);
-  const session = useStore((state) => state.session);
-  const loading = useStore((state) => state.loading);
-  const signOut = useStore((state) => state.signOut);
-  const updateProfile = useStore((state) => state.updateProfile);
-  const switchUser = useStore((state) => state.switchUser);
-  return { user, profile, session, loading, signOut, updateProfile, switchUser };
+  return useStore(useShallow((state) => ({
+    user: state.user,
+    profile: state.profile,
+    session: state.session,
+    loading: state.loading,
+    signOut: state.signOut,
+    updateProfile: state.updateProfile,
+    switchUser: state.switchUser,
+  })));
 };
 
 export const useDistrict = () => {
-  const selectedDistrict = useStore((state) => state.selectedDistrict);
-  const setSelectedDistrict = useStore((state) => state.setSelectedDistrict);
-  return { selectedDistrict, setSelectedDistrict };
+  return useStore(useShallow((state) => ({
+    selectedDistrict: state.selectedDistrict,
+    setSelectedDistrict: state.setSelectedDistrict,
+  })));
 };
 
 export const useNotifications = () => {
-  const notifications = useStore((state) => state.notifications);
-  const addNotification = useStore((state) => state.addNotification);
-  const markAsRead = useStore((state) => state.markAsRead);
-  const clearNotifications = useStore((state) => state.clearNotifications);
-  return { notifications, addNotification, markAsRead, clearNotifications };
+  return useStore(useShallow((state) => ({
+    notifications: state.notifications,
+    addNotification: state.addNotification,
+    markAsRead: state.markAsRead,
+    clearNotifications: state.clearNotifications,
+  })));
 };

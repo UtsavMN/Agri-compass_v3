@@ -67,6 +67,8 @@ export default function Layout({
 
   useEffect(() => {
     if (!user) return;
+    let timeoutId: number;
+    
     const fetchUnread = () => {
       apiGet('/api/conversations/unread-count', null, true)
         .then((res: any) => {
@@ -74,10 +76,18 @@ export default function Layout({
             setUnreadCount(res.count);
           }
         })
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => {
+          timeoutId = window.setTimeout(fetchUnread, 60000); // Poll every 60s
+        });
     };
+    
     fetchUnread();
-  }, [user, location.pathname]);
+    
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [user]);
   
   const handleSignOut = async () => {
     await signOut();

@@ -74,6 +74,11 @@ public class ProfileController {
     // PUT /api/profiles/{id} - update profile by ID
     @PutMapping("/profiles/{id}")
     public ResponseEntity<UserProfile> updateProfile(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        UserProfile currentProfile = userService.syncUserProfile(null);
+        if (!currentProfile.getClerkUserId().equals(id)) {
+            throw new RuntimeException("Unauthorized to update this profile");
+        }
+        
         String fullName = (String) body.get("fullName");
         if (fullName == null) fullName = (String) body.get("full_name");
         
