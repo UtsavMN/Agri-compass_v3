@@ -205,18 +205,18 @@ export default function Dashboard() {
                             const isRecommended = recommendedCrops.includes(rec.cropName);
 
                             return (
-                              <AccordionItem value={`item-${rec.cropName}`} key={rec.cropName} className="border border-earth-border rounded-xl bg-earth-elevated hover:border-gold-400/30 transition-all px-2 border-b-0 data-[state=open]:border-gold-400/50">
+                              <AccordionItem value={`item-${rec.cropName}`} key={rec.cropName} className="border border-earth-border/60 rounded-xl bg-earth-card hover:bg-earth-card/80 hover:border-gold-400/30 transition-all px-2 border-b-0 data-[state=open]:border-gold-400/50 shadow-sm">
                                 <AccordionTrigger className="hover:no-underline py-4 px-3">
                                   <div className="flex flex-1 items-center justify-between gap-3 mr-4">
-                                    <h4 className="font-bold text-gold-200 text-lg break-words">{rec.cropName}</h4>
+                                    <h4 className="font-bold text-gold-100 text-lg break-words transition-colors group-hover:text-white">{rec.cropName}</h4>
                                     <div className="flex flex-wrap justify-end gap-2 shrink-0">
-                                      {isRecommended && <Badge className="bg-gold-400 text-earth-main font-bold hidden sm:inline-flex">Recommended</Badge>}
-                                      <Badge variant="outline" className="border-gold-400/30 text-gold-400">{rec.season}</Badge>
+                                      {isRecommended && <Badge className="bg-gold-400 text-earth-main font-bold hidden sm:inline-flex shadow-sm">Recommended</Badge>}
+                                      <Badge variant="outline" className="border-gold-400/40 text-gold-400 font-semibold bg-gold-400/5">{rec.season}</Badge>
                                     </div>
                                   </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="px-3 pb-4">
-                                  <p className="text-sm text-gold-100/60 mb-4 leading-relaxed">{rec.reason}</p>
+                                  <p className="text-sm text-gold-100/90 mb-4 leading-relaxed">{rec.reason}</p>
 
                                   <div className="flex items-center gap-2 mb-4 text-xs font-bold text-gold-400 uppercase tracking-wider bg-gold-400/5 p-2.5 rounded-lg border border-gold-400/10">
                                     <Zap className="h-3 w-3 shrink-0" />
@@ -227,12 +227,12 @@ export default function Dashboard() {
                                   {districtInfo && (
                                     <div className="grid grid-cols-2 gap-4 pt-3 border-t border-earth-border/50 text-[11px]">
                                       <div className="min-w-0">
-                                        <span className="text-gold-100/40 uppercase tracking-tighter block mb-1.5">Soil Type</span>
-                                        <p className="text-gold-100/80 break-words leading-snug">{districtInfo.soil_type}</p>
+                                        <span className="text-gold-100/60 font-bold uppercase tracking-widest block mb-1.5">Soil Type</span>
+                                        <p className="text-gold-100 break-words leading-snug">{districtInfo.soil_type}</p>
                                       </div>
                                       <div className="min-w-0">
-                                        <span className="text-gold-100/40 uppercase tracking-tighter block mb-1.5">Weather Pattern</span>
-                                        <p className="text-gold-100/80 break-words leading-snug">{districtInfo.weather_pattern}</p>
+                                        <span className="text-gold-100/60 font-bold uppercase tracking-widest block mb-1.5">Weather Pattern</span>
+                                        <p className="text-gold-100 break-words leading-snug">{districtInfo.weather_pattern}</p>
                                       </div>
                                     </div>
                                   )}

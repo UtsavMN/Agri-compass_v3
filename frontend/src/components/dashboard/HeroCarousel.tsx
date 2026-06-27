@@ -56,14 +56,14 @@ interface HeroStatCardProps {
 
 const HeroStatCard = ({ icon, label, value, sub }: HeroStatCardProps) => (
   <TiltCard className="h-full">
-    <div className="card-premium bg-[#12120e]/85 backdrop-blur-md border-t-2 border-gold-400/80 p-6 min-h-[5.5rem] flex items-center gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
-      <div className="w-10 h-10 rounded-xl bg-gold-400/10 flex items-center justify-center flex-shrink-0">
+    <div className="card-premium bg-[#1a1a14]/90 backdrop-blur-xl border-t-2 border-gold-400/80 p-6 min-h-[5.5rem] flex items-center gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
+      <div className="w-10 h-10 rounded-xl bg-gold-400/20 flex items-center justify-center flex-shrink-0">
         <span className="text-gold-400">{icon}</span>
       </div>
       <div>
-        <p className="text-[10px] font-black text-gold-100/50 uppercase tracking-widest mb-1">{label}</p>
-        <p className="text-[20px] font-black text-[#f0ece0] leading-tight">{value}</p>
-        <p className="text-[11px] text-[#a09880] mt-0.5 font-bold uppercase tracking-wider">{sub}</p>
+        <p className="text-[10px] font-black text-gold-100/90 uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-[20px] font-black text-white leading-tight">{value}</p>
+        <p className="text-[11px] text-gold-100/70 mt-0.5 font-bold uppercase tracking-wider">{sub}</p>
       </div>
     </div>
   </TiltCard>

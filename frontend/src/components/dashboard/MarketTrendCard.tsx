@@ -24,10 +24,11 @@ export const MarketTrendCard = React.memo(() => {
           </div>
           <p className="text-[14px] font-bold text-gold-100 tracking-wide">Market Trends</p>
         </div>
-        <a href="/market-prices"
-          className="text-[11px] font-black uppercase tracking-widest text-gold-400 hover:text-gold-300 hover:scale-105 transition-all bg-gold-400/10 px-3 py-1.5 rounded-full border border-gold-400/20 shadow-inner">
-          View all
-        </a>
+        <Link 
+          to="/market-prices" 
+          className="text-[10px] font-black uppercase tracking-widest text-gold-100 hover:text-white bg-gold-400/20 px-3 py-1.5 rounded-full border border-gold-400/30 transition-all hover:bg-gold-400/30"
+        >  View all
+        </Link>
       </div>
 
       {/* Animated ticker-style rows */}
@@ -49,12 +50,12 @@ export const MarketTrendCard = React.memo(() => {
       </div>
 
       {/* Last updated */}
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-earth-border/40 relative z-10 shrink-0">
-        <p className="text-[10px] text-gold-100/40 font-bold uppercase tracking-widest">
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-earth-border/60 relative z-10 shrink-0">
+        <p className="text-[10px] text-gold-100/70 font-bold uppercase tracking-widest">
           APMC Data
         </p>
-        <p className="text-[10px] text-gold-400/60 font-bold uppercase tracking-widest flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+        <p className="text-[10px] text-gold-400/90 font-bold uppercase tracking-widest flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#22c55e]" />
           Live Updates
         </p>
       </div>
@@ -74,7 +75,7 @@ export const MarketTrendRow = React.memo(({ crop, index }: { crop: MarketTrend; 
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 24 }}
-      className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#1a1a14]/80 hover:scale-[1.02] border border-transparent hover:border-earth-border/60 transition-all cursor-pointer group shadow-sm hover:shadow-md overflow-hidden"
+      className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-white/5 hover:scale-[1.02] border border-transparent hover:border-gold-400/20 transition-all cursor-pointer group shadow-sm hover:shadow-md overflow-hidden"
       onClick={() => window.location.href = `/market-prices?crop=${crop.name}`}
     >
       {/* Crop name + season */}
@@ -88,8 +89,8 @@ export const MarketTrendRow = React.memo(({ crop, index }: { crop: MarketTrend; 
           />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-bold text-gold-100/90 truncate tracking-wide group-hover:text-gold-400 transition-colors">{crop.name}</p>
-          <p className="text-[10px] text-gold-100/40 uppercase font-black tracking-widest">{crop.unit}</p>
+          <p className="text-xs font-bold text-gold-100 truncate tracking-wide group-hover:text-white transition-colors">{crop.name}</p>
+          <p className="text-[10px] text-gold-100/70 uppercase font-black tracking-widest">{crop.unit}</p>
         </div>
       </div>
 
@@ -119,11 +120,11 @@ export const MarketTrendRow = React.memo(({ crop, index }: { crop: MarketTrend; 
 
       {/* Price + change */}
       <div className="text-right flex-shrink-0">
-        <p className={`text-[13px] font-black tracking-tight ${hasData ? 'text-gold-100' : 'text-gold-100/40'}`}>
+        <p className={`text-[13px] font-black tracking-tight ${hasData ? 'text-gold-100' : 'text-gold-100/70'}`}>
           {hasData ? `₹${formatIndianNumber(crop.price!)}` : 'N/A'}
         </p>
         <div className={`flex items-center justify-end gap-1 text-[10px] font-black uppercase tracking-widest mt-0.5 ${
-          !hasData ? 'text-gold-100/40'
+          !hasData ? 'text-gold-100/70'
           : isUp   ? 'text-green-400'
           : isDown ? 'text-red-400'
           : 'text-gold-100/50'
