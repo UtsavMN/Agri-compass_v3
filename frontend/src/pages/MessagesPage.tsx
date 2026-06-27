@@ -22,7 +22,7 @@ export const MessagesPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    apiGet(`/api/conversations/user/${user.id}`)
+    apiGet(`/api/conversations`)
       .then(setConversations)
       .catch(console.error)
       .finally(() => setLoading(false));

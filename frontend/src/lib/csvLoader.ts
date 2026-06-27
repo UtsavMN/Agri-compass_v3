@@ -7,26 +7,25 @@ export const loadDistrictDataFromCSV = (): Promise<any[]> => {
     return cachedDistrictDataPromise;
   }
 
-  cachedDistrictDataPromise = new Promise(async (resolve) => {
-    try {
-      const response = await fetch('/districts.csv');
-      const csvText = await response.text();
-      Papa.parse(csvText, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          resolve(results.data as any[]);
-        },
-        error: (error: any) => {
-          console.error('Error parsing CSV:', error);
-          resolve([]);
-        }
+  cachedDistrictDataPromise = fetch('/districts.csv')
+    .then(response => response.text())
+    .then(csvText => {
+      return new Promise<any[]>((resolve) => {
+        Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => resolve(results.data as any[]),
+          error: (error: any) => {
+            console.error('Error parsing CSV:', error);
+            resolve([]);
+          }
+        });
       });
-    } catch (error) {
+    })
+    .catch(error => {
       console.error('Error loading district data:', error);
-      resolve([]);
-    }
-  });
+      return [];
+    });
 
   return cachedDistrictDataPromise;
 };

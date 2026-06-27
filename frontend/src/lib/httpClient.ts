@@ -56,6 +56,11 @@ export async function apiGet<T = any>(endpoint: string, token?: string | null): 
     const errorBody = await response.text().catch(() => response.statusText);
     throw new Error(errorBody || `API GET request failed: ${response.statusText}`);
   }
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('text/html')) {
+    const errorBody = await response.text();
+    throw new Error(`API returned HTML instead of JSON. Ensure VITE_API_BASE_URL is correctly set. Received: ${errorBody.substring(0, 100)}...`);
+  }
   return response.json();
 }
 
@@ -76,6 +81,13 @@ export async function apiPost<T = any>(endpoint: string, body: any, token?: stri
     (error as any).status = response.status;
     throw error;
   }
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('text/html')) {
+    const errorBody = await response.text();
+    const error = new Error(`API returned HTML instead of JSON. Ensure VITE_API_BASE_URL is correctly set. Received: ${errorBody.substring(0, 100)}...`);
+    (error as any).status = response.status;
+    throw error;
+  }
   return response.json();
 }
 
@@ -93,6 +105,11 @@ export async function apiPut<T = any>(endpoint: string, body: any, token?: strin
     const errorBody = await response.text().catch(() => response.statusText);
     throw new Error(errorBody || `API PUT request failed: ${response.statusText}`);
   }
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('text/html')) {
+    const errorBody = await response.text();
+    throw new Error(`API returned HTML instead of JSON. Ensure VITE_API_BASE_URL is correctly set. Received: ${errorBody.substring(0, 100)}...`);
+  }
   return response.json();
 }
 
@@ -105,6 +122,11 @@ export async function apiDelete<T = any>(endpoint: string): Promise<T> {
   if (!response.ok) {
     const errorBody = await response.text().catch(() => response.statusText);
     throw new Error(errorBody || `API DELETE request failed: ${response.statusText}`);
+  }
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('text/html')) {
+    const errorBody = await response.text();
+    throw new Error(`API returned HTML instead of JSON. Ensure VITE_API_BASE_URL is correctly set. Received: ${errorBody.substring(0, 100)}...`);
   }
   // Some DELETE responses may not have a body
   const text = await response.text();
