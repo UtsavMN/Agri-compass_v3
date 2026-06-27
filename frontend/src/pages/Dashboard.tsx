@@ -173,7 +173,7 @@ export default function Dashboard() {
           temp={28} 
           condition="Clear" 
           userCount={userCount} 
-          newsCount={newsItems.length || 0} 
+          newsItems={newsItems} 
         />
 
         {/* ===== MAIN CONTENT GRID ===== */}

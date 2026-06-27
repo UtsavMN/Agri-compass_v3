@@ -39,6 +39,11 @@ public class FarmController {
         return ResponseEntity.ok(farmRepository.findByClerkUserId(userId).stream().map(this::farmDto).toList());
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Map<String, Object>>> getFarmsByUserId(@PathVariable String userId) {
+        return ResponseEntity.ok(farmRepository.findByClerkUserId(userId).stream().map(this::farmDto).toList());
+    }
+
     @PostMapping
     public ResponseEntity<Map<String, Object>> createFarm(@RequestBody Map<String, Object> body) {
         String userId = userService.syncUser(null).getId();

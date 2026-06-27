@@ -4,7 +4,7 @@ import { Cloud, Leaf as Wheat, TrendingUp, Users } from 'lucide-react';
 import { KarnatakaMap } from './KarnatakaMap';
 import { TiltCard } from '@/components/ui/animations';
 
-const HEROES = [
+const BASE_HEROES = [
   {
     id: 'fields',
     image: '/karnataka_farmland_hero.png',
@@ -77,29 +77,57 @@ export const HeroCarousel = ({
   temp, 
   condition, 
   userCount, 
-  newsCount 
+  newsItems = []
 }: { 
   temp: number; 
   condition: string; 
   userCount: number; 
-  newsCount: number; 
+  newsItems?: any[]; 
 }) => {
   const [current, setCurrent] = useState(0);
+  const [newsIndex, setNewsIndex] = useState(0);
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
-  // Auto-rotate every 10 seconds for better preview (was 15 mins)
+  const currentNews = newsItems[newsIndex];
+  const dynamicNewsText = currentNews ? (typeof currentNews === 'string' ? currentNews : currentNews.title) : 'Stay updated with the latest agricultural news and trade tariffs.';
+  
+  const heroes = [
+    ...BASE_HEROES,
+    {
+      id: 'news',
+      image: '/hero_image_4.jpg',
+      headline: 'Latest',
+      headlineGold: 'Market Intelligence',
+      subtext: dynamicNewsText,
+      badge: 'LIVE NEWS UPDATES',
+      ctaPrimary: { label: 'Read More', href: currentNews?.url || '/market-prices' },
+      ctaSecondary: { label: 'All Updates', href: '/market-prices' },
+    }
+  ];
+
+  // Auto-rotate heroes every 15 seconds
   useEffect(() => {
-    const ROTATE_MS = 10000;
+    const ROTATE_MS = 15000;
     const timer = setInterval(() => {
-      setCurrent(prev => (prev + 1) % HEROES.length);
+      setCurrent(prev => (prev + 1) % heroes.length);
     }, ROTATE_MS);
     return () => clearInterval(timer);
-  }, []);
+  }, [heroes.length]);
 
-  const hero = HEROES[current];
+  // Auto-rotate dynamic news every 20 seconds
+  useEffect(() => {
+    if (!newsItems.length) return;
+    const NEWS_ROTATE_MS = 20000;
+    const timer = setInterval(() => {
+      setNewsIndex(prev => (prev + 1) % newsItems.length);
+    }, NEWS_ROTATE_MS);
+    return () => clearInterval(timer);
+  }, [newsItems.length]);
+
+  const hero = heroes[current];
 
   return (
     <section ref={ref} className="relative w-full pt-28 pb-32 overflow-hidden flex flex-col justify-center items-center">
@@ -181,7 +209,7 @@ export const HeroCarousel = ({
 
         {/* Carousel dots */}
         <div className="flex items-center gap-2 mt-12 pb-6 border-b border-earth-border/20">
-          {HEROES.map((_, i) => (
+          {heroes.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}
@@ -199,7 +227,7 @@ export const HeroCarousel = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <HeroStatCard icon={<Cloud size={18} />} label="Current Weather" value={`${temp}°C`} sub={condition} />
             <HeroStatCard icon={<Users size={18} />} label="Active Users" value={String(userCount)} sub="Farmers connected" />
-            <HeroStatCard icon={<TrendingUp size={18} />} label="Market Updates" value={`${newsCount} Active`} sub="Recent trade bulletins" />
+            <HeroStatCard icon={<TrendingUp size={18} />} label="Market Updates" value={`${newsItems.length || 0} Active`} sub="Recent trade bulletins" />
           </div>
         </div>
       </motion.div>

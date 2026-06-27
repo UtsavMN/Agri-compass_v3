@@ -72,7 +72,6 @@ export const MessagesPage = () => {
                 <AvatarImage src={conv.otherUser?.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${conv.otherUser?.clerkUserId}`} />
                 <AvatarFallback>{conv.otherUser?.fullName?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
-              <div className="absolute bottom-0.5 right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-[#0A0A0A]" />
             </div>
 
             {/* Text content */}
