@@ -17,6 +17,10 @@ export const VoiceChatbot = () => {
     setInput("");
     
     // Mock response
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        { text: "ಖಂಡಿತ, ಯಾವ ಬೆಳೆಯ ಬಗ್ಗೆ ಮಾಹಿತಿ ಬೇಕು?", sender: "bot" }
       ]);
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 1000);
