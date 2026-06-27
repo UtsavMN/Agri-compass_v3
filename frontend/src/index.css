@@ -94,9 +94,9 @@
     color: var(--text-primary);
   }
 
-  h1 { font-size: 2.25rem; line-height: 2.5rem; }
-  h2 { font-size: 1.875rem; line-height: 2.25rem; }
-  h3 { font-size: 1.5rem; line-height: 2rem; }
+  h1 { font-size: 2.5rem; line-height: 1.1; letter-spacing: -0.03em; }
+  h2 { font-size: 2rem; line-height: 1.2; letter-spacing: -0.02em; }
+  h3 { font-size: 1.5rem; line-height: 1.3; }
 
   p {
     line-height: 1.75;
@@ -165,7 +165,7 @@
   .card-hover:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-premium);
-    border-color: var(--border-medium);
+    border-color: rgba(201, 168, 76, 0.3);
   }
 
   .card-interactive {

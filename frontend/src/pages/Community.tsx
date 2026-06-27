@@ -188,7 +188,7 @@ export default function Community() {
   return (
     <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       <div className="py-12 px-4 md:px-8 max-w-7xl mx-auto">
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-5xl mx-auto space-y-8">
             {/* Tab switch bar */}
             <div className="flex gap-2 border-b border-earth-border/40 pb-4 mb-4 select-none">
               {COMMUNITY_TABS.map(tab => {

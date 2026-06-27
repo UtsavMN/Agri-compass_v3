@@ -94,10 +94,10 @@ export default function Layout({
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f0f0b] flex flex-col text-[#e2dcd0]">
+    <div className="min-h-screen bg-earth-main flex flex-col text-[#e2dcd0]">
       {/* ===== FLOATING GLASS NAVBAR ===== */}
       {!hideHeader && (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0f0f0b]/80 backdrop-blur-md border-b border-earth-border/40 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between transition-all duration-300">
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-earth-main/80 backdrop-blur-xl border-b border-earth-border/40 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between transition-all duration-300">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2.5 cursor-pointer animate-fade-in" onClick={() => navigate('/dashboard')}>
               <Sprout className="h-6.5 w-6.5 text-gold-400" />

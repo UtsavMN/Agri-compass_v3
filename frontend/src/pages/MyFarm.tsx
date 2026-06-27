@@ -236,8 +236,8 @@ export default function MyFarm() {
   }
 
   return (
-    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
-      <div className="space-y-12 pb-12 max-w-7xl mx-auto">
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 w-full mx-auto animate-fade-in">
+      <div className="space-y-12 pb-12 w-full mx-auto">
         <ScrollReveal>
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div>

@@ -101,7 +101,7 @@ export const PostCard = React.memo(function PostCard({
 
   return (
     <Card className="card-premium border-none shadow-premium mb-6 overflow-hidden">
-      <div className="p-5">
+      <div className="p-6 md:p-8">
         <div className="flex items-center justify-between mb-5">
           <button className="flex items-center gap-3 text-left hover:opacity-80 transition-opacity" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (post.user?.id) navigate(`/profile/${post.user.id}`); }}>
             <Avatar className="h-10 w-10 border border-gold-400/20">

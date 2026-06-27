@@ -160,7 +160,7 @@ export default function MarketPrices() {
   }));
 
   return (
-    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 w-full mx-auto animate-fade-in">
       <div className="space-y-8 pb-12">
         {/* Header */}
         <ScrollReveal>

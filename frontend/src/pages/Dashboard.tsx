@@ -166,7 +166,7 @@ export default function Dashboard() {
 
   return (
     <div className="w-full relative animate-fade-in">
-      <div className="min-h-screen bg-[#0f0f0b]">
+      <div className="min-h-screen bg-earth-main">
 
         {/* ===== HERO CAROUSEL (FULL BLEED) ===== */}
         <HeroCarousel 
@@ -177,7 +177,7 @@ export default function Dashboard() {
         />
 
         {/* ===== MAIN CONTENT GRID ===== */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-20">
           
           {selectedDistrict && (
             <AnimatedSection delay={0.1}>
