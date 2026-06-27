@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 public class Message {
 
     @Id
+    @Column(nullable = false)
     private String id;
 
     @Column(name = "conversation_id", nullable = false)

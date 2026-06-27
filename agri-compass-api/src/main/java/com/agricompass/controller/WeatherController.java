@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import org.springframework.cache.annotation.Cacheable;
 
 @RestController
 @RequestMapping("/api/weather")
@@ -60,6 +61,7 @@ public class WeatherController {
     }
 
     @GetMapping("/{district}")
+    @Cacheable(value = "weather", key = "#district != null ? #district.toLowerCase() : 'bengaluru'")
     public ResponseEntity<?> getWeather(@PathVariable String district) {
         // Normalize district to official Title Case names in Karnataka
         String officialDistrictName = "Bengaluru Urban";
@@ -113,9 +115,9 @@ public class WeatherController {
             String description = (weatherList == null || weatherList.isEmpty()) 
                 ? "Clear" : (String) weatherList.get(0).get("description");
 
-            double temperature = mainData != null ? ((Number) mainData.get("temp")).doubleValue() : 25.0;
-            int humidity = mainData != null ? ((Number) mainData.get("humidity")).intValue() : 50;
-            double windSpeed = windData != null ? ((Number) windData.get("speed")).doubleValue() * 3.6 : 10.0;
+            double temperature = mainData != null && mainData.get("temp") != null ? ((Number) mainData.get("temp")).doubleValue() : 25.0;
+            int humidity = mainData != null && mainData.get("humidity") != null ? ((Number) mainData.get("humidity")).intValue() : 50;
+            double windSpeed = windData != null && windData.get("speed") != null ? ((Number) windData.get("speed")).doubleValue() * 3.6 : 10.0;
 
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> forecastItems = (List<Map<String, Object>>) forecastRaw.get("list");
@@ -137,8 +139,8 @@ public class WeatherController {
                     
                     Map<String, Object> dayForecast = new HashMap<>();
                     dayForecast.put("date", dateOnly);
-                    dayForecast.put("temp_max", fMain != null ? Math.round(((Number) fMain.get("temp_max")).doubleValue()) : 30.0);
-                    dayForecast.put("temp_min", fMain != null ? Math.round(((Number) fMain.get("temp_min")).doubleValue()) : 20.0);
+                    dayForecast.put("temp_max", fMain != null && fMain.get("temp_max") != null ? Math.round(((Number) fMain.get("temp_max")).doubleValue()) : 30.0);
+                    dayForecast.put("temp_min", fMain != null && fMain.get("temp_min") != null ? Math.round(((Number) fMain.get("temp_min")).doubleValue()) : 20.0);
                     dayForecast.put("description", (fWeather == null || fWeather.isEmpty()) ? "Clear" : fWeather.get(0).get("description"));
                     
                     forecast.add(dayForecast);

@@ -19,49 +19,53 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
   const [error, setError] = useState<string | null>(null)
 
   // Hoist these helpers so effects can safely reference them
-  const loadWeatherData = useCallback(async () => {
+  const loadWeatherData = useCallback(async (isMounted: { current: boolean }) => {
     try {
-      setLoading(true)
-      setError(null)
+      if (isMounted.current) { setLoading(true); setError(null); }
 
       const data = await WeatherAPI.getWeatherForDistrict(district)
-      if (data) {
-        setWeatherData(data)
-
-        // Log weather for farm if farmId provided
-        if (farmId && data.weather) {
-          await WeatherAPI.logWeatherForFarm(farmId, district, data.weather)
+      if (isMounted.current) {
+        if (data) {
+          setWeatherData(data)
+          // Log weather for farm if farmId provided
+          if (farmId && data.weather) {
+            await WeatherAPI.logWeatherForFarm(farmId, district, data.weather)
+          }
+        } else {
+          setError('Weather data not available')
         }
-      } else {
-        setError('Weather data not available')
       }
     } catch (err) {
       console.error('Error loading weather:', err)
-      setError('Failed to load weather data')
+      if (isMounted.current) setError('Failed to load weather data')
     } finally {
-      setLoading(false)
+      if (isMounted.current) setLoading(false)
     }
   }, [district, farmId])
 
-  const loadWeatherHistory = useCallback(async () => {
+  const loadWeatherHistory = useCallback(async (isMounted: { current: boolean }) => {
     if (!farmId) return
 
     try {
       const history = await WeatherAPI.getWeatherHistoryForFarm(farmId)
-      setWeatherHistory(history)
+      if (isMounted.current) setWeatherHistory(history)
     } catch (err) {
       console.error('Error loading weather history:', err)
     }
   }, [farmId])
 
   useEffect(() => {
-    loadWeatherData()
+    const isMounted = { current: true };
+    loadWeatherData(isMounted)
+    return () => { isMounted.current = false; }
   }, [district, loadWeatherData])
 
   useEffect(() => {
+    const isMounted = { current: true };
     if (farmId) {
-      loadWeatherHistory()
+      loadWeatherHistory(isMounted)
     }
+    return () => { isMounted.current = false; }
   }, [farmId, loadWeatherHistory])
 
   const getWeatherIcon = (description: string) => {
@@ -116,7 +120,7 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
           <Button
             variant="outline"
             size="sm"
-            onClick={loadWeatherData}
+            onClick={() => loadWeatherData({ current: true })}
             className="flex items-center gap-2"
           >
             <RefreshCw className="h-4 w-4" />
@@ -145,7 +149,7 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
             <Button
               variant="ghost"
               size="sm"
-              onClick={loadWeatherData}
+              onClick={() => loadWeatherData({ current: true })}
               className="h-8 w-8 p-0"
             >
               <RefreshCw className="h-4 w-4" />
@@ -236,8 +240,8 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
                   <div>
                     <h5 className="text-sm font-medium text-gray-700 mb-2">Farming Tips:</h5>
                     <ul className="space-y-1">
-                      {advisory.farmingTips.slice(0, 3).map((tip, index) => (
-                        <li key={index} className="text-sm text-gray-600 flex items-start gap-2">
+                      {advisory.farmingTips.slice(0, 3).map((tip) => (
+                        <li key={tip} className="text-sm text-gray-600 flex items-start gap-2">
                           <span className="text-green-500 mt-1">•</span>
                           {tip}
                         </li>
@@ -248,8 +252,8 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
 
                 {advisory.riskAlerts.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {advisory.riskAlerts.slice(0, 2).map((alert, index) => (
-                      <Badge key={index} variant="destructive" className="text-xs">
+                    {advisory.riskAlerts.slice(0, 2).map((alert) => (
+                      <Badge key={alert} variant="destructive" className="text-xs">
                         ⚠️ {alert}
                       </Badge>
                     ))}
@@ -260,8 +264,8 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
                   <div>
                     <h5 className="text-sm font-medium text-gray-700 mb-2">Recommendations:</h5>
                     <div className="flex flex-wrap gap-2">
-                      {advisory.recommendations.slice(0, 2).map((rec, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
+                      {advisory.recommendations.slice(0, 2).map((rec) => (
+                        <Badge key={rec} variant="secondary" className="text-xs">
                           {rec}
                         </Badge>
                       ))}

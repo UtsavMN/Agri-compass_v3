@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Optional;
+import org.springframework.cache.annotation.Cacheable;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -265,6 +266,7 @@ public class AiController {
 
     @SuppressWarnings("unchecked")
     @PostMapping("/soil-recommendation")
+    @Cacheable(value = "soilRecommendations", key = "#body.hashCode()")
     public ResponseEntity<Map<String, Object>> getSoilRecommendation(@RequestBody Map<String, Object> body) {
         ObjectMapper mapper = new ObjectMapper();
 
@@ -299,8 +301,12 @@ public class AiController {
                     List<Map<String, Object>> contentList = (List<Map<String, Object>>) response.get("content");
                     if (contentList != null && !contentList.isEmpty()) {
                         String text = (String) contentList.get(0).get("text");
-                        Map<String, Object> parsedResponse = mapper.readValue(stripMarkdownFences(text), Map.class);
-                        return ResponseEntity.ok(parsedResponse);
+                        try {
+                            Map<String, Object> parsedResponse = mapper.readValue(stripMarkdownFences(text), Map.class);
+                            return ResponseEntity.ok(parsedResponse);
+                        } catch (Exception e) {
+                            log.warn("Failed to parse JSON from Anthropic response, falling back to Gemini", e);
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -359,8 +365,12 @@ public class AiController {
                 }
                 
                 if (aiResponseText != null) {
-                    Map<String, Object> parsedResponse = mapper.readValue(stripMarkdownFences(aiResponseText), Map.class);
-                    return ResponseEntity.ok(parsedResponse);
+                    try {
+                        Map<String, Object> parsedResponse = mapper.readValue(stripMarkdownFences(aiResponseText), Map.class);
+                        return ResponseEntity.ok(parsedResponse);
+                    } catch (Exception e) {
+                        log.warn("Failed to parse JSON from Gemini response", e);
+                    }
                 }
                 
             } catch (Exception e) {

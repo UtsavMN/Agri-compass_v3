@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Papa from 'papaparse';
 import { useUser, MOCK_USERS } from '@/store';
 import { useDistrict } from '@/store';
+import { loadDistrictDataFromCSV } from '@/lib/csvLoader';
 import { apiGet } from '@/lib/httpClient';
 import { cropRecommender } from '@/lib/ai/cropRecommender';
 import { WeatherAPI, WeatherResponse } from '@/lib/api/weather';
@@ -99,69 +100,32 @@ export default function Dashboard() {
     }
   }, [selectedDistrict]);
 
-  const loadDistrictDataFromCSV = async () => {
-    try {
-      const response = await fetch('/districts.csv');
-      const csvText = await response.text();
-      return new Promise<any[]>((resolve) => {
-        Papa.parse(csvText, {
-          header: true,
-          skipEmptyLines: true,
-          complete: (results) => {
-            const data = results.data as any[];
-            setDistrictData(data);
-            setDistricts(data.map(d => d.district));
-            resolve(data);
-          },
-          error: (error: any) => {
-            console.error('Error parsing CSV:', error);
-            resolve([]);
-          }
-        });
-      });
-    } catch (error) {
-      console.error('Error loading district data:', error);
-      return [];
-    }
-  };
+  // loadDistrictDataFromCSV is imported from @/lib/csvLoader
 
   const initializeDashboard = async () => {
     try {
-      // Load districts from CSV before choosing a default district.
-      const loadedDistrictData = await loadDistrictDataFromCSV();
+      const [loadedDistrictData, cropsData, postsData] = await Promise.all([
+        loadDistrictDataFromCSV().then(data => {
+          setDistrictData(data);
+          setDistricts(data.map(d => d.district));
+          return data;
+        }),
+        apiGet('/api/crops?page=0&size=6&sortBy=name').catch(() => ({ content: [] })),
+        PostsAPI.getPosts().catch(() => [])
+      ]);
 
-      // Load crops — API returns Spring Page object with .content
-      const data = await apiGet('/api/crops?page=0&size=6&sortBy=name');
-      setCrops(data?.content || []);
+      setCrops(cropsData?.content || []);
+      setCommunityPosts(postsData.slice(0, 3));
 
+      // Fetch news from our secure proxy endpoint
+      apiGet('/api/news/agriculture')
+        .then(res => {
+          if (res && res.articles) {
+            setNewsItems(res.articles.slice(0, 4));
+          }
+        })
+        .catch(err => console.error('Failed to load news', err));
 
-
-      // Load news items from NewsAPI
-      try {
-        const query = encodeURIComponent('(agriculture OR farming OR farmer OR farmers OR crop OR crops OR harvest OR agritech OR mandi) AND (India OR Karnataka OR Indian)');
-        const newsResponse = await fetch(`https://newsapi.org/v2/everything?qInTitle=${query}&language=en&sortBy=publishedAt&pageSize=4&apiKey=44400a74abc14987ae8a431819183d08`);
-        const newsData = await newsResponse.json();
-        if (newsData.status === 'ok' && newsData.articles && newsData.articles.length > 0) {
-          setNewsItems(newsData.articles);
-        } else {
-          throw new Error('No articles found');
-        }
-      } catch (newsError) {
-        console.error('Error fetching news:', newsError);
-        setNewsItems([
-          { title: 'New subsidy scheme announced for organic farming', url: '#', source: { name: 'Local Gov' } },
-          { title: 'Weather alert: Heavy rainfall expected in coastal districts', url: '#', source: { name: 'IMD' } },
-          { title: 'New pest-resistant rice variety released', url: '#', source: { name: 'ICAR' } },
-          { title: 'Farmers training program starting next month', url: '#', source: { name: 'Agri Dept' } }
-        ]);
-      }
-
-      try {
-        const posts = await PostsAPI.getPosts();
-        setCommunityPosts(posts.slice(0, 3));
-      } catch (err) {
-        console.error('Error fetching community posts for dashboard:', err);
-      }
     } catch (error) {
       console.error('Error initializing dashboard:', error);
     } finally {
@@ -173,23 +137,21 @@ export default function Dashboard() {
     if (!selectedDistrict) return;
 
     try {
-      // Load crop recommendations from AI
-      const recommendations = await cropRecommender.getRecommendations(selectedDistrict);
-      setCropRecommendations(recommendations);
-
-      // Load specific crop details for the district (Recommended Crops)
       setLoading(true);
-      let data = await apiGet(`/api/crops/recommendations/${encodeURIComponent(selectedDistrict)}`);
+      
+      const recommendationsPromise = cropRecommender.getRecommendations(selectedDistrict).catch(() => []);
+      const dataPromise = apiGet(`/api/crops/recommendations/${encodeURIComponent(selectedDistrict)}`).catch(() => []);
+      
+      const [recommendations, data] = await Promise.all([recommendationsPromise, dataPromise]);
+      setCropRecommendations(recommendations);
 
       // Fallback to all crops if no recommendations found for this district
       if (!data || data.length === 0) {
-        const fallback = await apiGet('/api/crops?page=0&size=6&sortBy=name');
-        data = fallback?.content || [];
+        const fallback = await apiGet('/api/crops?page=0&size=6&sortBy=name').catch(() => ({ content: [] }));
+        setCrops(fallback?.content || []);
+      } else {
+        setCrops(data || []);
       }
-
-      setCrops(data || []);
-
-
     } catch (error) {
       console.error('Error loading district data:', error);
     } finally {
@@ -240,7 +202,7 @@ export default function Dashboard() {
                             const isRecommended = recommendedCrops.includes(rec.cropName);
 
                             return (
-                              <AccordionItem value={`item-${index}`} key={index} className="border border-earth-border rounded-xl bg-earth-elevated hover:border-gold-400/30 transition-all px-2 border-b-0 data-[state=open]:border-gold-400/50">
+                              <AccordionItem value={`item-${rec.cropName}`} key={rec.cropName} className="border border-earth-border rounded-xl bg-earth-elevated hover:border-gold-400/30 transition-all px-2 border-b-0 data-[state=open]:border-gold-400/50">
                                 <AccordionTrigger className="hover:no-underline py-4 px-3">
                                   <div className="flex flex-1 items-center justify-between gap-3 mr-4">
                                     <h4 className="font-bold text-gold-200 text-lg break-words">{rec.cropName}</h4>

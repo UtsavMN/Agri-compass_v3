@@ -1,9 +1,10 @@
 import { useEffect } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export const useOnboardingGate = () => {
   const { user, isLoaded } = useUser();
+  const { getToken } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,7 +18,7 @@ export const useOnboardingGate = () => {
 
     const checkOnboarding = async () => {
       try {
-        const token = await user.getToken();
+        const token = await getToken();
         const res = await fetch(`/api/users/onboarding-status`, {
           headers: { Authorization: `Bearer ${token}` }
         });

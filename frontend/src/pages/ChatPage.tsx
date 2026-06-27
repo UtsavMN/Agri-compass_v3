@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
-import { ArrowLeft, Send } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/httpClient";
+import { Avatar } from "@/components/ui/Avatar";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
@@ -11,29 +11,31 @@ interface Message {
   senderId: string;
   content: string;
   createdAt: string;
+  pending?: boolean;
 }
 
 export const ChatPage = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { user } = useUser();
+  const currentUserId = user?.id;
+  const otherUserId = userId;
   
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState("");
+  const [input, setInput] = useState("");
   const [otherUser, setOtherUser] = useState<any>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [connected, setConnected] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const stompClient = useRef<Client | null>(null);
 
   useEffect(() => {
-    if (!userId || !user?.id) return;
+    if (!currentUserId || !otherUserId) return;
 
-    // Load other user profile
-    apiGet(`/api/users/${userId}/public`).then(d => setOtherUser(d.profile)).catch(console.error);
+    apiGet(`/api/users/${otherUserId}/public`).then(d => setOtherUser(d.profile)).catch(console.error);
 
-    // Get or create conversation
-    apiGet(`/api/conversations/user/${userId}`)
+    apiGet(`/api/conversations/user/${otherUserId}`)
       .then(d => {
         setConversationId(d.id);
         return apiGet(`/api/messages/${d.id}`);
@@ -44,15 +46,17 @@ export const ChatPage = () => {
       })
       .catch(console.error);
 
-    // Setup WebSocket
-    const socket = new SockJS('http://localhost:8080/ws/messages');
+    const apiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
+    const wsUrl = apiBase ? apiBase.replace('https://', 'wss://').replace('http://', 'ws://') : `ws://${window.location.host}`;
+    const socket = new SockJS(`${apiBase || ''}/ws/messages`);
     const client = new Client({
       webSocketFactory: () => socket,
       debug: function (str) {
         console.log(str);
       },
       onConnect: () => {
-        client.subscribe(`/topic/messages.${user.id}`, (message) => {
+        setConnected(true);
+        client.subscribe(`/topic/messages.${currentUserId}`, (message) => {
           if (message.body) {
             const parsedMessage = JSON.parse(message.body);
             setMessages(prev => {
@@ -63,6 +67,8 @@ export const ChatPage = () => {
           }
         });
       },
+      onDisconnect: () => setConnected(false),
+      onWebSocketError: () => setConnected(false),
     });
     
     client.activate();
@@ -71,11 +77,10 @@ export const ChatPage = () => {
     return () => {
       client.deactivate();
     };
-  }, [userId, user?.id]);
+  }, [otherUserId, currentUserId]);
 
   useEffect(() => {
     if (conversationId) {
-      // mark as read
       apiPost(`/api/messages/${conversationId}/read`, {}).catch(console.error);
     }
   }, [conversationId, messages]);
@@ -86,11 +91,13 @@ export const ChatPage = () => {
     }, 100);
   };
 
-  const handleSend = async () => {
-    if (!newMessage.trim() || !conversationId) return;
+  const sendMessage = async () => {
+    if (!input.trim() || !conversationId) return;
 
-    const content = newMessage;
-    setNewMessage("");
+    const content = input;
+    setInput("");
+
+    // optimistic UI update could go here
 
     try {
       const res = await apiPost(`/api/messages/${conversationId}`, { content });
@@ -101,71 +108,119 @@ export const ChatPage = () => {
     }
   };
 
+  const groupMessagesByDate = (msgs: Message[]) => {
+    const groups: { [key: string]: Message[] } = {};
+    msgs.forEach(msg => {
+      const date = new Date(msg.createdAt).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+      if (!groups[date]) groups[date] = [];
+      groups[date].push(msg);
+    });
+    return groups;
+  };
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-[#0A0A0A] max-w-2xl mx-auto border-x border-white/5 relative">
-      {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-white/5 bg-[#0f0f0b]/80 backdrop-blur-md absolute top-0 left-0 right-0 z-10 pt-safe-top">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-[#F5F0E8]/50 hover:text-[#C9A84C] transition-colors">
-          <ArrowLeft className="w-5 h-5" />
+    <div className="h-screen bg-[#0A0A0A] flex flex-col">
+
+      {/* Chat header */}
+      <div className="flex-shrink-0 bg-[#0A0A0A] border-b border-[#1E1E1E] px-4 py-3.5 flex items-center gap-3">
+        <button onClick={() => navigate('/messages')} className="w-8 h-8 flex items-center justify-center text-[#F5F0E8]/40 hover:text-[#F5F0E8] transition-colors rounded-lg hover:bg-[#111]">
+          ←
         </button>
-        {otherUser && (
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/profile/${userId}`)}>
-            <img src={otherUser.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`} className="w-8 h-8 rounded-full border border-[#C9A84C]/20" />
-            <div>
-              <p className="text-sm font-semibold text-[#F5F0E8] leading-none">{otherUser.fullName}</p>
-              <p className="text-[10px] text-[#F5F0E8]/40 mt-1">@{otherUser.usernameHandle}</p>
-            </div>
+
+        <button onClick={() => navigate(`/profile/${otherUserId}`)} className="flex items-center gap-3 flex-1">
+          <div className="relative">
+            <Avatar user={otherUser} size={38} />
+            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-[#0A0A0A]" />
           </div>
-        )}
+          <div className="text-left">
+            <p className="text-[#F5F0E8] font-semibold text-sm">{otherUser?.fullName || 'User'}</p>
+            <p className="text-[#F5F0E8]/30 text-xs">@{otherUser?.usernameHandle} · {otherUser?.district}</p>
+          </div>
+        </button>
+
+        {/* Connection status */}
+        <div className="flex items-center gap-1.5">
+          <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} />
+          <span className="text-[#F5F0E8]/20 text-xs">{connected ? 'Live' : 'Reconnecting'}</span>
+        </div>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 pt-[5rem] pb-[5rem] space-y-4">
-        {messages.map((msg, idx) => {
-          const isMine = msg.senderId === user?.id;
-          const showDate = idx === 0 || new Date(msg.createdAt).toDateString() !== new Date(messages[idx-1].createdAt).toDateString();
-          return (
-            <div key={msg.id}>
-              {showDate && (
-                <div className="flex justify-center my-6">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-[#F5F0E8]/30 bg-[#1E1E1E] px-3 py-1 rounded-full">
-                    {new Date(msg.createdAt).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                  </span>
-                </div>
-              )}
-              <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
-                <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${isMine ? 'bg-[#C9A84C] text-[#0A0A0A] rounded-tr-sm' : 'bg-[#1E1E1E] text-[#F5F0E8] border border-white/5 rounded-tl-sm'}`}>
-                  {msg.content}
-                </div>
-              </div>
-              <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                <span className="text-[8px] font-semibold text-[#F5F0E8]/30 mx-1">
-                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+        {Object.entries(groupMessagesByDate(messages)).map(([date, msgs]) => (
+          <div key={date}>
+            {/* Date separator */}
+            <div className="flex items-center gap-3 my-6">
+              <div className="flex-1 h-px bg-[#1E1E1E]" />
+              <span className="text-[#F5F0E8]/15 text-xs px-2">{date}</span>
+              <div className="flex-1 h-px bg-[#1E1E1E]" />
             </div>
-          );
-        })}
+
+            <div className="space-y-1.5">
+              {(msgs as Message[]).map((msg, i) => {
+                const isMe = msg.senderId === currentUserId;
+                const prevMsg = (msgs as Message[])[i - 1];
+                const showAvatar = !isMe && prevMsg?.senderId !== msg.senderId;
+                const isLastInGroup = !(msgs as Message[])[i + 1] || (msgs as Message[])[i + 1].senderId !== msg.senderId;
+
+                return (
+                  <div key={msg.id} className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                    {/* Other user avatar — only show on last message in group */}
+                    {!isMe && (
+                      <div className="w-7 flex-shrink-0 mb-1">
+                        {isLastInGroup && <Avatar user={otherUser!} size={28} />}
+                      </div>
+                    )}
+
+                    <div className={`max-w-[72%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
+                      <div className={`px-4 py-2.5 text-sm leading-relaxed ${
+                        isMe
+                          ? 'bg-[#C9A84C] text-[#0A0A0A] font-medium rounded-2xl rounded-br-sm'
+                          : 'bg-[#161616] text-[#F5F0E8] border border-[#1E1E1E] rounded-2xl rounded-bl-sm'
+                      } ${msg.pending ? 'opacity-60' : ''}`}>
+                        {msg.content}
+                      </div>
+                      {isLastInGroup && (
+                        <p className="text-[#F5F0E8]/15 text-xs mt-1 px-1">
+                          {formatTime(msg.createdAt)}{isMe && !msg.pending ? ' ✓' : ''}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/5 bg-[#0f0f0b]/80 backdrop-blur-md pb-safe-bottom">
-        <div className="flex items-end gap-2 bg-[#1E1E1E] border border-white/5 p-1 rounded-2xl">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Write a message..."
-            className="flex-1 bg-transparent border-none py-3 px-4 text-sm text-[#F5F0E8] placeholder:text-[#F5F0E8]/30 focus:ring-0"
+      {/* Input bar */}
+      <div className="flex-shrink-0 bg-[#0A0A0A] border-t border-[#1E1E1E] px-4 py-3">
+        <div className="flex items-end gap-3 bg-[#111] border border-[#1E1E1E] rounded-2xl px-4 py-3 focus-within:border-[#C9A84C]/30 transition-colors">
+          <textarea
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }}}
+            placeholder="Message..."
+            rows={1}
+            className="flex-1 bg-transparent text-[#F5F0E8] text-sm placeholder:text-[#F5F0E8]/20 focus:outline-none resize-none max-h-28 overflow-y-auto"
+            onInput={e => {
+              const t = e.target as HTMLTextAreaElement;
+              t.style.height = 'auto';
+              t.style.height = Math.min(t.scrollHeight, 112) + 'px';
+            }}
           />
-          <button 
-            onClick={handleSend}
-            disabled={!newMessage.trim()}
-            className="p-3 m-1 bg-[#C9A84C] text-[#0A0A0A] rounded-xl disabled:opacity-30 disabled:bg-[#1E1E1E] disabled:text-[#F5F0E8]/30 transition-all"
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim()}
+            className="w-8 h-8 bg-[#C9A84C] rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-25 hover:bg-[#D4B86A] transition-all"
           >
-            <Send className="w-4 h-4" />
+            <span className="text-[#0A0A0A] text-base font-bold">↑</span>
           </button>
         </div>
       </div>

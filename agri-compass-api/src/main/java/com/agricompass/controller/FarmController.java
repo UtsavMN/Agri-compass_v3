@@ -208,11 +208,28 @@ public class FarmController {
         dto.put("irrigation_type", farm.getIrrigationType());
         dto.put("current_crop", farm.getCurrentCrop());
         dto.put("created_at", farm.getCreatedAt() != null ? farm.getCreatedAt().toString() : null);
-        
-        // Weather logs and images are fetched separately via repository
-        // Farm.getWeatherLogs() and Farm.getImages() return empty lists as stubs
-        dto.put("weather_logs", java.util.Collections.emptyList());
-        dto.put("images", java.util.Collections.emptyList());
+        List<Map<String, Object>> logs = weatherLogRepository.findByFarmIdOrderByCreatedAtDesc(farm.getId()).stream().map(log -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", log.getId());
+            m.put("notes", log.getNotes());
+            m.put("temperature", log.getTemperature());
+            m.put("humidity", log.getHumidity());
+            m.put("conditions", log.getConditions());
+            m.put("created_at", log.getCreatedAt() != null ? log.getCreatedAt().toString() : null);
+            return m;
+        }).toList();
+
+        List<Map<String, Object>> imgs = farmImageRepository.findByFarmIdOrderByCreatedAtDesc(farm.getId()).stream().map(img -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", img.getId());
+            m.put("image_url", img.getImageUrl());
+            m.put("caption", img.getCaption());
+            m.put("created_at", img.getCreatedAt() != null ? img.getCreatedAt().toString() : null);
+            return m;
+        }).toList();
+
+        dto.put("weather_logs", logs);
+        dto.put("images", imgs);
         
         return dto;
     }

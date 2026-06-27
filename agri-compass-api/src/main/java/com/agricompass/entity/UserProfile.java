@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 public class UserProfile {
 
     @Id
-    @Column(name = "clerk_user_id")
+    @Column(name = "clerk_user_id", nullable = false)
     private String clerkUserId;
 
     @Column(name = "full_name", nullable = false)

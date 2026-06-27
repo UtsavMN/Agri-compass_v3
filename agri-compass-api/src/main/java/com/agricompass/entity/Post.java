@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 public class Post {
 
     @Id
+    @Column(nullable = false)
     private String id;
 
     @Column(name = "clerk_user_id", nullable = false)

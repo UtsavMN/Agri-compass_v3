@@ -179,12 +179,25 @@ export const BankCard = ({ scheme }: { scheme: typeof BANK_SCHEMES[0] }) => {
 export default function GovSchemes() {
   const [activeTab, setActiveTab] = useState<'for-you' | 'central' | 'karnataka' | 'banks'>('for-you');
   const [searchTerm, setSearchTerm] = useState('');
-  const { user, profile } = useUser();
+  const { user } = useUser();
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [farms, setFarms] = useState<any[]>([]);
+
+  interface SchemeFilters {
+    category: 'all' | 'central' | 'karnataka' | 'bank';
+    benefit: 'all' | 'financial' | 'subsidy' | 'insurance' | 'training' | 'infrastructure';
+    caste: 'all' | 'general' | 'sc' | 'st' | 'obc' | 'minority';
+    landSize: 'all' | 'small' | 'marginal' | 'large';
+  }
+
+  const [filters, setFilters] = useState<SchemeFilters>({
+    category: 'all', benefit: 'all', caste: 'all', landSize: 'all'
+  });
 
   useEffect(() => {
     if (user?.id) {
        apiGet('/api/farms').then(setFarms).catch(console.error);
+       apiGet('/api/profile/me').then(setUserProfile).catch(console.error);
     }
   }, [user?.id]);
 
@@ -198,7 +211,7 @@ export default function GovSchemes() {
      
      // Specific match
      const schemeText = `${scheme.name} ${scheme.benefit} ${scheme.category}`.toLowerCase();
-     if (profile?.location && schemeText.includes(profile.location.toLowerCase())) score += 20;
+     if (userProfile?.location && schemeText.includes(userProfile.location.toLowerCase())) score += 20;
      if (farms.some(f => f.cropFocus && schemeText.includes(f.cropFocus.toLowerCase()))) score += 25;
      
      return Math.min(100, score);
@@ -222,7 +235,7 @@ export default function GovSchemes() {
       .map(scheme => ({ ...scheme, score: calculateEligibilityScore(scheme) }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 6);
-  }, [farms, profile]);
+  }, [farms, userProfile]);
 
   const filteredBankSchemes = BANK_SCHEMES.filter(scheme => {
     const isSearchMatch = !searchTerm ||
@@ -301,6 +314,61 @@ export default function GovSchemes() {
                 className="pl-12 bg-earth-elevated/20 border-earth-border text-gold-100 focus:border-[#c49a2a] h-12 rounded-xl text-xs font-bold uppercase tracking-widest placeholder:text-[#6a6050]"
               />
             </div>
+          </div>
+        </ScrollReveal>
+
+        {/* Filter bar */}
+        <ScrollReveal delay={0.15}>
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
+            {/* Benefit type */}
+            <select
+              value={filters.benefit}
+              onChange={e => setFilters(f => ({ ...f, benefit: e.target.value as any }))}
+              className="bg-[#111] border border-[#1E1E1E] text-[#F5F0E8] text-[10px] font-bold uppercase tracking-widest rounded-xl px-4 py-2.5 focus:border-[#c49a2a]/50 focus:outline-none flex-shrink-0"
+            >
+              <option value="all">All Benefits</option>
+              <option value="financial">Financial Support</option>
+              <option value="subsidy">Subsidy</option>
+              <option value="insurance">Crop Insurance</option>
+              <option value="training">Training & Extension</option>
+              <option value="infrastructure">Infrastructure</option>
+            </select>
+
+            {/* Caste category */}
+            <select
+              value={filters.caste}
+              onChange={e => setFilters(f => ({ ...f, caste: e.target.value as any }))}
+              className="bg-[#111] border border-[#1E1E1E] text-[#F5F0E8] text-[10px] font-bold uppercase tracking-widest rounded-xl px-4 py-2.5 focus:border-[#c49a2a]/50 focus:outline-none flex-shrink-0"
+            >
+              <option value="all">All Categories</option>
+              <option value="general">General</option>
+              <option value="sc">SC</option>
+              <option value="st">ST</option>
+              <option value="obc">OBC</option>
+              <option value="minority">Minority</option>
+            </select>
+
+            {/* Land size */}
+            <select
+              value={filters.landSize}
+              onChange={e => setFilters(f => ({ ...f, landSize: e.target.value as any }))}
+              className="bg-[#111] border border-[#1E1E1E] text-[#F5F0E8] text-[10px] font-bold uppercase tracking-widest rounded-xl px-4 py-2.5 focus:border-[#c49a2a]/50 focus:outline-none flex-shrink-0"
+            >
+              <option value="all">All Land Sizes</option>
+              <option value="marginal">Marginal (under 2 acres)</option>
+              <option value="small">Small (2–5 acres)</option>
+              <option value="large">Large (5+ acres)</option>
+            </select>
+
+            {/* Reset button */}
+            {Object.values(filters).some(v => v !== 'all') && (
+              <button
+                onClick={() => setFilters({ category: 'all', benefit: 'all', caste: 'all', landSize: 'all' })}
+                className="text-[#c49a2a] text-[10px] font-bold uppercase tracking-widest px-4 py-2.5 flex-shrink-0 hover:text-[#d4aa3a]"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         </ScrollReveal>
 

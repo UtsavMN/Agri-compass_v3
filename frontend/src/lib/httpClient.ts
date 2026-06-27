@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 
 // In dev, use relative URLs so Vite's /api proxy forwards to the backend (port 8080).
 // Set VITE_API_URL when deploying (e.g. production API host).
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ??
-  (import.meta.env.DEV ? '' : 'http://localhost:8080');
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? '';
 
 /**
  * Get the Clerk session token from the active session.

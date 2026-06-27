@@ -27,6 +27,11 @@ export const MarketPricesSection = ({ district }: { district: string }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => <PriceSkeleton key={i} />)}
         </div>
+      ) : prices.length === 0 ? (
+        <div className="text-center py-16">
+          <p className="text-[#F5F0E8]/40">No mandi data available for {district} today.</p>
+          <p className="text-[#F5F0E8]/20 text-sm mt-2">Data.gov.in updates prices daily by 5 PM.</p>
+        </div>
       ) : (
         <motion.div
           variants={staggerContainer}

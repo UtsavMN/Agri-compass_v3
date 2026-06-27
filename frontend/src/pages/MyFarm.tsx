@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import { useUser, MOCK_USERS } from '@/store';
+import { loadDistrictDataFromCSV } from '@/lib/csvLoader';
 import { FarmsAPI, type Farm } from '@/lib/api/farms';
 import { cropRecommender } from '@/lib/ai/cropRecommender';
 import { SeasonAdvisoryCard } from '@/components/farm/SeasonAdvisoryCard';
@@ -97,42 +98,28 @@ export default function MyFarm() {
     }
   }, [selectedDistrict]);
 
-  const loadDistrictDataFromCSV = async () => {
-    try {
-      const response = await fetch('/districts.csv');
-      const csvText = await response.text();
-      return new Promise<any[]>((resolve) => {
-        Papa.parse(csvText, {
-          header: true,
-          skipEmptyLines: true,
-          complete: (results) => {
-            const data = results.data as any[];
-            setDistrictData(data);
-            setDistricts(data.map(d => d.district));
-            resolve(data);
-          },
-          error: (error: any) => {
-            console.error('Error parsing CSV:', error);
-            resolve([]);
-          }
-        });
-      });
-    } catch (error) {
-      console.error('Error loading district data:', error);
-      return [];
-    }
-  };
+  // loadDistrictDataFromCSV is imported from @/lib/csvLoader
 
   const initializePage = async () => {
     try {
-      const loadedDistrictData = await loadDistrictDataFromCSV();
+      setLoading(true);
+      const [loadedDistrictData] = await Promise.all([
+        loadDistrictDataFromCSV().then(data => {
+          setDistrictData(data);
+          setDistricts(data.map(d => d.district));
+          return data;
+        }),
+        loadFarms()
+      ]);
+      
       if (!selectedDistrict) {
         const defaultDistrict = profile?.location || profile?.district || loadedDistrictData[0]?.district || '';
         setSelectedDistrict(defaultDistrict);
       }
-      await loadFarms();
     } catch (error) {
       console.error('Error initializing page:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -148,9 +135,8 @@ export default function MyFarm() {
         description: err.message ?? 'Could not load farm details.',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
+    // Removed finally { setLoading(false) } since initializePage handles it
   };
 
   const loadDistrictData = async () => {
@@ -261,20 +247,9 @@ export default function MyFarm() {
 
             {activeTab === 'farms' && (
               <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-3 bg-earth-elevated/50 p-2 pl-4 rounded-2xl border border-earth-border">
+                <div className="flex items-center gap-3 bg-earth-elevated/50 p-2 px-4 rounded-2xl border border-earth-border">
                   <MapPin className="h-4 w-4 text-gold-400/60" />
-                  <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
-                    <SelectTrigger className="w-48 bg-transparent border-none text-gold-100 font-bold focus:ring-0 notranslate" translate="no">
-                      <SelectValue placeholder="District Protocol" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-earth-elevated border-earth-border notranslate" translate="no">
-                      {districts.sort().map((district) => (
-                        <SelectItem key={district} value={district} className="text-gold-100 uppercase text-xs font-bold">
-                          {district}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <span className="text-gold-100 font-bold text-sm tracking-widest uppercase">{selectedDistrict || 'NO DISTRICT SELECTED'}</span>
                 </div>
 
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

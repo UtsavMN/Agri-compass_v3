@@ -14,8 +14,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
+
 @RestController
 @RequestMapping("/api/market")
+@Slf4j
 public class MarketController {
 
     @Value("${data.gov.in.api.key:default}")
@@ -34,29 +37,50 @@ public class MarketController {
             ));
         }
 
-        String url = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070" +
-            "?api-key=" + dataGovApiKey +
-            "&format=json" +
-            "&limit=" + limit +
-            "&filters[state]=Karnataka" +
-            "&filters[district]=" + district;
+        // Add logging at the method start
+        log.info("Fetching mandi prices for district: {}", district);
 
-        try {
-            RestTemplate restTemplate = new RestTemplate();
-            @SuppressWarnings("unchecked")
-            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+        String[] districtVariants = { district, district.replace("Shivamogga", "Shimoga") };
+        List<Map<String, Object>> allParsedPrices = new ArrayList<>();
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        for (String distVariant : districtVariants) {
+            String url = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070" +
+                "?api-key=" + dataGovApiKey +
+                "&format=json" +
+                "&limit=" + limit +
+                "&filters[state]=Karnataka" +
+                "&filters[district]=" + distVariant;
+
+            log.info("API URL: {}", url);
+
+            try {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+                List<Map<String, Object>> parsed = parseMandiData(response);
+                if (parsed != null && !parsed.isEmpty()) {
+                    allParsedPrices.addAll(parsed);
+                    break; // stop trying variants if we got data
+                }
+            } catch (Exception e) {
+                log.error("Failed to fetch market prices: {}", e.getMessage());
+            }
+        }
+
+        if (allParsedPrices.isEmpty()) {
             return ResponseEntity.ok(Map.of(
-                "prices", parseMandiData(response),
-                "district", district,
-                "fetchedAt", LocalDateTime.now()
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.ok(Map.of(
-                "prices", getMockData(district),
+                "prices", getMockData(district), // fallback to mock if completely empty
                 "district", district,
                 "fetchedAt", LocalDateTime.now()
             ));
         }
+
+        return ResponseEntity.ok(Map.of(
+            "prices", allParsedPrices,
+            "district", district,
+            "fetchedAt", LocalDateTime.now()
+        ));
     }
 
     @SuppressWarnings("unchecked")

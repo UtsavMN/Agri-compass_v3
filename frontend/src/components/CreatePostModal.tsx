@@ -55,9 +55,11 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
   })
 
   useEffect(() => {
+    let isMounted = true;
     if (isOpen && user) {
-      loadUserFarms()
+      loadUserFarms(isMounted)
     }
+    return () => { isMounted = false; }
   }, [isOpen, user])
 
   useEffect(() => {
@@ -67,17 +69,17 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
     }
   }, [previewUrls])
 
-  const loadUserFarms = async () => {
+  const loadUserFarms = async (isMounted: boolean) => {
     if (!user) return
 
     setLoadingFarms(true)
     try {
       const data = await FarmsAPI.getFarms(user.id)
-      setFarms(data || [])
+      if (isMounted) setFarms(data || [])
     } catch (error) {
       console.error('Error loading farms:', error)
     } finally {
-      setLoadingFarms(false)
+      if (isMounted) setLoadingFarms(false)
     }
   }
 
@@ -289,7 +291,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
             {previewUrls.length > 0 && (
               <div className="grid grid-cols-3 gap-2 mt-4">
                 {previewUrls.map((url, index) => (
-                  <div key={index} className="relative group">
+                  <div key={url} className="relative group">
                     <img
                       src={url}
                       alt={`Preview ${index + 1}`}
