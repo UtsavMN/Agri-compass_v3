@@ -11,7 +11,7 @@ export const ParticleField = React.memo(() => {
   return (
     <Particles
       id="agri-particles"
-      init={particlesInit}
+      {...({ init: particlesInit } as any)}
       className="absolute inset-0 pointer-events-none z-0"
       options={{
         background: { color: { value: "transparent" } },
