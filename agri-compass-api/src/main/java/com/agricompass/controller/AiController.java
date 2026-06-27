@@ -378,45 +378,9 @@ public class AiController {
             }
         }
 
-        // 3. Fallback to schema-compliant rich mock data if all API keys are exhausted
-        log.warn("All AI APIs exhausted. Serving production-grade mock growing guide.");
-        Map<String, Object> mockResponse = Map.of(
-            "recommended_crops", List.of(
-                Map.of(
-                    "crop_name", "Rice (Paddy)",
-                    "suitability_score", 88,
-                    "expected_yield_per_acre_tons", 2.8,
-                    "growing_guide", Map.of(
-                        "sowing_details", "Raise seedlings in nursery for 21-25 days. Transplant in puddled soils spaced at 20x15 cm. Highly recommended for Raichur & Shivamogga command areas.",
-                        "fertilizer_npk_schedule_per_acre", "Basal: 50 kg DAP + 50 kg MOP. Active Tillering (21 DAS): Top-dress 130 kg Urea. Panicle Initiation (55 DAS): Top-dress 65 kg Urea + 50 kg MOP.",
-                        "irrigation_plan", "Maintain continuous submergence (5 cm depth) until vegetative stage. Keep soil saturated during flowering and grain filling. Drain field 2 weeks before harvest.",
-                        "pest_disease_management", "Spray Tricyclazole (0.6g/L) for Blast disease. Keep watch for Stem Borer and implement early soil pheromone traps.",
-                        "harvesting_tips", "Harvest when 80-85% of panicles turn golden straw-colored. Sun-dry grains to 14% moisture content to prevent storage fungal rot."
-                    )
-                ),
-                Map.of(
-                    "crop_name", "Maize",
-                    "suitability_score", 82,
-                    "expected_yield_per_acre_tons", 3.2,
-                    "growing_guide", Map.of(
-                        "sowing_details", "Sow seeds at 5 cm depth. Optimal seed rate is 20 kg/ha. Excellent choice for medium-drained soils of Davanagere.",
-                        "fertilizer_npk_schedule_per_acre", "Basal: 75 kg complex fertilizer. Knee-high stage: Top-dress 60 kg Urea. Tasseling stage: Top-dress 60 kg Urea + 30 kg MOP.",
-                        "irrigation_plan", "Irrigate at critical growth phases: tasseling, silking, and grain milking. Avoid any prolonged water stagnation.",
-                        "pest_disease_management", "Incorporate active early sprays of Emamectin Benzoate (0.4g/L) against Fall Armyworm infestation.",
-                        "harvesting_tips", "Harvest when grains form a black layer at the base (physiological maturity). De-husk cobs and dry fully."
-                    )
-                )
-            ),
-            "soil_health_report", Map.of(
-                "status", "Good",
-                "limiting_factors", List.of("Moderate nitrogen deficiency", "Minor soil compaction"),
-                "soil_amendment_recommendations", "Apply 10 tonnes of Farmyard Manure (FYM) per hectare and plant green manure crops like Sunnhemp in the off-season."
-            ),
-            "warnings", List.of("Slightly low moisture level recorded. Keep scheduling irrigation strictly around vegetative stage."),
-            "confidence_level", 92
-        );
-
-        return ResponseEntity.ok(mockResponse);
+        // 3. Fail loudly if all API keys are exhausted or missing (Production Best Practice)
+        log.error("All AI APIs exhausted or missing. Failing loudly to prevent silent data corruption.");
+        throw new RuntimeException("AI Service Unavailable: Please check your GEMINI_API_KEY environment variables.");
     }
 
     private String stripMarkdownFences(String text) {
