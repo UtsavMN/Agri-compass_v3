@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { MARKET_TRENDS, getCropImage, formatIndianNumber, MarketTrend } from '@/data/masterData'
 import { motion, AnimatePresence } from 'framer-motion'

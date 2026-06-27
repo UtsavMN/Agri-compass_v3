@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { useEffect, useState } from "react";
+import { apiGet } from "@/lib/httpClient";
 
 interface FarmIntelligenceProps {
   farmName: string;
@@ -17,9 +18,8 @@ export const FarmIntelligenceCard = ({ farmName, acres, district, crop, npk }: F
   useEffect(() => {
     if (crop) {
       // Fetch live market price for this crop from your backend
-      fetch(`/api/market/prices?commodity=${crop}&district=${district}&limit=1`)
-        .then(r => r.json())
-        .then(d => {
+      apiGet(`/api/market/prices?commodity=${crop}&district=${district}&limit=1`)
+        .then((d: any) => {
           if (d.prices && d.prices.length > 0) {
             setMarketPrice(d.prices[0].modalPrice);
           } else {

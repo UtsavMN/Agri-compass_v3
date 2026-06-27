@@ -1,10 +1,10 @@
 import { useEffect } from "react";
-import { useUser, useAuth } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { apiGet } from "@/lib/httpClient";
 
 export const useOnboardingGate = () => {
   const { user, isLoaded } = useUser();
-  const { getToken } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -18,12 +18,8 @@ export const useOnboardingGate = () => {
 
     const checkOnboarding = async () => {
       try {
-        const token = await getToken();
-        const res = await fetch(`/api/users/onboarding-status`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const { completed } = await res.json();
-        if (!completed) navigate("/onboarding");
+        const data = await apiGet<{ completed: boolean }>('/api/users/onboarding-status');
+        if (!data.completed) navigate("/onboarding");
       } catch (e) {
         console.error("Failed to check onboarding status", e);
       }

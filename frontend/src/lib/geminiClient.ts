@@ -1,6 +1,7 @@
 // src/lib/geminiClient.ts
 // This wrapper enforces strict rate limits to protect free tier credits.
 // Free Gemini tier: 15 requests/minute, 1500 requests/day, 1M tokens/minute
+import { apiPost } from '@/lib/httpClient'
 
 const RATE_LIMITS = {
   requestsPerMinute: 12,     // stay under 15 limit with buffer
@@ -95,24 +96,14 @@ Context: ${context ? truncateInput(context) : 'Karnataka farmer, Kharif season'}
   }))
 
   // Call via backend to keep API key secure
-  const response = await fetch('/api/ai/chat', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Mock-User-Id': localStorage.getItem('mock_user_id') || '1',
-    },
-    body: JSON.stringify({
-      message: fullPrompt,
-      systemContext: systemPrompt,
-      maxTokens: RATE_LIMITS.maxTokensPerRequest,
-      history: formattedHistory
-    }),
+  const data = await apiPost('/api/ai/chat', {
+    message: fullPrompt,
+    systemContext: systemPrompt,
+    maxTokens: RATE_LIMITS.maxTokensPerRequest,
+    history: formattedHistory
   })
 
-  if (!response.ok) throw new Error('AI service unavailable')
-
   recordRequest()
-  const data = await response.json()
   return data.reply || data.response || 'Empty response received.'
 }
 
