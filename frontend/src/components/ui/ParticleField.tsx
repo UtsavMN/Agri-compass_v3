@@ -32,7 +32,7 @@ export const ParticleField = React.memo(() => {
             random: true,
             outModes: { default: "bounce" },
           },
-          number: { density: { enable: true, area: 900 }, value: 40 },
+          number: { density: { enable: true, area: 900 } as any, value: 40 },
           opacity: { value: 0.18 },
           size: { value: { min: 1, max: 2.5 } },
         },

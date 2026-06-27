@@ -9,7 +9,7 @@ interface GoldCardProps {
 
 export const GoldCard = ({ children, className, onClick }: GoldCardProps) => (
   <motion.div
-    variants={cardHoverVariants}
+    variants={cardHoverVariants as any}
     initial="rest"
     whileHover="hover"
     onClick={onClick}

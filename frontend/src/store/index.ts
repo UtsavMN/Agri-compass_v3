@@ -12,6 +12,12 @@ export interface Profile {
   phone: string | null;
   location: string | null;
   language_preference: string | null;
+  bio?: string | null;
+  language?: string | null;
+  avatar_url?: string | null;
+  profile_picture_url?: string | null;
+  cover_photo_url?: string | null;
+  created_at?: string | null;
 }
 
 export const MOCK_USERS: any[] = [];

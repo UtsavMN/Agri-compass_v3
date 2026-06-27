@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import { apiGet } from "@/lib/httpClient";
-import { Avatar } from "@/components/ui/Avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -68,7 +68,10 @@ export const MessagesPage = () => {
           >
             {/* Avatar with online dot */}
             <div className="relative flex-shrink-0">
-              <Avatar user={conv.otherUser} size={50} />
+              <Avatar className="w-[50px] h-[50px]">
+                <AvatarImage src={conv.otherUser?.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${conv.otherUser?.clerkUserId}`} />
+                <AvatarFallback>{conv.otherUser?.fullName?.charAt(0) || 'U'}</AvatarFallback>
+              </Avatar>
               <div className="absolute bottom-0.5 right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-[#0A0A0A]" />
             </div>
 

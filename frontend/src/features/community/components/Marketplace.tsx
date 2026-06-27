@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiGet, apiPost, apiDelete } from '@/lib/httpClient';
-import { useUser } from '@clerk/clerk-react';
+import { useUser } from '@/store';
 import { LISTING_CATEGORIES } from '@/data/marketplaceCategories';
 import { 
   Plus, 

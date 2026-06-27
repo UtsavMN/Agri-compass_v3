@@ -58,7 +58,7 @@ Provide a helpful, concise response in English or Kannada as appropriate.`
           prompt: systemPrompt,
           user_id: request.user_id,
           farm_id: request.farm_id
-        }, { signal: controller.signal })
+        })
 
         clearTimeout(timeoutId)
 

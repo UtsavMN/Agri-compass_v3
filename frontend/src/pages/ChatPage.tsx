@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import { apiGet, apiPost } from "@/lib/httpClient";
-import { Avatar } from "@/components/ui/Avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
@@ -133,7 +133,10 @@ export const ChatPage = () => {
 
         <button onClick={() => navigate(`/profile/${otherUserId}`)} className="flex items-center gap-3 flex-1">
           <div className="relative">
-            <Avatar user={otherUser} size={38} />
+            <Avatar className="w-[38px] h-[38px]">
+              <AvatarImage src={otherUser?.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser?.clerkUserId}`} />
+              <AvatarFallback>{otherUser?.fullName?.charAt(0) || 'U'}</AvatarFallback>
+            </Avatar>
             <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-[#0A0A0A]" />
           </div>
           <div className="text-left">
@@ -172,7 +175,12 @@ export const ChatPage = () => {
                     {/* Other user avatar — only show on last message in group */}
                     {!isMe && (
                       <div className="w-7 flex-shrink-0 mb-1">
-                        {isLastInGroup && <Avatar user={otherUser!} size={28} />}
+                        {isLastInGroup && (
+                          <Avatar className="w-[28px] h-[28px]">
+                            <AvatarImage src={otherUser?.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser?.clerkUserId}`} />
+                            <AvatarFallback>{otherUser?.fullName?.charAt(0) || 'U'}</AvatarFallback>
+                          </Avatar>
+                        )}
                       </div>
                     )}
 
