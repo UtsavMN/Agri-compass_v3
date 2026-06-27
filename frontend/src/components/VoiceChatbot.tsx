@@ -2,9 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff, Volume2, X, Send, Sprout } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-
-// Note: You must add VITE_GROQ_API_KEY to your .env file
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
+import { apiPost } from "@/lib/httpClient";
 
 export const VoiceChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -75,46 +73,21 @@ export const VoiceChatbot = () => {
   const handleIntent = async (text: string) => {
     setResponse("ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ..."); // "Analyzing..."
     
-    if (!GROQ_API_KEY) {
-      const msg = "ಕ್ಷಮಿಸಿ, ಎಪಿಐ ಕೀ (API Key) ಇಲ್ಲ."; // Sorry, no API key
-      setResponse(msg);
-      speak(msg);
-      return;
-    }
-
     try {
-      const completion = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${GROQ_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "llama3-8b-8192",
-          messages: [
-            {
-              role: "system",
-              content: `You are a helpful agricultural assistant for farmers in Karnataka.
-              The user will speak in Kannada or English. 
-              Respond ONLY in Kannada script. Keep it under 2 sentences.
-              If they ask about prices, suggest /market-prices.
-              If they ask about weather, suggest /weather.
-              If they ask about schemes, suggest /schemes.
-              Format your response as: [Action]|Your Kannada response here
-              Where Action is either a path (e.g. /weather) or "none".`
-            },
-            {
-              role: "user",
-              content: text
-            }
-          ],
-          temperature: 0.5,
-          max_tokens: 150
-        })
+      const data = await apiPost("/api/ai/chat", {
+        message: text,
+        maxTokens: 150,
+        systemContext: `You are a helpful agricultural assistant for farmers in Karnataka.
+          The user will speak in Kannada or English. 
+          Respond ONLY in Kannada script. Keep it under 2 sentences.
+          If they ask about prices, suggest /market-prices.
+          If they ask about weather, suggest /weather.
+          If they ask about schemes, suggest /schemes.
+          Format your response as: [Action]|Your Kannada response here
+          Where Action is either a path (e.g. /weather) or "none".`
       });
 
-      const data = await completion.json();
-      const rawText = data.choices[0].message.content || "";
+      const rawText = data?.reply || data?.response || "";
       
       const [action, reply] = rawText.includes("|") ? rawText.split("|") : ["none", rawText];
       
