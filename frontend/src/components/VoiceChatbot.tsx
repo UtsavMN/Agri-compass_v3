@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff, Volume2, X, Send, Sprout } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Note: You must add VITE_GROQ_API_KEY to your .env file
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
@@ -16,6 +16,10 @@ export const VoiceChatbot = () => {
   
   const recognitionRef = useRef<any>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Hide the chatbot entirely on the messages pages to prevent overlapping the chat input
+  const isMessagesPage = location.pathname.startsWith('/messages');
 
   useEffect(() => {
     // Check if browser supports speech recognition
@@ -131,6 +135,8 @@ export const VoiceChatbot = () => {
       speak(msg);
     }
   };
+
+  if (isMessagesPage) return null;
 
   return (
     <>
