@@ -57,7 +57,10 @@ export default function PostDetail() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-3">
-                <Avatar>
+                <Avatar 
+                  className="cursor-pointer hover:opacity-80 transition-opacity" 
+                  onClick={() => navigate(`/profile/${post.user?.id || post.user?.clerkUserId}`)}
+                >
                   <AvatarImage src={post.user?.avatar_url} />
                   <AvatarFallback>{((post.user?.username || post.user?.full_name || 'F')[0] || 'F').toUpperCase()}</AvatarFallback>
                 </Avatar>

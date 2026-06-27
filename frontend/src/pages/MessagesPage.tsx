@@ -61,13 +61,19 @@ export const MessagesPage = () => {
         ) : conversations.length === 0 ? (
            <div className="text-center py-10 text-[#F5F0E8]/40">No conversations yet</div>
         ) : conversations.map(conv => (
-          <button
+          <div
             key={conv.id}
             onClick={() => navigate(`/messages/${conv.otherUser.id}`)}
-            className="w-full px-6 py-4 flex items-center gap-4 hover:bg-[#111] transition-colors text-left"
+            className="w-full px-6 py-4 flex items-center gap-4 hover:bg-[#111] transition-colors text-left cursor-pointer"
           >
             {/* Avatar with online dot */}
-            <div className="relative flex-shrink-0">
+            <div 
+              className="relative flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/profile/${conv.otherUser.id}`);
+              }}
+            >
               <Avatar className="w-[50px] h-[50px]">
                 <AvatarImage src={conv.otherUser?.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${conv.otherUser?.clerkUserId}`} />
                 <AvatarFallback>{conv.otherUser?.fullName?.charAt(0) || 'U'}</AvatarFallback>
@@ -93,7 +99,7 @@ export const MessagesPage = () => {
                 <span className="text-[#0A0A0A] text-xs font-bold">{conv.unreadCount}</span>
               </div>
             )}
-          </button>
+          </div>
         ))}
       </div>
     </div>

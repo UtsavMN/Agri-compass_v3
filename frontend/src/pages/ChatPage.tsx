@@ -176,7 +176,10 @@ export const ChatPage = () => {
                     {!isMe && (
                       <div className="w-7 flex-shrink-0 mb-1">
                         {isLastInGroup && (
-                          <Avatar className="w-[28px] h-[28px]">
+                          <Avatar 
+                            className="w-[28px] h-[28px] cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => navigate(`/profile/${otherUserId}`)}
+                          >
                             <AvatarImage src={otherUser?.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser?.clerkUserId}`} />
                             <AvatarFallback>{otherUser?.fullName?.charAt(0) || 'U'}</AvatarFallback>
                           </Avatar>
