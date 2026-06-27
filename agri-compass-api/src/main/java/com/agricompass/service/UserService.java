@@ -103,4 +103,8 @@ public class UserService {
     public UserProfile updateProfile(UserProfile profile) {
         return userProfileRepository.save(profile);
     }
+
+    public long countUsers() {
+        return userProfileRepository.count();
+    }
 }

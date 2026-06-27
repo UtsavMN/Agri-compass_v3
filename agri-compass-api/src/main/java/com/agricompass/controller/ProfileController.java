@@ -116,4 +116,10 @@ public class ProfileController {
         UserProfile profile = userService.updateProfile(fullName, avatarUrl, location, phone, languagePreference, district, usernameHandle, bio);
         return ResponseEntity.ok(profile);
     }
+
+    // GET /api/profiles/count - get total number of users
+    @GetMapping("/profiles/count")
+    public ResponseEntity<Map<String, Long>> getUserCount() {
+        return ResponseEntity.ok(Map.of("count", userService.countUsers()));
+    }
 }

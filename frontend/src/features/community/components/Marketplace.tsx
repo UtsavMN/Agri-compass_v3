@@ -361,10 +361,10 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
   }, [selectedCategory]);
 
   const handleSubmit = async () => {
-    if (!title.trim() || !price || !location.trim()) {
+    if (!price || !location.trim()) {
       toast({
         title: 'Validation failed',
-        description: 'Please fill in all the required fields.',
+        description: 'Price and location are required fields.',
         variant: 'destructive',
       });
       return;
@@ -377,8 +377,10 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
         finalDescription = `[Type: ${subType}] \n\n${finalDescription}`;
       }
 
+      const finalTitle = title.trim() || `${subType} - ${location}`;
+
       const payload = {
-        title: title.trim(),
+        title: finalTitle,
         description: finalDescription,
         category: selectedCategory?.label || 'General',
         listingType,
@@ -495,7 +497,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
 
               {/* Core Details */}
               <div className="space-y-1">
-                <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Listing Title</label>
+                <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Listing Title (Optional)</label>
                 <input
                   type="text"
                   placeholder="e.g. High Quality Sona Masuri Rice Seedlings"
@@ -580,7 +582,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                   </div>
                   <div className="flex justify-between items-center pb-2 border-b border-white/5">
                     <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Title</span>
-                    <span className="text-xs font-bold text-[#f0ece0] truncate max-w-[200px]">{title}</span>
+                    <span className="text-xs font-bold text-[#f0ece0] truncate max-w-[200px]">{title || `${subType} - ${location}`}</span>
                   </div>
                   <div className="flex justify-between items-center pb-2 border-b border-white/5">
                     <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Price</span>
@@ -619,10 +621,10 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
             <div />
           ) : step === 2 ? (
             <button onClick={() => {
-              if (!title.trim() || !price || !location.trim()) {
+              if (!price || !location.trim()) {
                 toast({
                   title: 'Validation failed',
-                  description: 'Title, price and location are required fields.',
+                  description: 'Price and location are required fields.',
                   variant: 'destructive'
                 });
                 return;

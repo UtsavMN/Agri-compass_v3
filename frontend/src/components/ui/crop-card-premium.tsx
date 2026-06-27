@@ -103,7 +103,7 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
 
         <div className="absolute bottom-4 left-4 right-4">
           <h3 className="text-2xl font-black text-gold-100 tracking-tighter drop-shadow-lg">{crop.name}</h3>
-          {crop.scientificName && (
+          {crop.scientificName && crop.scientificName.toLowerCase() !== 'unknown' && (
             <p className="text-xs italic text-gold-300/80 mt-0.5 font-medium drop-shadow">{crop.scientificName}</p>
           )}
         </div>

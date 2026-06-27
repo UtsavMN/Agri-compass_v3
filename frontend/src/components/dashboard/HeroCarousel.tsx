@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Cloud, Leaf as Wheat, TrendingUp } from 'lucide-react';
+import { Cloud, Leaf as Wheat, TrendingUp, Users } from 'lucide-react';
 import { KarnatakaMap } from './KarnatakaMap';
 import { TiltCard } from '@/components/ui/animations';
 
@@ -76,12 +76,12 @@ import { ParticleField } from "@/components/ui/ParticleField";
 export const HeroCarousel = ({ 
   temp, 
   condition, 
-  cropsCount, 
+  userCount, 
   newsCount 
 }: { 
   temp: number; 
   condition: string; 
-  cropsCount: number; 
+  userCount: number; 
   newsCount: number; 
 }) => {
   const [current, setCurrent] = useState(0);
@@ -198,8 +198,8 @@ export const HeroCarousel = ({
         <div className="-mb-24 mt-8 relative z-20 w-full">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <HeroStatCard icon={<Cloud size={18} />} label="Current Weather" value={`${temp}°C`} sub={condition} />
-            <HeroStatCard icon={<Wheat size={18} />} label="Tracked Crops" value={String(cropsCount)} sub="Optimized suggestions" />
-            <HeroStatCard icon={<TrendingUp size={18} />} label="Market Updates" value={`${newsCount} Active`} sub="Recent trade tariffs" />
+            <HeroStatCard icon={<Users size={18} />} label="Active Users" value={String(userCount)} sub="Farmers connected" />
+            <HeroStatCard icon={<TrendingUp size={18} />} label="Market Updates" value={`${newsCount} Active`} sub="Recent trade bulletins" />
           </div>
         </div>
       </motion.div>

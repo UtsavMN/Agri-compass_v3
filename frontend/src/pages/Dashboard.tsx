@@ -84,6 +84,7 @@ export default function Dashboard() {
   const [newsItems, setNewsItems] = useState<any[]>([]);
   const [communityPosts, setCommunityPosts] = useState<Post[]>([]);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [userCount, setUserCount] = useState(0);
 
 
   useEffect(() => {
@@ -104,18 +105,20 @@ export default function Dashboard() {
 
   const initializeDashboard = async () => {
     try {
-      const [loadedDistrictData, cropsData, postsData] = await Promise.all([
+      const [loadedDistrictData, cropsData, postsData, userCountData] = await Promise.all([
         loadDistrictDataFromCSV().then(data => {
           setDistrictData(data);
           setDistricts(data.map(d => d.district));
           return data;
         }),
         apiGet('/api/crops?page=0&size=6&sortBy=name').catch(() => ({ content: [] })),
-        PostsAPI.getPosts().catch(() => [])
+        PostsAPI.getPosts().catch(() => []),
+        apiGet('/api/profiles/count').catch(() => ({ count: 0 }))
       ]);
 
       setCrops(cropsData?.content || []);
       setCommunityPosts(postsData.slice(0, 3));
+      setUserCount(userCountData?.count || 0);
 
       // Fetch news from our secure proxy endpoint
       apiGet('/api/news/agriculture')
@@ -169,7 +172,7 @@ export default function Dashboard() {
         <HeroCarousel 
           temp={28} 
           condition="Clear" 
-          cropsCount={24} 
+          userCount={userCount} 
           newsCount={newsItems.length || 0} 
         />
 

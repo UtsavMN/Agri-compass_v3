@@ -61,10 +61,24 @@ export default function Layout({
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useOnboardingGate();
 
-
+  useEffect(() => {
+    if (!user) return;
+    const fetchUnread = () => {
+      apiGet('/api/conversations/unread-count', null, true)
+        .then((res: any) => {
+          if (res && typeof res.count === 'number') {
+            setUnreadCount(res.count);
+          }
+        })
+        .catch(console.error);
+    };
+    fetchUnread();
+  }, [user, location.pathname]);
+  
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
@@ -150,6 +164,11 @@ export default function Layout({
             {user && (
               <button onClick={() => navigate('/messages')} className="relative p-2 text-gold-100/70 hover:text-gold-100 transition-colors">
                 <MessageSquare className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-bounce shadow-lg ring-2 ring-[#0f0f0b]">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </button>
             )}
 

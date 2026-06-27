@@ -63,7 +63,7 @@ export const MessagesPage = () => {
         ) : conversations.map(conv => (
           <button
             key={conv.id}
-            onClick={() => navigate(`/messages/${conv.otherUser.clerkUserId}`)}
+            onClick={() => navigate(`/messages/${conv.otherUser.id}`)}
             className="w-full px-6 py-4 flex items-center gap-4 hover:bg-[#111] transition-colors text-left"
           >
             {/* Avatar with online dot */}

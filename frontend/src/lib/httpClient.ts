@@ -4,6 +4,14 @@ import { useState, useEffect } from 'react';
 // Set VITE_API_URL when deploying (e.g. production API host).
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? '';
 
+// Simple in-memory cache to massively speed up navigation and reduce backend load
+const apiCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+export function clearApiCache() {
+  apiCache.clear();
+}
+
 /**
  * Get the Clerk session token from the active session.
  * Uses the global Clerk instance injected by ClerkProvider.
@@ -42,7 +50,15 @@ async function getAuthHeaders(isFormData = false): Promise<Record<string, string
   return headers;
 }
 
-export async function apiGet<T = any>(endpoint: string, token?: string | null): Promise<T> {
+export async function apiGet<T = any>(endpoint: string, token?: string | null, forceRefresh = false): Promise<T> {
+  const cacheKey = endpoint;
+  if (!forceRefresh && apiCache.has(cacheKey)) {
+    const cached = apiCache.get(cacheKey)!;
+    if (Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data as T;
+    }
+  }
+
   const headers = await getAuthHeaders();
   // Allow manually passed token to override
   if (token) {
@@ -61,7 +77,9 @@ export async function apiGet<T = any>(endpoint: string, token?: string | null): 
     const errorBody = await response.text();
     throw new Error(`API returned HTML instead of JSON. Ensure VITE_API_BASE_URL is correctly set. Received: ${errorBody.substring(0, 100)}...`);
   }
-  return response.json();
+  const data = await response.json();
+  apiCache.set(cacheKey, { data, timestamp: Date.now() });
+  return data;
 }
 
 export async function apiPost<T = any>(endpoint: string, body: any, token?: string | null): Promise<T> {
@@ -88,6 +106,7 @@ export async function apiPost<T = any>(endpoint: string, body: any, token?: stri
     (error as any).status = response.status;
     throw error;
   }
+  clearApiCache(); // Invalidate cache on write
   return response.json();
 }
 
@@ -110,6 +129,7 @@ export async function apiPut<T = any>(endpoint: string, body: any, token?: strin
     const errorBody = await response.text();
     throw new Error(`API returned HTML instead of JSON. Ensure VITE_API_BASE_URL is correctly set. Received: ${errorBody.substring(0, 100)}...`);
   }
+  clearApiCache(); // Invalidate cache on write
   return response.json();
 }
 
@@ -128,6 +148,7 @@ export async function apiDelete<T = any>(endpoint: string): Promise<T> {
     const errorBody = await response.text();
     throw new Error(`API returned HTML instead of JSON. Ensure VITE_API_BASE_URL is correctly set. Received: ${errorBody.substring(0, 100)}...`);
   }
+  clearApiCache(); // Invalidate cache on write
   // Some DELETE responses may not have a body
   const text = await response.text();
   return text ? JSON.parse(text) : ({} as T);
@@ -144,6 +165,7 @@ export async function apiUpload<T = any>(endpoint: string, formData: FormData): 
     const errorBody = await response.text().catch(() => response.statusText);
     throw new Error(errorBody || `API UPLOAD request failed: ${response.statusText}`);
   }
+  clearApiCache(); // Invalidate cache on write
   return response.json();
 }
 
