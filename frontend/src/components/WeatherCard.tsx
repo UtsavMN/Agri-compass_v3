@@ -240,8 +240,8 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
                   <div>
                     <h5 className="text-sm font-medium text-gray-700 mb-2">Farming Tips:</h5>
                     <ul className="space-y-1">
-                      {advisory.farmingTips.slice(0, 3).map((tip) => (
-                        <li key={tip} className="text-sm text-gray-600 flex items-start gap-2">
+                      {advisory.farmingTips.slice(0, 3).map((tip, idx) => (
+                        <li key={idx} className="text-sm text-gray-600 flex items-start gap-2">
                           <span className="text-green-500 mt-1">•</span>
                           {tip}
                         </li>
@@ -252,8 +252,8 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
 
                 {advisory.riskAlerts.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {advisory.riskAlerts.slice(0, 2).map((alert) => (
-                      <Badge key={alert} variant="destructive" className="text-xs">
+                    {advisory.riskAlerts.slice(0, 2).map((alert, idx) => (
+                      <Badge key={idx} variant="destructive" className="text-xs">
                         ⚠️ {alert}
                       </Badge>
                     ))}
@@ -264,8 +264,8 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
                   <div>
                     <h5 className="text-sm font-medium text-gray-700 mb-2">Recommendations:</h5>
                     <div className="flex flex-wrap gap-2">
-                      {advisory.recommendations.slice(0, 2).map((rec) => (
-                        <Badge key={rec} variant="secondary" className="text-xs">
+                      {advisory.recommendations.slice(0, 2).map((rec, idx) => (
+                        <Badge key={idx} variant="secondary" className="text-xs">
                           {rec}
                         </Badge>
                       ))}

@@ -1,30 +1,30 @@
 import { useEffect } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { apiGet } from "@/lib/httpClient";
 
 export const useOnboardingGate = () => {
+  const { getToken } = useAuth();
   const { user, isLoaded } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     if (!isLoaded || !user) return;
-    
-    // Don't check onboarding on the onboarding page itself or auth pages
-    if (location.pathname.startsWith('/onboarding') || location.pathname.startsWith('/auth')) {
-      return;
-    }
+    if (location.pathname === "/onboarding") return;
 
-    const checkOnboarding = async () => {
+    const check = async () => {
       try {
-        const data = await apiGet<{ completed: boolean }>('/api/users/onboarding-status');
-        if (!data.completed) navigate("/onboarding");
-      } catch (e) {
-        console.error("Failed to check onboarding status", e);
+        const token = await getToken();
+        const res = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL || ""}/api/users/onboarding-status`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const { completed } = await res.json();
+        if (!completed) navigate("/onboarding", { replace: true });
+      } catch (err) {
+        console.error("Onboarding check failed:", err);
       }
     };
-
-    checkOnboarding();
-  }, [isLoaded, user, navigate, location.pathname]);
+    check();
+  }, [isLoaded, user, location.pathname]);
 };

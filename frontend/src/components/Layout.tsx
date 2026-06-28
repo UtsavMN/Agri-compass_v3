@@ -78,7 +78,7 @@ export default function Layout({
         })
         .catch(console.error)
         .finally(() => {
-          timeoutId = window.setTimeout(fetchUnread, 60000); // Poll every 60s
+          timeoutId = window.setTimeout(fetchUnread, 15000); // Poll every 15s
         });
     };
     
@@ -172,10 +172,13 @@ export default function Layout({
               {selectedDistrict || 'NO DISTRICT'}
             </div>            {/* Messages Button */}
             {user && (
-              <button onClick={() => navigate('/messages')} className="relative p-2 text-gold-100/70 hover:text-gold-100 transition-colors">
-                <MessageSquare className="h-5 w-5" />
+              <button
+                onClick={() => navigate('/messages')}
+                className="relative p-2 rounded-lg hover:bg-[#C9A84C]/5 transition-colors"
+                aria-label="Messages">
+                <MessageSquare className="h-5 w-5 text-[#F5F0E8]" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-bounce shadow-lg ring-2 ring-[#0f0f0b]">
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-[#C9A84C] rounded-full text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}

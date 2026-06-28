@@ -132,6 +132,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
       })
 
       // Reset form
+      previewUrls.forEach(url => URL.revokeObjectURL(url))
       setTitle('')
       setContent('')
       setCropTags([])
@@ -175,7 +176,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Post</DialogTitle>

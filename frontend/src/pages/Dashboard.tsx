@@ -105,18 +105,20 @@ export default function Dashboard() {
 
   const initializeDashboard = async () => {
     try {
-      const [loadedDistrictData, cropsData, postsData, userCountData] = await Promise.all([
+      const [loadedDistrictData, postsData, userCountData, cropsData] = await Promise.all([
         loadDistrictDataFromCSV().then(data => {
           setDistrictData(data);
           setDistricts(data.map(d => d.district));
           return data;
         }),
-        apiGet('/api/crops?page=0&size=6&sortBy=name').catch(() => ({ content: [] })),
         PostsAPI.getPosts().catch(() => []),
-        apiGet('/api/profiles/count').catch(() => ({ count: 0 }))
+        apiGet('/api/profiles/count').catch(() => ({ count: 0 })),
+        !selectedDistrict ? apiGet('/api/crops?page=0&size=6&sortBy=name').catch(() => ({ content: [] })) : Promise.resolve({ content: [] })
       ]);
 
-      setCrops(cropsData?.content || []);
+      if (!selectedDistrict) {
+        setCrops(cropsData?.content || []);
+      }
       setCommunityPosts(postsData.slice(0, 3));
       setUserCount(userCountData?.count || 0);
 

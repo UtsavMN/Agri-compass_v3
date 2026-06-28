@@ -182,6 +182,7 @@ export default function GovSchemes() {
   const { user } = useUser();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [farms, setFarms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   interface SchemeFilters {
     category: 'all' | 'central' | 'karnataka' | 'bank';
@@ -196,14 +197,20 @@ export default function GovSchemes() {
 
   useEffect(() => {
     if (user?.id) {
-       apiGet('/api/farms').then(setFarms).catch(console.error);
-       apiGet('/api/profile/me').then(setUserProfile).catch(console.error);
+       setLoading(true);
+       Promise.all([
+         apiGet('/api/farms').catch(() => []),
+         apiGet('/api/profile/me').catch(() => null)
+       ]).then(([farmsData, profileData]) => {
+         setFarms(farmsData || []);
+         setUserProfile(profileData);
+       }).finally(() => setLoading(false));
     }
   }, [user?.id]);
 
   const calculateEligibilityScore = (scheme: typeof GOVERNMENT_SCHEMES[0]) => {
      let score = 50; // base score
-     const totalAcres = farms.reduce((sum, f) => sum + (f.areaAcres || 0), 0);
+     const totalAcres = farms.reduce((sum, f) => sum + (f.acres || 0), 0);
      
      // Benefit those with small acreage for subsidy schemes
      if (scheme.subsidyPercent && totalAcres < 5) score += 30;
@@ -211,8 +218,8 @@ export default function GovSchemes() {
      
      // Specific match
      const schemeText = `${scheme.name} ${scheme.benefit} ${scheme.category}`.toLowerCase();
-     if (userProfile?.location && schemeText.includes(userProfile.location.toLowerCase())) score += 20;
-     if (farms.some(f => f.cropFocus && schemeText.includes(f.cropFocus.toLowerCase()))) score += 25;
+     if (userProfile?.district && schemeText.includes(userProfile.district.toLowerCase())) score += 20;
+     if (farms.some(f => f.currentCrop && schemeText.includes(f.currentCrop.toLowerCase()))) score += 25;
      
      return Math.min(100, score);
   };
@@ -373,6 +380,11 @@ export default function GovSchemes() {
         </ScrollReveal>
 
         {/* Content grid */}
+        {loading ? (
+           <div className="flex justify-center items-center py-20">
+             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#c49a2a]"></div>
+           </div>
+        ) : (
         <ScrollReveal delay={0.2}>
           {activeTab !== 'banks' ? (
             filteredGovSchemes.length > 0 ? (
@@ -427,6 +439,7 @@ export default function GovSchemes() {
             )
           )}
         </ScrollReveal>
+        )}
       </div>
     </div>
   );
