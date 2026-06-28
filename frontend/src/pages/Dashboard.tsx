@@ -294,7 +294,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
             
             {/* Market News Card (1fr) */}
-            <div className="bg-[#1e1e16] border border-[rgba(255,255,255,0.07)] rounded-xl p-6 flex flex-col justify-between">
+            <div className="glass-panel rounded-2xl p-6 flex flex-col justify-between">
               <div>
                 <span className="text-[11px] text-[#6a6050] uppercase tracking-wider font-bold">
                   MARKET INTELLIGENCE
@@ -335,7 +335,7 @@ export default function Dashboard() {
             </div>
 
             {/* Community Snippet Card (320px) */}
-            <div className="bg-[#1e1e16] border border-[rgba(255,255,255,0.07)] rounded-xl p-6 flex flex-col justify-between w-full">
+            <div className="glass-panel rounded-2xl p-6 flex flex-col justify-between w-full">
               <div>
                 <span className="text-[11px] text-[#6a6050] uppercase tracking-wider font-bold">
                   COMMUNITY DISCUSSION

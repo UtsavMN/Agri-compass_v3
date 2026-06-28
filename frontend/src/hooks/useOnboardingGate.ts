@@ -10,7 +10,6 @@ export const useOnboardingGate = () => {
 
   useEffect(() => {
     if (!isLoaded || !user) return;
-    if (location.pathname === "/onboarding") return;
 
     const check = async () => {
       try {
@@ -20,7 +19,12 @@ export const useOnboardingGate = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const { completed } = await res.json();
-        if (!completed) navigate("/onboarding", { replace: true });
+        
+        if (!completed && location.pathname !== "/onboarding") {
+          navigate("/onboarding", { replace: true });
+        } else if (completed && location.pathname === "/onboarding") {
+          navigate("/dashboard", { replace: true });
+        }
       } catch (err) {
         console.error("Onboarding check failed:", err);
       }

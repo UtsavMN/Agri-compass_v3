@@ -145,7 +145,8 @@ export default function Onboarding() {
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -40 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="glass-panel p-8 rounded-3xl">
 
               <div className="text-center mb-8">
                 <div className="text-4xl mb-4">🌾</div>
@@ -228,7 +229,7 @@ export default function Onboarding() {
                 {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
                 <button onClick={submitStep1}
-                  className="w-full py-3.5 bg-[#C9A84C] text-[#0A0A0A] font-semibold rounded-xl hover:bg-[#D4B86A] transition-colors">
+                  className="w-full py-3.5 bg-[#C9A84C] text-[#0A0A0A] font-bold tracking-wide rounded-xl hover:bg-[#D4B86A] hover:-translate-y-0.5 shadow-[0_0_15px_rgba(201,168,76,0.3)] hover:shadow-[0_0_25px_rgba(201,168,76,0.5)] transition-all">
                   Continue →
                 </button>
               </div>
@@ -241,7 +242,8 @@ export default function Onboarding() {
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -40 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="glass-panel p-8 rounded-3xl">
 
               <div className="text-center mb-8">
                 <div className="text-4xl mb-4">🌱</div>
@@ -291,11 +293,11 @@ export default function Onboarding() {
                 {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
                 <button onClick={() => submitFinal(false)} disabled={loading}
-                  className="w-full py-3.5 bg-[#C9A84C] text-[#0A0A0A] font-semibold rounded-xl hover:bg-[#D4B86A] transition-colors disabled:opacity-50">
+                  className="w-full py-3.5 bg-[#C9A84C] text-[#0A0A0A] font-bold tracking-wide rounded-xl hover:bg-[#D4B86A] hover:-translate-y-0.5 shadow-[0_0_15px_rgba(201,168,76,0.3)] hover:shadow-[0_0_25px_rgba(201,168,76,0.5)] transition-all disabled:opacity-50 disabled:hover:translate-y-0">
                   {loading ? "Saving..." : "Complete setup →"}
                 </button>
                 <button onClick={() => submitFinal(true)} disabled={loading}
-                  className="w-full py-3 text-[#F5F0E8]/30 text-sm hover:text-[#F5F0E8]/60 transition-colors">
+                  className="w-full py-3 text-[#F5F0E8]/40 text-sm font-medium hover:text-[#F5F0E8] transition-colors">
                   Skip for now
                 </button>
               </div>
@@ -308,7 +310,7 @@ export default function Onboarding() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="text-center">
+              className="glass-panel p-10 rounded-3xl text-center">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}

@@ -64,23 +64,20 @@ export const MessagesPage = () => {
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex flex-col">
 
-      {/* Header */}
-      <div className="border-b border-[#1E1E1E] px-5 py-5 flex items-center justify-between">
-        <div>
+      {/* Header and Search */}
+      <div className="glass-panel sticky top-0 z-10 px-5 py-5 border-b border-[#1E1E1E]">
+        <div className="mb-4">
           <h1 className="text-xl font-serif text-[#F5F0E8]">Messages</h1>
           <p className="text-[#F5F0E8]/25 text-xs mt-0.5">Connect with farmers across Karnataka</p>
         </div>
-      </div>
-
-      {/* Search bar */}
-      <div className="px-4 py-3 border-b border-[#1E1E1E]">
         <div className="relative">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#F5F0E8]/20 text-sm">🔍</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#F5F0E8]/20">🔍</span>
           <input
+            type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search farmers by name or @handle..."
-            className="w-full bg-[#111] border border-[#1E1E1E] rounded-xl pl-9 pr-4 py-3 text-[#F5F0E8] text-sm placeholder:text-[#F5F0E8]/20 focus:border-[#C9A84C]/40 focus:outline-none transition-colors"
+            className="w-full bg-[#111]/50 border border-[#1E1E1E] rounded-xl pl-9 pr-4 py-3 text-[#F5F0E8] text-sm placeholder:text-[#F5F0E8]/20 focus:border-[#C9A84C]/40 focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/10 transition-all shadow-inner"
           />
         </div>
       </div>
@@ -130,7 +127,7 @@ export const MessagesPage = () => {
           conversations.map((conv: any) => (
             <button key={conv.id}
               onClick={() => navigate(`/messages/${conv.otherUser?.clerkUserId || conv.otherUser?.id}`)}
-              className="w-full px-4 py-4 flex items-center gap-3 hover:bg-[#0D0D0D] transition-colors text-left">
+              className="w-full px-4 py-4 flex items-center gap-3 hover:bg-[#1E1E1E]/40 hover:backdrop-blur-sm transition-all text-left">
               <div className="relative flex-shrink-0">
                 <div className="w-12 h-12 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/20 overflow-hidden flex items-center justify-center">
                   {conv.otherUser?.profilePictureUrl || conv.otherUser?.profile_picture_url

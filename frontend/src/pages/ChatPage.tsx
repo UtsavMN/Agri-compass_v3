@@ -169,46 +169,44 @@ export const ChatPage = () => {
 
   return (
     <div className="h-screen bg-[#0A0A0A] flex flex-col">
-
-      {/* Header */}
-      <div className="flex-shrink-0 bg-[#0A0A0A] border-b border-[#1E1E1E] px-4 py-3 flex items-center gap-3">
-        <button onClick={() => navigate("/messages")}
-          className="w-8 h-8 flex items-center justify-center text-[#F5F0E8]/30 hover:text-[#F5F0E8] rounded-lg hover:bg-[#111] transition-all"
-          aria-label="Back to messages">
-          ←
-        </button>
-
-        {loading ? (
-          <div className="flex items-center gap-3 flex-1 animate-pulse">
-            <div className="w-9 h-9 rounded-full bg-[#1E1E1E]" />
-            <div>
-              <div className="h-3 bg-[#1E1E1E] rounded w-24 mb-1.5" />
-              <div className="h-2 bg-[#1E1E1E] rounded w-16" />
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3 flex-1">
-            <div className="relative">
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-[#C9A84C]/10 flex items-center justify-center flex-shrink-0">
-                {otherUser?.profilePictureUrl || otherUser?.profile_picture_url
-                  ? <img src={otherUser.profilePictureUrl || otherUser.profile_picture_url} className="w-full h-full object-cover" alt="" />
-                  : <span className="text-[#C9A84C] text-sm font-semibold">{(otherUser?.fullName || otherUser?.full_name || "?")[0]}</span>
-                }
+      <div className="glass-panel sticky top-0 z-10 px-5 py-3 border-b border-[#1E1E1E] flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate("/messages")} className="text-[#F5F0E8]/40 hover:text-[#C9A84C] transition-colors p-1">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          
+          {loading ? (
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#1E1E1E] animate-pulse" />
+              <div className="space-y-1.5">
+                <div className="h-3 bg-[#1E1E1E] rounded w-24 animate-pulse" />
+                <div className="h-2 bg-[#1E1E1E] rounded w-16 animate-pulse" />
               </div>
-              {connected && (
-                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-[#0A0A0A]" />
-              )}
             </div>
-            <div>
-              <p className="text-[#F5F0E8] text-sm font-semibold">{otherUser?.fullName || otherUser?.full_name}</p>
-              <p className="text-[#F5F0E8]/30 text-xs">@{otherUser?.usernameHandle || otherUser?.username_handle} · {otherUser?.district}</p>
+          ) : (
+            <div className="flex items-center gap-3 flex-1">
+              <div className="relative">
+                <div className="w-9 h-9 rounded-full overflow-hidden bg-[#C9A84C]/10 flex items-center justify-center flex-shrink-0">
+                  {otherUser?.profilePictureUrl || otherUser?.profile_picture_url
+                    ? <img src={otherUser.profilePictureUrl || otherUser.profile_picture_url} className="w-full h-full object-cover" alt="" />
+                    : <span className="text-[#C9A84C] text-sm font-semibold">{(otherUser?.fullName || otherUser?.full_name || "?")[0]}</span>
+                  }
+                </div>
+                {connected && (
+                  <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-[#0A0A0A]" />
+                )}
+              </div>
+              <div>
+                <p className="text-[#F5F0E8] text-sm font-semibold">{otherUser?.fullName || otherUser?.full_name}</p>
+                <p className="text-[#F5F0E8]/30 text-xs">@{otherUser?.usernameHandle || otherUser?.username_handle} · {otherUser?.district}</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <div className={`w-1.5 h-1.5 rounded-full transition-colors ${connected ? "bg-green-400" : "bg-[#3a3a3a]"}`} />
-          <span className="text-[#F5F0E8]/15 text-xs">{connected ? "Live" : "Connecting..."}</span>
+        <div className="flex items-center gap-1.5 flex-shrink-0 bg-[#111] px-2 py-1 rounded-full border border-[#1E1E1E]">
+          <div className={`w-1.5 h-1.5 rounded-full transition-colors ${connected ? "bg-green-400" : "bg-[#C9A84C] animate-pulse"}`} />
+          <span className="text-[#F5F0E8]/30 text-[10px] uppercase font-bold tracking-wider">{connected ? "Live" : "Connecting..."}</span>
         </div>
       </div>
 
@@ -267,10 +265,10 @@ export const ChatPage = () => {
                       )}
 
                       <div className={`max-w-[70%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                        <div className={`px-4 py-2.5 text-sm leading-relaxed ${
+                        <div className={`px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
                           isMe
-                            ? "bg-[#C9A84C] text-[#0A0A0A] font-medium rounded-2xl rounded-br-sm"
-                            : "bg-[#161616] text-[#F5F0E8] border border-[#1E1E1E] rounded-2xl rounded-bl-sm"
+                            ? "bg-[#C9A84C] text-[#0A0A0A] font-medium rounded-2xl rounded-br-sm shadow-[0_2px_10px_rgba(201,168,76,0.15)]"
+                            : "glass-panel text-[#F5F0E8] rounded-2xl rounded-bl-sm"
                         } ${msg.pending ? "opacity-60" : ""}`}>
                           {msg.content}
                         </div>
@@ -291,8 +289,8 @@ export const ChatPage = () => {
       </div>
 
       {/* Input bar */}
-      <div className="flex-shrink-0 bg-[#0A0A0A] border-t border-[#1E1E1E] px-4 py-3">
-        <div className="flex items-end gap-3 bg-[#111] border border-[#1E1E1E] rounded-2xl px-4 py-3 focus-within:border-[#C9A84C]/25 transition-colors">
+      <div className="glass-panel flex-shrink-0 px-4 py-3 sticky bottom-0">
+        <div className="flex items-end gap-3 bg-[#111]/80 backdrop-blur-md border border-[#1E1E1E] rounded-2xl px-4 py-3 focus-within:border-[#C9A84C]/40 focus-within:ring-2 focus-within:ring-[#C9A84C]/10 transition-all shadow-inner">
           <textarea
             ref={inputRef}
             value={input}
@@ -303,7 +301,7 @@ export const ChatPage = () => {
                 sendMessage();
               }
             }}
-            placeholder="Message..."
+            placeholder="Type your message..."
             rows={1}
             className="flex-1 bg-transparent text-[#F5F0E8] text-sm placeholder:text-[#F5F0E8]/20 focus:outline-none resize-none max-h-28 overflow-y-auto"
             onInput={e => {
@@ -315,8 +313,8 @@ export const ChatPage = () => {
           <button onClick={sendMessage}
             disabled={!input.trim()}
             aria-label="Send message"
-            className="w-8 h-8 bg-[#C9A84C] rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-20 hover:bg-[#D4B86A] transition-all">
-            <span className="text-[#0A0A0A] font-bold text-base">↑</span>
+            className="w-8 h-8 bg-[#C9A84C] rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-20 hover:bg-[#D4B86A] hover:-translate-y-0.5 hover:shadow-[0_0_15px_rgba(201,168,76,0.4)] transition-all">
+            <span className="text-[#0A0A0A] font-bold text-base leading-none mb-0.5">↑</span>
           </button>
         </div>
         {!connected && (
