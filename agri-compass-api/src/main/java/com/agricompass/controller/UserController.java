@@ -21,12 +21,14 @@ public class UserController {
     private final UserProfileRepository userProfileRepository;
     private final PostRepository postRepository;
     private final FollowRepository followRepository;
+    private final com.agricompass.repository.FarmRepository farmRepository;
 
-    public UserController(UserService userService, UserProfileRepository userProfileRepository, PostRepository postRepository, FollowRepository followRepository) {
+    public UserController(UserService userService, UserProfileRepository userProfileRepository, PostRepository postRepository, FollowRepository followRepository, com.agricompass.repository.FarmRepository farmRepository) {
         this.userService = userService;
         this.userProfileRepository = userProfileRepository;
         this.postRepository = postRepository;
         this.followRepository = followRepository;
+        this.farmRepository = farmRepository;
     }
 
     @GetMapping("/onboarding-status")
@@ -43,6 +45,49 @@ public class UserController {
         Map<String, Boolean> response = new HashMap<>();
         response.put("completed", completed);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/check-handle")
+    public ResponseEntity<Map<String, Boolean>> checkHandle(@RequestParam("handle") String handle) {
+        boolean available = userProfileRepository.findByUsernameHandle(handle).isEmpty();
+        return ResponseEntity.ok(Map.of("available", available));
+    }
+
+    @PostMapping("/onboarding")
+    public ResponseEntity<Map<String, Boolean>> completeOnboarding(@RequestBody Map<String, Object> body) {
+        UserProfile profile = userService.syncUserProfile(null);
+        if (profile == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        profile.setFullName((String) body.get("fullName"));
+        profile.setUsernameHandle((String) body.get("usernameHandle"));
+        profile.setPhone((String) body.get("phone"));
+        profile.setDistrict((String) body.get("district"));
+        profile.setLanguage((String) body.get("language"));
+        profile.setProfilePictureUrl((String) body.get("profilePictureUrl"));
+        profile.setOnboardingCompleted(1);
+
+        userProfileRepository.save(profile);
+
+        if (body.containsKey("farm") && body.get("farm") != null) {
+            Map<String, Object> farmData = (Map<String, Object>) body.get("farm");
+            com.agricompass.entity.Farm farm = new com.agricompass.entity.Farm();
+            farm.setClerkUserId(profile.getClerkUserId());
+            farm.setFarmName((String) farmData.get("farmName"));
+            
+            Object acresObj = farmData.get("acres");
+            if (acresObj != null) {
+                farm.setAcres(Double.valueOf(acresObj.toString()));
+            }
+            
+            farm.setCurrentCrop((String) farmData.get("currentCrop"));
+            farm.setSoilType((String) farmData.get("soilType"));
+            farm.setDistrict(profile.getDistrict());
+            farmRepository.save(farm);
+        }
+
+        return ResponseEntity.ok(Map.of("success", true));
     }
 
     @GetMapping("/search")

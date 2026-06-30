@@ -111,6 +111,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
     }
 
     setIsLoading(true)
+    let success = false;
     try {
       // Upload images if any
       const imageUrls: string[] = []
@@ -141,8 +142,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
       setMediaFiles([])
       setPreviewUrls([])
 
-      onClose()
-      onPostCreated?.()
+      success = true;
 
       toast({
         title: 'Post created successfully!',
@@ -158,6 +158,10 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
       })
     } finally {
       setIsLoading(false)
+      if (success) {
+        onPostCreated?.()
+        onClose()
+      }
     }
   }
 
