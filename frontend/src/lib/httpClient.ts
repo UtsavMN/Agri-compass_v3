@@ -1,224 +1,90 @@
-import { useState, useEffect } from 'react';
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ??
+  import.meta.env.VITE_API_URL ??
+  ""
+).replace(/\/$/, ""); // remove trailing slash
 
-// In dev, use relative URLs so Vite's /api proxy forwards to the backend (port 8080).
-// Set VITE_API_URL when deploying (e.g. production API host).
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? '';
-
-// Simple in-memory cache to massively speed up navigation and reduce backend load
-const apiCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-export function clearApiCache() {
-  apiCache.clear();
+// Log the URL on startup so you can verify in browser console
+if (import.meta.env.DEV) {
+  console.log("[API] Base URL:", API_BASE_URL || "relative (same origin)");
 }
 
-/**
- * Get the Clerk session token from the active session.
- * Uses the global Clerk instance injected by ClerkProvider.
- */
-async function getClerkToken(): Promise<string | null> {
-  try {
-    // Access the global Clerk instance
-    const clerk = (window as any).__clerk_frontend_api
-      ? (window as any).Clerk
-      : (window as any).Clerk;
+export const buildUrl = (path: string): string => {
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE_URL}${cleanPath}`;
+};
 
-    if (clerk?.session) {
-      const token = await clerk.session.getToken();
-      return token;
-    }
-    return null;
-  } catch (e) {
-    console.warn('Could not get Clerk token:', e);
-    return null;
-  }
-}
-
-async function getAuthHeaders(isFormData = false): Promise<Record<string, string>> {
-  const headers: Record<string, string> = {};
-  
-  if (!isFormData) {
-    headers['Content-Type'] = 'application/json';
-  }
-
-  // Get Clerk JWT token for authenticated requests
-  const token = await getClerkToken();
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  return headers;
-}
-
-export async function apiGet<T = any>(endpoint: string, token?: string | null, forceRefresh = false): Promise<T> {
-  const cacheKey = endpoint;
-  if (!forceRefresh && apiCache.has(cacheKey)) {
-    const cached = apiCache.get(cacheKey)!;
-    if (Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.data as T;
-    }
-  }
-
-  const headers = await getAuthHeaders();
-  // Allow manually passed token to override
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'GET',
-    headers,
+export const apiGet = async (path: string, token?: string | null): Promise<any> => {
+  const res = await fetch(buildUrl(path), {
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   });
-  if (!response.ok) {
-    const errorBody = await response.text().catch(() => response.statusText);
-    throw new Error(errorBody || `API GET request failed: ${response.statusText}`);
-  }
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('text/html')) {
-    const errorBody = await response.text();
-    throw new Error(`API returned HTML instead of JSON. Ensure VITE_API_BASE_URL is correctly set. Received: ${errorBody.substring(0, 100)}...`);
-  }
-  const data = await response.json();
-  apiCache.set(cacheKey, { data, timestamp: Date.now() });
-  return data;
-}
+  if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`);
+  return res.json();
+};
 
-export async function apiPost<T = any>(endpoint: string, body: any, token?: string | null): Promise<T> {
-  const headers = await getAuthHeaders();
-  // Allow manually passed token to override
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'POST',
-    headers,
+export const apiPost = async (path: string, body: unknown, token?: string | null): Promise<any> => {
+  const res = await fetch(buildUrl(path), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify(body),
   });
-  if (!response.ok) {
-    const errorBody = await response.text().catch(() => response.statusText);
-    const error = new Error(errorBody || `API POST request failed: ${response.statusText}`);
-    (error as any).status = response.status;
-    throw error;
-  }
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('text/html')) {
-    const errorBody = await response.text();
-    const error = new Error(`API returned HTML instead of JSON. Ensure VITE_API_BASE_URL is correctly set. Received: ${errorBody.substring(0, 100)}...`);
-    (error as any).status = response.status;
-    throw error;
-  }
-  clearApiCache(); // Invalidate cache on write
-  return response.json();
-}
+  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
+  return res.json();
+};
 
-export async function apiPut<T = any>(endpoint: string, body: any, token?: string | null): Promise<T> {
-  const headers = await getAuthHeaders();
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'PUT',
-    headers,
+export const apiDelete = async (path: string, token?: string | null): Promise<any> => {
+  const res = await fetch(buildUrl(path), {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  if (!res.ok) throw new Error(`DELETE ${path} failed: ${res.status}`);
+  return res.json();
+};
+
+export const apiPut = async (path: string, body: unknown, token?: string | null): Promise<any> => {
+  const res = await fetch(buildUrl(path), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify(body),
   });
-  if (!response.ok) {
-    const errorBody = await response.text().catch(() => response.statusText);
-    throw new Error(errorBody || `API PUT request failed: ${response.statusText}`);
-  }
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('text/html')) {
-    const errorBody = await response.text();
-    throw new Error(`API returned HTML instead of JSON. Ensure VITE_API_BASE_URL is correctly set. Received: ${errorBody.substring(0, 100)}...`);
-  }
-  clearApiCache(); // Invalidate cache on write
-  return response.json();
-}
+  if (!res.ok) throw new Error(`PUT ${path} failed: ${res.status}`);
+  return res.json();
+};
 
-export async function apiDelete<T = any>(endpoint: string): Promise<T> {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'DELETE',
-    headers,
+export const apiPatch = async (path: string, body: unknown, token?: string | null): Promise<any> => {
+  const res = await fetch(buildUrl(path), {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
   });
-  if (!response.ok) {
-    const errorBody = await response.text().catch(() => response.statusText);
-    throw new Error(errorBody || `API DELETE request failed: ${response.statusText}`);
-  }
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('text/html')) {
-    const errorBody = await response.text();
-    throw new Error(`API returned HTML instead of JSON. Ensure VITE_API_BASE_URL is correctly set. Received: ${errorBody.substring(0, 100)}...`);
-  }
-  clearApiCache(); // Invalidate cache on write
-  // Some DELETE responses may not have a body
-  const text = await response.text();
-  return text ? JSON.parse(text) : ({} as T);
-}
+  if (!res.ok) throw new Error(`PATCH ${path} failed: ${res.status}`);
+  return res.json();
+};
 
-export async function apiUpload<T = any>(endpoint: string, formData: FormData): Promise<T> {
-  const headers = await getAuthHeaders(true);
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'POST',
-    headers,
-    body: formData,
+export const apiUpload = async (path: string, body: FormData, token?: string | null): Promise<any> => {
+  const res = await fetch(buildUrl(path), {
+    method: "POST",
+    headers: {
+      // Do NOT set Content-Type to application/json for FormData, browser will set it with boundary
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: body,
   });
-  if (!response.ok) {
-    const errorBody = await response.text().catch(() => response.statusText);
-    throw new Error(errorBody || `API UPLOAD request failed: ${response.statusText}`);
-  }
-  clearApiCache(); // Invalidate cache on write
-  return response.json();
-}
-
-export function useApiGet<T = any>(endpoint: string | null) {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    if (!endpoint) {
-      setData(null);
-      return;
-    }
-
-    const controller = new AbortController();
-    const { signal } = controller;
-
-    setLoading(true);
-    setError(null);
-
-    getAuthHeaders()
-      .then((headers) => {
-        return fetch(`${API_BASE_URL}${endpoint}`, {
-          method: 'GET',
-          headers,
-          signal,
-        });
-      })
-      .then(async (response) => {
-        if (!response.ok) {
-          const errorBody = await response.text().catch(() => response.statusText);
-          throw new Error(errorBody || `API GET request failed: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then((result) => {
-        setData(result);
-      })
-      .catch((err) => {
-        if (err.name !== 'AbortError') {
-          setError(err);
-        }
-      })
-      .finally(() => {
-        if (!signal.aborted) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      controller.abort();
-    };
-  }, [endpoint]);
-
-  return { data, loading, error };
-}
+  if (!res.ok) throw new Error(`UPLOAD ${path} failed: ${res.status}`);
+  return res.json();
+};

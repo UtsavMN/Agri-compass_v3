@@ -4,6 +4,7 @@ import { useAuth, useUser } from "@clerk/clerk-react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { motion } from "framer-motion";
+import { buildUrl } from "../lib/httpClient";
 
 interface Message {
   id: string;
@@ -83,10 +84,9 @@ export const ChatPage = () => {
   // WebSocket — uses env variable, not hardcoded localhost
   useEffect(() => {
     if (!conversationId || !user?.id) return;
-    const base = import.meta.env.VITE_API_BASE_URL ?? "";
 
     const client = new Client({
-      webSocketFactory: () => new SockJS(`${base}/ws`),
+      webSocketFactory: () => new SockJS(buildUrl('/ws')),
       onConnect: () => {
         setConnected(true);
         client.subscribe(`/topic/messages.${user.id}`, frame => {

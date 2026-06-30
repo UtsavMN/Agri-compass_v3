@@ -64,6 +64,12 @@ export default function Community() {
     }
   })
 
+  // Poll for new posts every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(fetchPosts, 10000);
+    return () => clearInterval(interval);
+  }, [fetchPosts]);
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setDebouncedQuery(searchQuery.trim())

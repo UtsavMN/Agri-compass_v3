@@ -58,20 +58,26 @@ if (!PUBLISHABLE_KEY) {
   console.error("Missing Publishable Key");
 }
 
+import { AppLoader } from '@/components/AppLoader';
+import { startKeepAlive } from '@/lib/keepAlive';
+
+startKeepAlive(); // Ping the server to keep it awake on Render
+
 function App() {
   return (
-    <ClerkProvider 
-      publishableKey={PUBLISHABLE_KEY}
-      appearance={{ baseTheme: dark }}
-      signInFallbackRedirectUrl="/onboarding-check"
-      signUpFallbackRedirectUrl="/onboarding"
-    >
-      <ThemeProvider>
-        <Router>
-          <LanguageProvider>
-            <ErrorBoundary>
-              <Suspense fallback={<LoadingOverlay message="Loading Agri Compass..." transparent />}>
-                <Routes>
+    <AppLoader>
+      <ClerkProvider 
+        publishableKey={PUBLISHABLE_KEY}
+        appearance={{ baseTheme: dark }}
+        signInFallbackRedirectUrl="/onboarding-check"
+        signUpFallbackRedirectUrl="/onboarding"
+      >
+        <ThemeProvider>
+          <Router>
+            <LanguageProvider>
+              <ErrorBoundary>
+                <Suspense fallback={<LoadingOverlay message="Loading Agri Compass..." transparent />}>
+                  <Routes>
                   {/* Public Routes without persistent Layout */}
                 <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
                 <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
@@ -117,6 +123,7 @@ function App() {
         </Router>
       </ThemeProvider>
     </ClerkProvider>
+    </AppLoader>
   );
 }
 

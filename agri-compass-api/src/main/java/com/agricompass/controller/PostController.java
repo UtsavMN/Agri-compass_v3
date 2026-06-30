@@ -110,7 +110,7 @@ public class PostController {
         String bodyContent = body.get("body") != null ? (String) body.get("body") : (String) body.get("content");
         String category = (String) body.get("category");
         
-        com.agricompass.entity.UserProfile userProfile = profileRepository.findById(userId).orElse(null);
+        com.agricompass.entity.UserProfile userProfile = profileRepository.findByIdIgnoreCase(userId).orElse(null);
         String location = (userProfile != null && userProfile.getDistrict() != null && !userProfile.getDistrict().isEmpty()) 
                 ? userProfile.getDistrict() 
                 : (String) body.get("location");

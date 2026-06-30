@@ -37,35 +37,43 @@ public class MarketController {
             ));
         }
 
-        // Add logging at the method start
-        log.info("Fetching mandi prices for district: {}", district);
+        // Map modern district names to Data.gov.in spellings
+        Map<String, String> districtMap = Map.of(
+            "Shivamogga", "Shimoga",
+            "Bengaluru Urban", "Bangalore",
+            "Bengaluru Rural", "Bangalore Rural",
+            "Belagavi", "Belgaum",
+            "Kalaburagi", "Gulbarga",
+            "Vijayapura", "Bijapur",
+            "Ballari", "Bellary",
+            "Chikkamagaluru", "Chikmagalur",
+            "Dakshina Kannada", "Dakshina Kannada"
+        );
 
-        String[] districtVariants = { district, district.replace("Shivamogga", "Shimoga") };
-        List<Map<String, Object>> allParsedPrices = new ArrayList<>();
+        String apiDistrict = districtMap.getOrDefault(district, district);
+        log.info("Fetching mandi prices for district: {}", apiDistrict);
 
         RestTemplate restTemplate = new RestTemplate();
+        List<Map<String, Object>> allParsedPrices = new ArrayList<>();
 
-        for (String distVariant : districtVariants) {
-            String url = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070" +
-                "?api-key=" + dataGovApiKey +
-                "&format=json" +
-                "&limit=" + limit +
-                "&filters[state]=Karnataka" +
-                "&filters[district]=" + distVariant;
+        String url = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070" +
+            "?api-key=" + dataGovApiKey +
+            "&format=json" +
+            "&limit=" + limit +
+            "&filters[state]=Karnataka" +
+            "&filters[district]=" + apiDistrict;
 
-            log.info("API URL: {}", url);
+        log.info("API URL: {}", url);
 
-            try {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> response = restTemplate.getForObject(url, Map.class);
-                List<Map<String, Object>> parsed = parseMandiData(response);
-                if (parsed != null && !parsed.isEmpty()) {
-                    allParsedPrices.addAll(parsed);
-                    break; // stop trying variants if we got data
-                }
-            } catch (Exception e) {
-                log.error("Failed to fetch market prices: {}", e.getMessage());
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            List<Map<String, Object>> parsed = parseMandiData(response);
+            if (parsed != null && !parsed.isEmpty()) {
+                allParsedPrices.addAll(parsed);
             }
+        } catch (Exception e) {
+            log.error("Failed to fetch market prices: {}", e.getMessage());
         }
 
         if (allParsedPrices.isEmpty()) {

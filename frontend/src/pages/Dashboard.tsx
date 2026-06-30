@@ -105,31 +105,30 @@ export default function Dashboard() {
 
   const initializeDashboard = async () => {
     try {
-      const [loadedDistrictData, postsData, userCountData, cropsData] = await Promise.all([
+      const [loadedDistrictData] = await Promise.all([
         loadDistrictDataFromCSV().then(data => {
           setDistrictData(data);
           setDistricts(data.map(d => d.district));
           return data;
-        }),
-        PostsAPI.getPosts().catch(() => []),
-        apiGet('/api/profiles/count').catch(() => ({ count: 0 })),
-        !selectedDistrict ? apiGet('/api/crops?page=0&size=6&sortBy=name').catch(() => ({ content: [] })) : Promise.resolve({ content: [] })
+        })
+      ]);
+      // Fetch dashboard summary and news in parallel to speed up load
+      const [summaryData, newsRes] = await Promise.all([
+        apiGet('/api/dashboard/summary').catch(() => null),
+        apiGet('/api/news/agriculture').catch(() => ({ articles: [] }))
       ]);
 
-      if (!selectedDistrict) {
-        setCrops(cropsData?.content || []);
+      if (summaryData) {
+        if (!selectedDistrict) {
+          setCrops(summaryData.crops || []);
+        }
+        setCommunityPosts(summaryData.posts || []);
+        setUserCount(summaryData.userCount || 0);
       }
-      setCommunityPosts(postsData.slice(0, 3));
-      setUserCount(userCountData?.count || 0);
 
-      // Fetch news from our secure proxy endpoint
-      apiGet('/api/news/agriculture')
-        .then(res => {
-          if (res && res.articles) {
-            setNewsItems(res.articles.slice(0, 4));
-          }
-        })
-        .catch(err => console.error('Failed to load news', err));
+      if (newsRes && newsRes.articles) {
+        setNewsItems(newsRes.articles.slice(0, 4));
+      }
 
     } catch (error) {
       console.error('Error initializing dashboard:', error);

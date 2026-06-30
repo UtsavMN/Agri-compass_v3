@@ -52,9 +52,13 @@ export const RouteGuard = ({ children }: { children: React.ReactNode }) => {
   }, [isLoaded, isSignedIn, clerkUser, setClerkUserAndProfile]);
 
   if (!isLoaded || (isSignedIn && !profileLoaded)) {
-    return <LoadingOverlay message="Loading profile..." transparent />;
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <div className="text-[#C9A84C] animate-pulse text-3xl">🌾</div>
+      </div>
+    );
   }
 
-  if (!isSignedIn) return <Navigate to="/auth" />;
+  if (!isSignedIn) return <Navigate to="/auth" replace />;
   return <>{children}</>;
 };
