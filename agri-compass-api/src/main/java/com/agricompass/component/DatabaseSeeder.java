@@ -164,7 +164,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                         minQ = Math.round(minHa / 2.471);
                         avgQ = Math.round(avgHa / 2.471);
                         maxQ = Math.round(maxHa / 2.471);
-                    } catch (Exception e) {}
+                    } catch (Exception e) {
+                        System.err.println("Failed to parse yield string: " + e.getMessage());
+                    }
                 }
                 yield.setMinimumQuintals(minQ);
                 yield.setAverageQuintals(avgQ);
@@ -272,14 +274,18 @@ public class DatabaseSeeder implements CommandLineRunner {
                 try {
                     return (Integer.parseInt(parts[0].replaceAll("[^0-9]", "")) + 
                             Integer.parseInt(parts[1].replaceAll("[^0-9]", ""))) / 2;
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                    System.err.println("Failed to parse duration: " + e.getMessage());
+                }
             }
             try {
                 java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\d+").matcher(s);
                 if (m.find()) {
                     return Integer.parseInt(m.group());
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                System.err.println("Failed to parse duration regex: " + e.getMessage());
+            }
         }
         return 120;
     }
@@ -300,7 +306,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                     averageHa = Double.parseDouble(parts[0]);
                 }
                 return averageHa / 2.471;
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                System.err.println("Failed to parse cost: " + e.getMessage());
+            }
         }
         return defaultVal;
     }

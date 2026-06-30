@@ -359,7 +359,7 @@ public class AiController {
                                 }
                             }
                         } catch (Exception e) {
-                            log.warn("Gemini model {} key failed", modelName);
+                            log.warn("Gemini model {} key failed", modelName, e);
                         }
                     }
                 }

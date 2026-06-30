@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/users")
 public class UserController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserController.class);
+
     private final UserService userService;
     private final UserProfileRepository userProfileRepository;
     private final PostRepository postRepository;
@@ -131,7 +133,7 @@ public class UserController {
                 return pMap;
             }).collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to fetch posts for user: {}", userId, e);
         }
 
         int followerCount = 0;
@@ -140,7 +142,7 @@ public class UserController {
             followerCount = followRepository.countByFollowingId(userId);
             followingCount = followRepository.countByFollowerId(userId);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to fetch follower counts for user: {}", userId, e);
         }
 
         Map<String, Object> response = new HashMap<>();

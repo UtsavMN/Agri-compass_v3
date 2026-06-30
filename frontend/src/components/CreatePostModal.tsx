@@ -238,8 +238,10 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
                   <Sprout className="h-3 w-3" />
                   {tag}
                   <button
+                    type="button"
                     onClick={() => handleCropTagRemove(tag)}
                     className="ml-1 hover:bg-green-200 rounded-full p-0.5"
+                    aria-label={`Remove ${tag} tag`}
                   >
                     <X className="h-3 w-3" />
                   </button>

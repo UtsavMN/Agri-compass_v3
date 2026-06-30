@@ -70,7 +70,7 @@ const HeroStatCard = ({ icon, label, value, sub, onClick }: HeroStatCardProps) =
 );
 
 export default function Dashboard() {
-  const { user, profile } = useUser();
+  const { user } = useUser();
   const navigate = useNavigate();
   const { scrollY } = useScroll();
   const yBg = useTransform(scrollY, [0, 600], [0, 180]);

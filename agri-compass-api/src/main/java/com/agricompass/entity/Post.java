@@ -82,7 +82,10 @@ public class Post {
     public java.time.LocalDateTime getUpdatedAt() {
         if (createdAt != null) {
             try { return java.time.LocalDateTime.parse(createdAt.replace(" ", "T")); }
-            catch (Exception e) { return null; }
+            catch (Exception e) { 
+                System.err.println("Failed to parse createdAt date (" + createdAt + "): " + e.getMessage());
+                return null; 
+            }
         }
         return null;
     }

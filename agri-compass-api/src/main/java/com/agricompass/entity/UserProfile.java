@@ -22,6 +22,7 @@ public class UserProfile {
     @Column(nullable = false)
     private String district;
 
+    @Column(nullable = false)
     private String state = "Karnataka";
 
     @Column(name = "profile_picture_url")
@@ -29,9 +30,10 @@ public class UserProfile {
 
     private String bio;
 
+    @Column(nullable = false)
     private String language = "kn";
 
-    @Column(name = "onboarding_completed")
+    @Column(name = "onboarding_completed", nullable = false)
     private Integer onboardingCompleted = 0;
 
     @Column(name = "created_at", insertable = false, updatable = false)
