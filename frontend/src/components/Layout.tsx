@@ -68,23 +68,31 @@ export default function Layout({
   useEffect(() => {
     if (!user) return;
     let timeoutId: number;
+    let isMounted = true;
     
     const fetchUnread = () => {
-      apiGet('/api/conversations/unread-count', null, true)
+      if (!isMounted) return;
+      apiGet('/api/conversations/unread-count', null)
         .then((res: any) => {
+          if (!isMounted) return;
           if (res && typeof res.count === 'number') {
             setUnreadCount(res.count);
           }
         })
-        .catch(console.error)
+        .catch((err) => {
+          if (isMounted) console.error(err);
+        })
         .finally(() => {
-          timeoutId = window.setTimeout(fetchUnread, 15000); // Poll every 15s
+          if (isMounted) {
+            timeoutId = window.setTimeout(fetchUnread, 15000); // Poll every 15s
+          }
         });
     };
     
     fetchUnread();
     
     return () => {
+      isMounted = false;
       if (timeoutId) window.clearTimeout(timeoutId);
     };
   }, [user]);

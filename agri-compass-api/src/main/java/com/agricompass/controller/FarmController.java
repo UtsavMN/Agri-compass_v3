@@ -36,22 +36,59 @@ public class FarmController {
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getFarms() {
         String userId = userService.syncUser(null).getId();
-        return ResponseEntity.ok(farmRepository.findByClerkUserId(userId).stream().map(this::farmDto).toList());
+        return getFarmsResponse(farmRepository.findByClerkUserId(userId));
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Map<String, Object>>> getFarmsByUserId(@PathVariable String userId) {
-        return ResponseEntity.ok(farmRepository.findByClerkUserId(userId).stream().map(this::farmDto).toList());
+        return getFarmsResponse(farmRepository.findByClerkUserId(userId));
+    }
+
+    private ResponseEntity<List<Map<String, Object>>> getFarmsResponse(List<Farm> farms) {
+        if (farms.isEmpty()) return ResponseEntity.ok(List.of());
+
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+
+        Map<String, List<WeatherLog>> weatherLogs = weatherLogRepository
+            .findByFarmIdInOrderByCreatedAtDesc(farmIds)
+            .stream().collect(java.util.stream.Collectors.groupingBy(log -> log.getFarm().getId()));
+
+        Map<String, List<FarmImage>> farmImages = farmImageRepository
+            .findByFarmIdInOrderByCreatedAtDesc(farmIds)
+            .stream().collect(java.util.stream.Collectors.groupingBy(img -> img.getFarm().getId()));
+
+        List<Map<String, Object>> result = farms.stream()
+            .map(farm -> farmDto(farm,
+                weatherLogs.getOrDefault(farm.getId(), List.of()),
+                farmImages.getOrDefault(farm.getId(), List.of())))
+            .toList();
+
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> createFarm(@RequestBody Map<String, Object> body) {
         String userId = userService.syncUser(null).getId();
+        
+        Double areaAcres = null;
+        if (body.containsKey("area_acres") && body.get("area_acres") != null) {
+            Object val = body.get("area_acres");
+            if (val instanceof Number) {
+                areaAcres = ((Number) val).doubleValue();
+            } else {
+                try {
+                    areaAcres = Double.parseDouble(val.toString());
+                } catch (NumberFormatException e) {
+                    // Ignore invalid format
+                }
+            }
+        }
+        
         Farm farm = Farm.builder()
             .userId(userId)
             .name((String) body.get("name"))
             .location((String) body.get("location"))
-            .areaAcres(body.get("area_acres") != null ? ((Number) body.get("area_acres")).doubleValue() : null)
+            .areaAcres(areaAcres)
             .soilType((String) body.get("soil_type"))
             .irrigationType((String) body.get("irrigation_type"))
             .currentCrop((String) body.get("current_crop"))
@@ -71,7 +108,18 @@ public class FarmController {
 
         if (body.containsKey("name")) farm.setName((String) body.get("name"));
         if (body.containsKey("location")) farm.setLocation((String) body.get("location"));
-        if (body.containsKey("area_acres")) farm.setAreaAcres(((Number) body.get("area_acres")).doubleValue());
+        if (body.containsKey("area_acres") && body.get("area_acres") != null) {
+            Object val = body.get("area_acres");
+            if (val instanceof Number) {
+                farm.setAreaAcres(((Number) val).doubleValue());
+            } else {
+                try {
+                    farm.setAreaAcres(Double.parseDouble(val.toString()));
+                } catch (NumberFormatException e) {
+                    // Ignore invalid format
+                }
+            }
+        }
         if (body.containsKey("soil_type")) farm.setSoilType((String) body.get("soil_type"));
         if (body.containsKey("irrigation_type")) farm.setIrrigationType((String) body.get("irrigation_type"));
         if (body.containsKey("current_crop")) farm.setCurrentCrop((String) body.get("current_crop"));
@@ -204,6 +252,13 @@ public class FarmController {
     }
 
     private Map<String, Object> farmDto(Farm farm) {
+        return farmDto(farm, 
+            weatherLogRepository.findByFarmIdOrderByCreatedAtDesc(farm.getId()),
+            farmImageRepository.findByFarmIdOrderByCreatedAtDesc(farm.getId())
+        );
+    }
+
+    private Map<String, Object> farmDto(Farm farm, List<WeatherLog> weatherLogList, List<FarmImage> farmImageList) {
         Map<String, Object> dto = new HashMap<>();
         dto.put("id", farm.getId());
         dto.put("name", farm.getName());
@@ -213,7 +268,7 @@ public class FarmController {
         dto.put("irrigation_type", farm.getIrrigationType());
         dto.put("current_crop", farm.getCurrentCrop());
         dto.put("created_at", farm.getCreatedAt() != null ? farm.getCreatedAt().toString() : null);
-        List<Map<String, Object>> logs = weatherLogRepository.findByFarmIdOrderByCreatedAtDesc(farm.getId()).stream().map(log -> {
+        List<Map<String, Object>> logs = weatherLogList.stream().map(log -> {
             Map<String, Object> m = new HashMap<>();
             m.put("id", log.getId());
             m.put("notes", log.getNotes());
@@ -224,7 +279,7 @@ public class FarmController {
             return m;
         }).toList();
 
-        List<Map<String, Object>> imgs = farmImageRepository.findByFarmIdOrderByCreatedAtDesc(farm.getId()).stream().map(img -> {
+        List<Map<String, Object>> imgs = farmImageList.stream().map(img -> {
             Map<String, Object> m = new HashMap<>();
             m.put("id", img.getId());
             m.put("image_url", img.getImageUrl());

@@ -62,6 +62,28 @@ public class PostController {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page - 1), limit);
         org.springframework.data.domain.Page<Post> postsPage = postRepository.findWithFilters(query, loc, userIdFilter, pageable);
 
+        List<String> postIds = postsPage.getContent().stream().map(Post::getId).distinct().toList();
+        
+        Map<String, Long> tmpLikeCounts = new HashMap<>();
+        Map<String, Long> tmpCommentCounts = new HashMap<>();
+        Set<String> tmpLikedByMe = new HashSet<>();
+        
+        if (!postIds.isEmpty()) {
+            tmpLikeCounts = postLikeRepository.countByPostIds(postIds).stream()
+                .collect(Collectors.toMap(r -> (String) r[0], r -> (Long) r[1]));
+            
+            tmpCommentCounts = commentRepository.countByPostIds(postIds).stream()
+                .collect(Collectors.toMap(r -> (String) r[0], r -> (Long) r[1]));
+                
+            if (currentUserId != null) {
+                tmpLikedByMe.addAll(postLikeRepository.findLikedPostIds(postIds, currentUserId));
+            }
+        }
+        
+        final Map<String, Long> likeCounts = tmpLikeCounts;
+        final Map<String, Long> commentCounts = tmpCommentCounts;
+        final Set<String> likedByMe = tmpLikedByMe;
+
         List<String> userIds = postsPage.getContent().stream().map(Post::getUserId).distinct().toList();
         List<com.agricompass.entity.UserProfile> profiles = profileRepository.findAllById(userIds);
         Map<String, com.agricompass.entity.UserProfile> profileMap = profiles.stream()
@@ -82,17 +104,16 @@ public class PostController {
             dto.put("created_at", post.getCreatedAt() != null ? post.getCreatedAt().toString() : null);
             dto.put("updated_at", post.getUpdatedAt() != null ? post.getUpdatedAt().toString() : null);
 
-            dto.put("_count", Map.of(
-                "likes", postLikeRepository.countByPostId(post.getId()),
-                "comments", commentRepository.countByPostId(post.getId())
-            ));
-            dto.put("likes_count", postLikeRepository.countByPostId(post.getId()));
-            dto.put("comments_count", commentRepository.countByPostId(post.getId()));
+            long likes = likeCounts.getOrDefault(post.getId(), 0L);
+            long comments = commentCounts.getOrDefault(post.getId(), 0L);
+
+            dto.put("_count", Map.of("likes", likes, "comments", comments));
+            dto.put("likes_count", likes);
+            dto.put("comments_count", comments);
             List<String> cropTags = post.getCropTags();
             dto.put("category", (cropTags != null && !cropTags.isEmpty()) ? cropTags.get(0) : "General");
 
-            dto.put("isLiked", currentUserId != null &&
-                postLikeRepository.findByPostIdAndClerkUserId(post.getId(), currentUserId).isPresent());
+            dto.put("isLiked", likedByMe.contains(post.getId()));
 
             com.agricompass.entity.UserProfile p = profileMap.get(post.getUserId());
             dto.put("user", userDtoFromProfile(post.getUserId(), p));
@@ -184,8 +205,16 @@ public class PostController {
 
     @GetMapping("/{id}/comments")
     public ResponseEntity<List<CommentResponseDTO>> getComments(@PathVariable String id) {
-        List<CommentResponseDTO> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(id).stream().map(comment -> {
-            com.agricompass.entity.UserProfile commentProfile = profileRepository.findById(comment.getClerkUserId()).orElse(null);
+        List<Comment> commentList = commentRepository.findByPostIdOrderByCreatedAtDesc(id);
+
+        List<String> authorIds = commentList.stream()
+            .map(Comment::getClerkUserId).distinct().toList();
+            
+        Map<String, com.agricompass.entity.UserProfile> profiles = profileRepository.findAllById(authorIds)
+            .stream().collect(Collectors.toMap(com.agricompass.entity.UserProfile::getId, p -> p));
+
+        List<CommentResponseDTO> comments = commentList.stream().map(comment -> {
+            com.agricompass.entity.UserProfile commentProfile = profiles.get(comment.getClerkUserId());
             Map<String, Object> userMap = userDtoFromProfile(comment.getClerkUserId(), commentProfile);
             UserSummaryDTO userDto = new UserSummaryDTO(
                 (String) userMap.get("id"),

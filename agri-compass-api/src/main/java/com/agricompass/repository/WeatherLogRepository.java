@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface WeatherLogRepository extends JpaRepository<WeatherLog, String> {
     List<WeatherLog> findByFarmIdOrderByCreatedAtDesc(String farmId);
+    List<WeatherLog> findByFarmIdInOrderByCreatedAtDesc(List<String> farmIds);
 }

@@ -35,9 +35,7 @@ public class CropService {
     }
 
     public List<CropDTO> searchCrops(String query) {
-        return cropRepository.findAll().stream()
-                .filter(c -> c.getName().toLowerCase().contains(query.toLowerCase()) || 
-                            (c.getSeason() != null && c.getSeason().toLowerCase().contains(query.toLowerCase())))
+        return cropRepository.searchByName(query).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -70,34 +68,25 @@ public class CropService {
     }
 
     public List<CropDTO> getCropsByDistrict(String district) {
-        return districtRepository.findByDistrictNameIgnoreCase(district).stream()
-                .map(CropDistrict::getCrop)
-                .distinct()
+        return cropRepository.findByDistrict(district).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     public List<CropDTO> getCropsBySeason(String season) {
-        return cropRepository.findAll().stream()
-                .filter(c -> c.getSeason() != null && c.getSeason().equalsIgnoreCase(season))
+        return cropRepository.findBySeason(season).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     public List<CropDTO> getHighProfitCrops() {
-        return cropRepository.findAll().stream()
-                .filter(c -> c.getAiScore() != null && c.getAiScore().getProfitabilityScore() >= 90)
-                .sorted((c1, c2) -> c2.getAiScore().getProfitabilityScore().compareTo(c1.getAiScore().getProfitabilityScore()))
-                .limit(10)
+        return cropRepository.findHighProfitCrops(org.springframework.data.domain.PageRequest.of(0, 10)).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     public List<CropDTO> getLowWaterCrops() {
-        return cropRepository.findAll().stream()
-                .filter(c -> c.getAiScore() != null && c.getAiScore().getWaterEfficiencyScore() >= 90)
-                .sorted((c1, c2) -> c2.getAiScore().getWaterEfficiencyScore().compareTo(c1.getAiScore().getWaterEfficiencyScore()))
-                .limit(10)
+        return cropRepository.findLowWaterCrops(org.springframework.data.domain.PageRequest.of(0, 10)).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

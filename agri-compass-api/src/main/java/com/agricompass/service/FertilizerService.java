@@ -22,7 +22,7 @@ public class FertilizerService {
 
     private final FertilizerAnalysisRepository analysisRepository;
     private final ObjectMapper objectMapper;
-    private Map<String, Object> cropDataMap = new HashMap<>();
+    private Map<String, Object> cropDataMap = java.util.Collections.emptyMap();
 
     public FertilizerService(FertilizerAnalysisRepository analysisRepository) {
         this.analysisRepository = analysisRepository;
@@ -35,6 +35,8 @@ public class FertilizerService {
             ClassPathResource resource = new ClassPathResource("dataset/Crops_data.json");
             InputStream inputStream = resource.getInputStream();
             List<Map<String, Object>> cropsList = objectMapper.readValue(inputStream, new TypeReference<List<Map<String, Object>>>() {});
+            
+            Map<String, Object> tempMap = new HashMap<>();
             
             for (Map<String, Object> data : cropsList) {
                 String name = (String) data.get("name");
@@ -95,17 +97,18 @@ public class FertilizerService {
                 
                 // Add to map under different key representations
                 String nameLower = name.toLowerCase();
-                cropDataMap.put(nameLower, adapted);
+                tempMap.put(nameLower, adapted);
                 
                 if (slug != null) {
-                    cropDataMap.put(slug.toLowerCase(), adapted);
+                    tempMap.put(slug.toLowerCase(), adapted);
                 }
                 
                 String simpleName = nameLower.split("\\s+")[0].replaceAll("[^a-zA-Z]", "");
-                if (!simpleName.isEmpty() && !cropDataMap.containsKey(simpleName)) {
-                    cropDataMap.put(simpleName, adapted);
+                if (!simpleName.isEmpty() && !tempMap.containsKey(simpleName)) {
+                    tempMap.put(simpleName, adapted);
                 }
             }
+            this.cropDataMap = java.util.Collections.unmodifiableMap(tempMap);
             log.info("Loaded master crop dataset for {} crops adapted from Crops_data.json.", cropDataMap.size());
         } catch (IOException e) {
             log.error("Failed to load Crops_data.json", e);

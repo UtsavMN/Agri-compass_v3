@@ -42,9 +42,23 @@ export const useCommunityFeed = (category?: string, feedScope: 'global' | 'local
   }, [category, feedScope, district]);
 
   useEffect(() => {
-    fetchPosts(); // immediate first fetch
-    const interval = setInterval(fetchPosts, 10000); // poll every 10 seconds
-    return () => clearInterval(interval);
+    let timeoutId: number;
+    let isMounted = true;
+
+    const poll = async () => {
+      if (!isMounted) return;
+      await fetchPosts();
+      if (isMounted) {
+        timeoutId = window.setTimeout(poll, 10000);
+      }
+    };
+
+    poll();
+
+    return () => {
+      isMounted = false;
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
   }, [fetchPosts]);
 
   return { posts, loading, error, refetch: fetchPosts };

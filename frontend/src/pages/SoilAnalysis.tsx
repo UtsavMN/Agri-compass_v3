@@ -136,7 +136,7 @@ export function SoilAnalysisContent() {
         season: season,
       };
 
-      const data = await apiPost<RecommendationResponse>('/api/ai/soil-recommendation', payload);
+      const data = (await apiPost('/api/ai/soil-recommendation', payload)) as RecommendationResponse;
       setResults(data);
       if (data.recommended_crops && data.recommended_crops.length > 0) {
         setExpandedCrop(data.recommended_crops[0].crop_name);

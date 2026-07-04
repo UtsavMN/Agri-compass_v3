@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface FarmImageRepository extends JpaRepository<FarmImage, String> {
     List<FarmImage> findByFarmIdOrderByCreatedAtDesc(String farmId);
+    List<FarmImage> findByFarmIdInOrderByCreatedAtDesc(List<String> farmIds);
 }

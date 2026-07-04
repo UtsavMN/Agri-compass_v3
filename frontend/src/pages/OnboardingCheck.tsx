@@ -21,10 +21,10 @@ export default function OnboardingCheck() {
            return;
         }
 
-        const profile = await apiGet('/api/profile/me');
+        const profile = await apiGet('/api/profile/me', token);
         if (profile) {
           setClerkUserAndProfile(clerkUser, profile);
-          if (profile.onboarding_completed) {
+          if (profile.onboarding_completed || profile.onboardingCompleted) {
             navigate('/dashboard');
           } else {
             navigate('/onboarding');

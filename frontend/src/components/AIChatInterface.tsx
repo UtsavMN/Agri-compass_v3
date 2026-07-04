@@ -180,8 +180,9 @@ export default function AIChatInterface({ selectedFarmId, onFarmSelect }: AIChat
   }
 
   const handleFarmChange = (farmId: string) => {
-    setCurrentFarmId(farmId)
-    onFarmSelect?.(farmId)
+    const idToSet = farmId === 'general' ? '' : farmId
+    setCurrentFarmId(idToSet)
+    onFarmSelect?.(idToSet)
   }
 
   const formatTime = (date: Date) => {
@@ -202,12 +203,12 @@ export default function AIChatInterface({ selectedFarmId, onFarmSelect }: AIChat
           </CardTitle>
 
           {farms.length > 0 && (
-            <Select value={currentFarmId} onValueChange={handleFarmChange}>
+            <Select value={currentFarmId || 'general'} onValueChange={handleFarmChange}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select farm context" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">General Advice</SelectItem>
+                <SelectItem value="general">General Advice</SelectItem>
                 {farms.map((farm) => (
                   <SelectItem key={farm.id} value={farm.id}>
                     {farm.name}

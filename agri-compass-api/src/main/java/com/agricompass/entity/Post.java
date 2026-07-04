@@ -79,15 +79,17 @@ public class Post {
     public String getVideoUrl() { return null; }
     public String getKnCaption() { return null; }
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(Post.class);
+
     public java.time.LocalDateTime getUpdatedAt() {
         if (createdAt != null) {
             try { return java.time.LocalDateTime.parse(createdAt.replace(" ", "T")); }
             catch (Exception e) { 
-                System.err.println("Failed to parse createdAt date (" + createdAt + "): " + e.getMessage());
-                return null; 
+                log.error("Failed to parse createdAt date ({}): {}", createdAt, e.getMessage());
+                return java.time.LocalDateTime.now(); 
             }
         }
-        return null;
+        return java.time.LocalDateTime.now();
     }
 
     public java.util.List<String> getCropTags() {

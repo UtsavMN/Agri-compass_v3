@@ -256,7 +256,9 @@ export default function CropDetails() {
                 alt={crop.name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = getCropImage('default');
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null;
+                  target.src = getCropImage('default');
                 }}
               />
             ) : (

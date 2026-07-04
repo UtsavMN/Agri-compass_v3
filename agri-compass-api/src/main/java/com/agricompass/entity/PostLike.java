@@ -5,7 +5,9 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
-@Table(name = "post_likes")
+@Table(name = "post_likes", indexes = {
+    @Index(name = "idx_post_likes", columnList = "post_id")
+})
 @IdClass(PostLike.PostLikeId.class)
 public class PostLike {
 

@@ -22,13 +22,15 @@ interface UseDistrictSearchOptions {
   initialDistrict?: string;
 }
 
+const DEFAULT_KEYS = ['district', 'recommended_crops', 'soil_type'];
+
 export function useDistrictSearch(
   districts: DistrictData[],
   options: UseDistrictSearchOptions = {}
 ) {
   const {
     threshold = 0.3, // Good balance for fuzzy matching
-    keys = ['district', 'recommended_crops', 'soil_type'],
+    keys = DEFAULT_KEYS,
     limit = 10,
     initialDistrict = '',
   } = options;

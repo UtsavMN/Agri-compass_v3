@@ -23,6 +23,7 @@ public class CropController {
     }
 
     @GetMapping
+    @org.springframework.cache.annotation.Cacheable("crops_all")
     public ResponseEntity<Page<CropDTO>> getAllCrops(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -35,6 +36,7 @@ public class CropController {
     }
 
     @GetMapping("/{id}")
+    @org.springframework.cache.annotation.Cacheable("crops_id")
     public ResponseEntity<CropDTO> getCropById(@PathVariable Long id) {
         CropDTO crop = cropService.getCropById(id);
         return crop != null ? ResponseEntity.ok(crop) : ResponseEntity.notFound().build();
@@ -46,6 +48,7 @@ public class CropController {
     }
 
     @GetMapping("/recommendations")
+    @org.springframework.cache.annotation.Cacheable("crops_reco")
     public ResponseEntity<List<CropDTO>> getRecommendations(@RequestParam String district) {
         return ResponseEntity.ok(cropService.getRecommendations(district));
     }
@@ -56,6 +59,7 @@ public class CropController {
     }
 
     @GetMapping("/district/{district}")
+    @org.springframework.cache.annotation.Cacheable("crops_district")
     public ResponseEntity<List<CropDTO>> getCropsByDistrict(@PathVariable String district) {
         return ResponseEntity.ok(cropService.getCropsByDistrict(district));
     }
@@ -66,11 +70,13 @@ public class CropController {
     }
 
     @GetMapping("/high-profit")
+    @org.springframework.cache.annotation.Cacheable("crops_profit")
     public ResponseEntity<List<CropDTO>> getHighProfitCrops() {
         return ResponseEntity.ok(cropService.getHighProfitCrops());
     }
 
     @GetMapping("/low-water")
+    @org.springframework.cache.annotation.Cacheable("crops_water")
     public ResponseEntity<List<CropDTO>> getLowWaterCrops() {
         return ResponseEntity.ok(cropService.getLowWaterCrops());
     }

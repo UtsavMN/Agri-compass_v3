@@ -39,6 +39,7 @@ public class DataController {
 
     // GET /api/schemes
     @GetMapping("/schemes")
+    @org.springframework.cache.annotation.Cacheable("schemes")
     public ResponseEntity<List<Map<String, Object>>> getSchemes() {
         return ResponseEntity.ok(List.of(
             createSchemeMap(

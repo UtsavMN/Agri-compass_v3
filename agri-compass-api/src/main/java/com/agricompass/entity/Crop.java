@@ -8,7 +8,10 @@ import java.util.List;
     name = "crops",
     indexes = {
         @Index(name = "idx_crop_name", columnList = "name"),
-        @Index(name = "idx_crop_district", columnList = "district")
+        @Index(name = "idx_crop_district", columnList = "district"),
+        @Index(name = "idx_crop_season", columnList = "season"),
+        @Index(name = "idx_crop_returns", columnList = "expected_returns"),
+        @Index(name = "idx_crop_water", columnList = "water_requirement")
     }
 )
 public class Crop {
@@ -65,10 +68,12 @@ public class Crop {
     @Column(name = "difficulty_level")
     private String difficultyLevel;
 
-    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "soil_requirement_id")
     private CropSoilRequirement soilRequirement;
 
-    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nutrient_id")
     private CropNutrient nutrient;
 
     @OneToMany(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -77,16 +82,20 @@ public class Crop {
     @OneToMany(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<CropIrrigation> irrigations;
 
-    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "market_info_id")
     private CropMarketInfo marketInfo;
 
-    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "yield_info_id")
     private CropYieldInfo yieldInfo;
 
-    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_harvest_id")
     private CropPostHarvest postHarvest;
 
-    @OneToOne(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ai_score_id")
     private CropAiScore aiScore;
 
     @OneToMany(mappedBy = "crop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

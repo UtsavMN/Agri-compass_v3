@@ -61,8 +61,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
           document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         });
         // Force a page reload once if the cookie was present when it shouldn't be
-        window.location.reload();
+        if (!sessionStorage.getItem('googtrans_cleared')) {
+          sessionStorage.setItem('googtrans_cleared', 'true');
+          window.location.reload();
+        }
         return;
+      } else {
+        sessionStorage.removeItem('googtrans_cleared');
       }
     } else {
       document.body.removeAttribute('translate');
@@ -113,6 +118,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const toggleLanguage = () => {
     const newLang = language === 'en' ? 'kn' : 'en';
+    sessionStorage.removeItem('googtrans_cleared');
     setLanguageState(newLang);
     localStorage.setItem('language', newLang);
     document.documentElement.lang = newLang;
@@ -120,6 +126,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setLanguage = (newLanguage: Language) => {
+    sessionStorage.removeItem('googtrans_cleared');
     setLanguageState(newLanguage);
     localStorage.setItem('language', newLanguage);
     document.documentElement.lang = newLanguage;

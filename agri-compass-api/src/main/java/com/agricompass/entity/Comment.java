@@ -3,7 +3,9 @@ package com.agricompass.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "post_comments")
+@Table(name = "post_comments", indexes = {
+    @Index(name = "idx_comments_post", columnList = "post_id")
+})
 public class Comment {
 
     @Id

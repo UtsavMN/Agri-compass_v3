@@ -25,6 +25,9 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
 
+    @Value("${clerk.jwt.issuer:}")
+    private String clerkJwtIssuer;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -32,14 +35,36 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // maybe some public endpoints
-                .requestMatchers("/ws/**").permitAll() // allow websockets setup
+                .requestMatchers(
+                    "/api/auth/**",
+                    "/api/health",
+                    "/api/crops/**",
+                    "/api/schemes/**",
+                    "/api/users/search",
+                    "/api/users/check-handle",
+                    "/api/users/*/public",
+                    "/ws/**"
+                ).permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(org.springframework.security.config.Customizer.withDefaults()));
+            .oauth2ResourceServer(oauth2 -> {
+                if (clerkJwtIssuer != null && !clerkJwtIssuer.isEmpty()) {
+                    oauth2.jwt(jwt -> jwt.decoder(jwtDecoder()));
+                } else {
+                    oauth2.jwt(org.springframework.security.config.Customizer.withDefaults());
+                }
+            });
 
         return http.build();
+    }
+
+    @Bean
+    public org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder() {
+        if (clerkJwtIssuer != null && !clerkJwtIssuer.isEmpty()) {
+            return org.springframework.security.oauth2.jwt.JwtDecoders.fromIssuerLocation(clerkJwtIssuer);
+        }
+        return null;
     }
 
     @Bean

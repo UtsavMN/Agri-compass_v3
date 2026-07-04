@@ -34,17 +34,28 @@ public class UserController {
     }
 
     @GetMapping("/onboarding-status")
-    public ResponseEntity<Map<String, Boolean>> getOnboardingStatus() {
-        UserProfile profile = userService.syncUserProfile(null);
-        boolean completed = false;
+    public ResponseEntity<Map<String, Boolean>> getOnboardingStatus(@org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt) {
+        if (jwt == null) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        String clerkUserId = jwt.getSubject();
+        java.util.Optional<UserProfile> profileOpt = userProfileRepository.findById(clerkUserId);
 
-        if (profile != null) {
-            boolean hasValidHandle = profile.getUsernameHandle() != null && !profile.getUsernameHandle().equals(profile.getClerkUserId());
-            boolean flagSet = profile.getOnboardingCompleted() != null && profile.getOnboardingCompleted() == 1;
-            completed = hasValidHandle && flagSet;
+        if (profileOpt.isEmpty()) {
+            // New user — needs onboarding
+            return ResponseEntity.ok(Map.of("completed", false));
         }
 
-        Map<String, Boolean> response = new HashMap<>();
+        UserProfile profile = profileOpt.get();
+        // IMPORTANT: if profile exists, treat as completed
+        // even if the onboarding_completed flag is not set
+        // This handles existing users who were created before onboarding was added
+        boolean completed = profile.getOnboardingCompleted() != null
+            ? profile.getOnboardingCompleted() == 1
+            : true; // existing profile = treat as complete
+
+        Map<String, Boolean> response = new java.util.HashMap<>();
         response.put("completed", completed);
         return ResponseEntity.ok(response);
     }

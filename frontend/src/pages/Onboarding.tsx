@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { apiGet, apiPost, apiUpload } from "@/lib/httpClient";
 
 const KARNATAKA_DISTRICTS = [
   "Bagalkot","Ballari","Belagavi","Bengaluru Rural","Bengaluru Urban",
@@ -49,10 +50,7 @@ export default function Onboarding() {
     if (handle.length < 3) return;
     setCheckingUsername(true);
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || ""}/api/users/check-handle?handle=${handle}`
-      );
-      const { available } = await res.json();
+      const { available } = await apiGet(`/api/users/check-handle?handle=${handle}`);
       setUsernameAvailable(available);
     } catch {
       setUsernameAvailable(null);
@@ -65,12 +63,13 @@ export default function Onboarding() {
     const formData = new FormData();
     formData.append("file", file);
     const token = await getToken();
-    const res = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL || ""}/api/profile/upload-avatar`,
-      { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData }
-    );
-    const { url } = await res.json();
-    setForm(f => ({ ...f, profilePicture: file, profilePictureUrl: url }));
+    try {
+      const { url } = await apiUpload('/api/profile/upload-avatar', formData, token);
+      setForm(f => ({ ...f, profilePicture: file, profilePictureUrl: url }));
+    } catch (e) {
+      console.error(e);
+      setError("Failed to upload image");
+    }
   };
 
   const submitStep1 = async () => {
@@ -90,27 +89,20 @@ export default function Onboarding() {
     setLoading(true);
     try {
       const token = await getToken();
-      await fetch(`${import.meta.env.VITE_API_BASE_URL || ""}/api/users/onboarding`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fullName: form.fullName,
-          usernameHandle: form.usernameHandle,
-          phone: form.phone,
-          district: form.district,
-          language: form.language,
-          profilePictureUrl: form.profilePictureUrl,
-          farm: skip ? null : (form.hasFarm ? {
-            farmName: form.farmName,
-            acres: parseFloat(form.acres) || null,
-            currentCrop: form.currentCrop || null,
-            soilType: form.soilType || null,
-          } : null),
-        }),
-      });
+      await apiPost('/api/users/onboarding', {
+        fullName: form.fullName,
+        usernameHandle: form.usernameHandle,
+        phone: form.phone,
+        district: form.district,
+        language: form.language,
+        profilePictureUrl: form.profilePictureUrl,
+        farm: skip ? null : (form.hasFarm ? {
+          farmName: form.farmName,
+          acres: parseFloat(form.acres) || null,
+          currentCrop: form.currentCrop || null,
+          soilType: form.soilType || null,
+        } : null),
+      }, token);
       setStep(3);
     } catch {
       setError("Something went wrong. Please try again.");

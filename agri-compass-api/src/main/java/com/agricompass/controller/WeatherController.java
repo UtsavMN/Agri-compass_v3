@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.Cacheable;
 @RestController
 @RequestMapping("/api/weather")
 public class WeatherController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WeatherController.class);
 
     @Value("${openweather.api.key}")
     private String openWeatherApiKey;
@@ -164,6 +165,7 @@ public class WeatherController {
 
             return ResponseEntity.ok(weatherResponse);
         } catch (Exception e) {
+            log.error("Failed to fetch weather for {}: {}", targetDistrict, e.getMessage());
             // Build dynamic mock forecast to ensure premium dark UI looks beautiful and has correct data
             List<Map<String, Object>> mockForecast = new ArrayList<>();
             java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
