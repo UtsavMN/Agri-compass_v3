@@ -1,75 +1,37 @@
-CREATE TABLE IF NOT EXISTS user_profiles (
-  clerk_user_id TEXT PRIMARY KEY,
-  full_name TEXT NOT NULL,
-  username_handle TEXT UNIQUE NOT NULL,
-  phone TEXT,
-  district TEXT NOT NULL,
-  state TEXT DEFAULT 'Karnataka',
-  profile_picture_url TEXT,
-  bio TEXT,
-  language TEXT DEFAULT 'kn',
-  onboarding_completed INTEGER DEFAULT 0,
-  created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT DEFAULT (datetime('now'))
-);
-
-CREATE TABLE IF NOT EXISTS farms (
-  id TEXT PRIMARY KEY,
-  clerk_user_id TEXT NOT NULL,
-  farm_name TEXT NOT NULL,
-  acres REAL,
-  district TEXT,
-  soil_type TEXT,
-  current_crop TEXT,
-  npk_n REAL,
-  npk_p REAL,
-  npk_k REAL,
-  created_at TEXT DEFAULT (datetime('now')),
-  FOREIGN KEY (clerk_user_id) REFERENCES user_profiles(clerk_user_id)
-);
-
-CREATE TABLE IF NOT EXISTS conversations (
-  id TEXT PRIMARY KEY,
-  participant_one TEXT NOT NULL,
-  participant_two TEXT NOT NULL,
-  created_at TEXT DEFAULT (datetime('now')),
-  UNIQUE(participant_one, participant_two),
-  FOREIGN KEY (participant_one) REFERENCES user_profiles(clerk_user_id),
-  FOREIGN KEY (participant_two) REFERENCES user_profiles(clerk_user_id)
-);
-
-CREATE TABLE IF NOT EXISTS messages (
-  id TEXT PRIMARY KEY,
-  conversation_id TEXT NOT NULL,
-  sender_id TEXT NOT NULL,
-  content TEXT NOT NULL,
-  read_at TEXT,
-  created_at TEXT DEFAULT (datetime('now')),
-  FOREIGN KEY (conversation_id) REFERENCES conversations(id),
-  FOREIGN KEY (sender_id) REFERENCES user_profiles(clerk_user_id)
-);
-
-CREATE TABLE IF NOT EXISTS community_posts (
-  id TEXT PRIMARY KEY,
-  clerk_user_id TEXT NOT NULL,
-  content TEXT NOT NULL,
-  category TEXT DEFAULT 'GENERAL',
-  district TEXT,
-  likes_count INTEGER DEFAULT 0,
-  created_at TEXT DEFAULT (datetime('now')),
-  FOREIGN KEY (clerk_user_id) REFERENCES user_profiles(clerk_user_id)
-);
-
-CREATE TABLE IF NOT EXISTS post_likes (
-  post_id TEXT NOT NULL,
-  clerk_user_id TEXT NOT NULL,
-  PRIMARY KEY (post_id, clerk_user_id)
-);
-
-CREATE TABLE IF NOT EXISTS post_comments (
-  id TEXT PRIMARY KEY,
-  post_id TEXT NOT NULL,
-  clerk_user_id TEXT NOT NULL,
-  content TEXT NOT NULL,
-  created_at TEXT DEFAULT (datetime('now'))
-);
+create table if not exists community_posts (likes_count integer, category varchar(255), clerk_user_id varchar(255) not null, content varchar(255) not null, created_at varchar(255), district varchar(255), id varchar(255) not null, primary key (id));
+create table if not exists conversations (created_at varchar(255), id varchar(255) not null, participant_one varchar(255) not null, participant_two varchar(255) not null, primary key (id));
+create table if not exists crop_ai_scores (climate_suitability_score integer, profitability_score integer, soil_suitability_score integer, sustainability_rating float, water_efficiency_score integer, crop_id bigint not null unique, id integer, primary key (id));
+create table if not exists crop_diseases (crop_id bigint not null, id integer, management TEXT, name varchar(255) not null, symptoms TEXT, primary key (id));
+create table if not exists crop_districts (crop_id bigint not null, id integer, district_name varchar(255) not null, primary key (id));
+create table if not exists crop_economics (expected_return float, investment_per_acre float, market_price_per_quintal float, profit_margin float, yield_quintal_per_acre float, crop_id bigint not null unique, id integer, primary key (id));
+create table if not exists crop_growing_steps (step_number integer, crop_id bigint not null, id integer, details TEXT, title varchar(255) not null, primary key (id));
+create table if not exists crop_irrigation (crop_id bigint not null, id integer, method varchar(255) not null, primary key (id));
+create table if not exists crop_market_info (average_msp float, crop_id bigint not null unique, id integer, export_potential varchar(255), market_demand varchar(255), price_volatility varchar(255), primary key (id));
+create table if not exists crop_nutrients (nitrogen_kg integer, phosphorus_kg integer, potassium_kg integer, crop_id bigint not null unique, id integer, primary key (id));
+create table if not exists crop_post_harvest (processing_required boolean, storage_duration_months integer, crop_id bigint not null unique, id integer, storage_method varchar(255), primary key (id));
+create table if not exists crop_recommendations (crop_id bigint not null, id integer, district varchar(255) not null, primary key (id));
+create table if not exists crop_soil_requirements (green_manure boolean, mulching boolean, crop_id bigint not null unique, id integer, crop_rotation varchar(255), organic_carbon varchar(255), ph_range varchar(255), primary key (id));
+create table if not exists crop_yield_info (average_quintals float, best_practice_quintals float, minimum_quintals float, crop_id bigint not null unique, id integer, primary key (id));
+create table if not exists crops (breakeven_months integer, duration_days integer, expected_returns float, investment_per_acre float, ai_score_id bigint unique, id integer, market_info_id bigint unique, nutrient_id bigint unique, post_harvest_id bigint unique, soil_requirement_id bigint unique, yield_info_id bigint unique, difficulty_level varchar(255), district varchar(255) not null, guidelines TEXT, image_url varchar(255), name varchar(255) not null, rainfall_mm varchar(255), scientific_name varchar(255), season varchar(255) not null, soil_type varchar(255), temperature_range varchar(255), water_requirement varchar(255), weather_pattern varchar(255), primary key (id));
+create table if not exists farm_images (created_at timestamp, caption varchar(255), farm_id varchar(255) not null, id varchar(255) not null, image_url varchar(255) not null, user_id varchar(255) not null, primary key (id));
+create table if not exists farms (acres float, npk_k float, npk_n float, npk_p float, clerk_user_id varchar(255) not null, created_at varchar(255), current_crop varchar(255), district varchar(255), farm_name varchar(255) not null, id varchar(255) not null, soil_type varchar(255), primary key (id));
+create table if not exists fertilizer_analyses (soil_k float, soil_n float, soil_p float, created_at timestamp, crop varchar(255) not null, farm_id varchar(255) not null, growth_stage varchar(255), id varchar(255) not null, result_json TEXT, soil_level varchar(255), soil_ph varchar(255), primary key (id));
+create table if not exists follows (created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, follower_id varchar(255) not null, following_id varchar(255) not null, primary key (follower_id, following_id));
+create table if not exists marketplace_listings (active boolean not null, price float not null, created_at timestamp, id integer, updated_at timestamp, category varchar(255) not null, description TEXT, image_url varchar(255), listing_type varchar(255) not null, location varchar(255), price_unit varchar(255), title varchar(255) not null, user_id varchar(255) not null, primary key (id));
+create table if not exists messages (content varchar(255) not null, conversation_id varchar(255) not null, created_at varchar(255), id varchar(255) not null, read_at varchar(255), sender_id varchar(255) not null, primary key (id));
+create table if not exists post_comments (clerk_user_id varchar(255) not null, content varchar(255) not null, created_at varchar(255), id varchar(255) not null, post_id varchar(255) not null, primary key (id));
+create table if not exists post_likes (clerk_user_id varchar(255) not null, post_id varchar(255) not null, primary key (clerk_user_id, post_id));
+create table if not exists user_profiles (onboarding_completed integer not null, bio varchar(255), clerk_user_id varchar(255) not null, created_at varchar(255), district varchar(255) not null, full_name varchar(255) not null, language varchar(255) not null, phone varchar(255), profile_picture_url varchar(255), state varchar(255) not null, updated_at varchar(255), username_handle varchar(255) not null unique, primary key (clerk_user_id));
+create table if not exists weather_logs (humidity float, temperature float, created_at timestamp, conditions varchar(255), farm_id varchar(255) not null, id varchar(255) not null, notes varchar(255), user_id varchar(255) not null, primary key (id));
+create index if not exists idx_district on crop_recommendations (district);
+create index if not exists idx_crop_name on crops (name);
+create index if not exists idx_crop_district on crops (district);
+create index if not exists idx_crop_season on crops (season);
+create index if not exists idx_crop_returns on crops (expected_returns);
+create index if not exists idx_crop_water on crops (water_requirement);
+create index if not exists idx_farm_images on farm_images (farm_id);
+create index if not exists idx_listing_category on marketplace_listings (category);
+create index if not exists idx_listing_type on marketplace_listings (listing_type);
+create index if not exists idx_comments_post on post_comments (post_id);
+create index if not exists idx_post_likes on post_likes (post_id);
+create index if not exists idx_weather_logs on weather_logs (farm_id);
