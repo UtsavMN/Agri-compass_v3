@@ -75,6 +75,11 @@ public class DatabaseSeeder implements CommandLineRunner {
                 
                 crop.setName(name);
                 
+                List<String> districtsList = (List<String>) data.get("recommended_districts_karnataka");
+                if (crop.getDistrict() == null) {
+                    crop.setDistrict(districtsList != null && !districtsList.isEmpty() ? districtsList.get(0) : "Statewide");
+                }
+                
                 List<String> seasonList = (List<String>) data.get("season");
                 crop.setSeason(seasonList != null ? String.join(", ", seasonList) : "Annual");
                 
