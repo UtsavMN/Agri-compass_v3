@@ -226,7 +226,6 @@ public class DatabaseSeeder implements CommandLineRunner {
 
                 // Districts
                 districtRepo.deleteAll(districtRepo.findByCropId(crop.getId()));
-                List<String> districtsList = (List<String>) data.get("recommended_districts_karnataka");
                 if (districtsList != null) {
                     for (String dName : districtsList) {
                         CropDistrict district = new CropDistrict();
