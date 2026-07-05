@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { apiGet } from "@/lib/httpClient";
 
 export const useOnboardingGate = () => {
   const { getToken, isSignedIn } = useAuth();
@@ -26,30 +27,19 @@ export const useOnboardingGate = () => {
           return;
         }
 
-        const res = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL || ""}/api/users/onboarding-status`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            signal: AbortSignal.timeout(5000), // 5 second timeout
+        const res = await apiGet('/api/users/onboarding-status', token).catch(err => {
+          // If 401 — auth is broken, NOT an onboarding issue
+          if (err.message.includes('401')) {
+            console.error("Auth failed — check Clerk keys and JWT issuer on Render");
+          } else {
+            console.error(`Onboarding check failed:`, err);
           }
-        );
+          return null; // Stop here — do not redirect to onboarding
+        });
 
-        // If 401 — auth is broken, NOT an onboarding issue
-        // Do NOT redirect to onboarding — show error instead
-        if (res.status === 401) {
-          console.error("Auth failed — check Clerk keys and JWT issuer on Render");
-          return; // Stop here — do not redirect to onboarding
-        }
+        if (!res) return;
 
-        // If any other error — server issue, do not redirect
-        if (!res.ok) {
-          console.error(`Onboarding check failed with status ${res.status}`);
-          return;
-        }
-
-        const data = await res.json();
-
-        if (data.completed === true) {
+        if (res.completed === true) {
           // Cache so we don't check again this session
           sessionStorage.setItem(cacheKey, "true");
         } else {

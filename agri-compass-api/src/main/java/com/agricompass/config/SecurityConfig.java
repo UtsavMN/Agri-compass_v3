@@ -48,24 +48,13 @@ public class SecurityConfig {
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )
-            .oauth2ResourceServer(oauth2 -> {
-                if (clerkJwtIssuer != null && !clerkJwtIssuer.isEmpty()) {
-                    oauth2.jwt(jwt -> jwt.decoder(jwtDecoder()));
-                } else {
-                    oauth2.jwt(org.springframework.security.config.Customizer.withDefaults());
-                }
-            });
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(org.springframework.security.config.Customizer.withDefaults()));
 
         return http.build();
     }
 
-    @Bean
-    public org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder() {
-        if (clerkJwtIssuer != null && !clerkJwtIssuer.isEmpty()) {
-            return org.springframework.security.oauth2.jwt.JwtDecoders.fromIssuerLocation(clerkJwtIssuer);
-        }
-        return null;
-    }
+    // Relies on Spring Boot auto-configuration for JwtDecoder
+    // via spring.security.oauth2.resourceserver.jwt.issuer-uri
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
