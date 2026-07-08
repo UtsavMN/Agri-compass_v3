@@ -56,10 +56,6 @@ public class SecurityConfig {
     // Relies on Spring Boot auto-configuration for JwtDecoder
     // via spring.security.oauth2.resourceserver.jwt.issuer-uri
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
-    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
