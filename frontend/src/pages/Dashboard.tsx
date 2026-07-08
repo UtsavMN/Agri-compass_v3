@@ -19,7 +19,7 @@ import { StaggerContainer, StaggerItem, TiltCard } from '@/components/ui/animati
 import { LottieEmptyState } from '@/components/ui/lottie-loading';
 import {  Post } from '@/lib/api/posts';
 import {    FileText,  Leaf, MapPin, Zap } from 'lucide-react';
-import { useScroll, useTransform } from 'framer-';
+import { useScroll, useTransform } from 'framer-motion';
 import { MarketTrendCard } from '@/components/dashboard/MarketTrendCard';
 
 import { HeroCarousel } from '@/components/dashboard/HeroCarousel';

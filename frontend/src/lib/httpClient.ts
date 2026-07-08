@@ -14,8 +14,7 @@ let globalClerkToken: string | null = null;
 export const setGlobalClerkToken = (token: string | null) => {
   globalClerkToken = token;
 };
-  globalClerkToken = token;
-};
+
 
 export const apiGet = async (path: string, token?: string | null): Promise<any> => {
   const actualToken = token || globalClerkToken;
