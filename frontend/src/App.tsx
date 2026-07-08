@@ -50,6 +50,7 @@ const MainLayout = () => {
 
 import { ClerkProvider } from '@clerk/clerk-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
+import { ClerkTokenManager } from '@/components/auth/ClerkTokenManager';
 import { dark } from '@clerk/themes';
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -90,7 +91,9 @@ function App() {
                 {/* Protected Routes wrapped in persistent Layout */}
                 <Route element={
                   <RouteGuard>
-                    <MainLayout />
+                    <ClerkTokenManager>
+                      <MainLayout />
+                    </ClerkTokenManager>
                   </RouteGuard>
                 }>
                   <Route path="/" element={<Community />} />

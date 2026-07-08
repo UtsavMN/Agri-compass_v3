@@ -5,30 +5,20 @@ const API_BASE_URL = (
 ).replace(/\/$/, ""); // remove trailing slash
 
 // Log the URL on startup so you can verify in browser console
-if (import.meta.env.DEV) {
-  console.log("[API] Base URL:", API_BASE_URL || "relative (same origin)");
-}
-
 export const buildUrl = (path: string): string => {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   return `${API_BASE_URL}${cleanPath}`;
 };
 
-const getClerkToken = async (): Promise<string | null> => {
-  try {
-    // @ts-ignore
-    if (window.Clerk && window.Clerk.session) {
-      // @ts-ignore
-      return await window.Clerk.session.getToken();
-    }
-  } catch (e) {
-    console.warn("Failed to get Clerk token automatically", e);
-  }
-  return null;
+let globalClerkToken: string | null = null;
+export const setGlobalClerkToken = (token: string | null) => {
+  globalClerkToken = token;
+};
+  globalClerkToken = token;
 };
 
 export const apiGet = async (path: string, token?: string | null): Promise<any> => {
-  const actualToken = token || await getClerkToken();
+  const actualToken = token || globalClerkToken;
   const res = await fetch(buildUrl(path), {
     headers: {
       "Content-Type": "application/json",
@@ -40,7 +30,7 @@ export const apiGet = async (path: string, token?: string | null): Promise<any> 
 };
 
 export const apiPost = async (path: string, body: unknown, token?: string | null): Promise<any> => {
-  const actualToken = token || await getClerkToken();
+  const actualToken = token || globalClerkToken;
   const res = await fetch(buildUrl(path), {
     method: "POST",
     headers: {
@@ -63,7 +53,7 @@ export const apiPost = async (path: string, body: unknown, token?: string | null
 };
 
 export const apiDelete = async (path: string, token?: string | null): Promise<any> => {
-  const actualToken = token || await getClerkToken();
+  const actualToken = token || globalClerkToken;
   const res = await fetch(buildUrl(path), {
     method: "DELETE",
     headers: {
@@ -76,7 +66,7 @@ export const apiDelete = async (path: string, token?: string | null): Promise<an
 };
 
 export const apiPut = async (path: string, body: unknown, token?: string | null): Promise<any> => {
-  const actualToken = token || await getClerkToken();
+  const actualToken = token || globalClerkToken;
   const res = await fetch(buildUrl(path), {
     method: "PUT",
     headers: {
@@ -90,7 +80,7 @@ export const apiPut = async (path: string, body: unknown, token?: string | null)
 };
 
 export const apiPatch = async (path: string, body: unknown, token?: string | null): Promise<any> => {
-  const actualToken = token || await getClerkToken();
+  const actualToken = token || globalClerkToken;
   const res = await fetch(buildUrl(path), {
     method: "PATCH",
     headers: {
@@ -104,7 +94,7 @@ export const apiPatch = async (path: string, body: unknown, token?: string | nul
 };
 
 export const apiUpload = async (path: string, body: FormData, token?: string | null): Promise<any> => {
-  const actualToken = token || await getClerkToken();
+  const actualToken = token || globalClerkToken;
   const res = await fetch(buildUrl(path), {
     method: "POST",
     headers: {
