@@ -110,7 +110,7 @@ export const VoiceChatbot = () => {
     }
   };
 
-  if (!isMessagesPage) return null;
+  if (isMessagesPage) return null;
 
   return (
     <>

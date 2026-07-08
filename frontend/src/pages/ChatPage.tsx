@@ -120,18 +120,11 @@ export const ChatPage = () => {
     setMessages(prev => [...prev, tempMsg]);
     scrollToBottom();
 
-    // Send via STOMP if connected, otherwise via REST
-    if (stompRef.current?.connected) {
-      stompRef.current.publish({
-        destination: "/app/chat.send",
-        body: JSON.stringify({ conversationId, recipientId: otherUserId, content }),
-      });
-    } else {
-      getToken().then(token => {
-        apiPost(`/api/messages/${conversationId}`, { content, recipientId: otherUserId }, token)
-          .catch(console.error);
-      });
-    }
+    // Send via REST API (backend handles broadcasting to WebSocket)
+    getToken().then(token => {
+      apiPost(`/api/messages/${conversationId}`, { content, recipientId: otherUserId }, token)
+        .catch(console.error);
+    });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     if (inputRef.current) inputRef.current.style.height = "auto";
