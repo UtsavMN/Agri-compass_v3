@@ -12,4 +12,7 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
     
     @org.springframework.data.jpa.repository.Query("SELECT c.postId, COUNT(c) FROM Comment c WHERE c.postId IN :postIds GROUP BY c.postId")
     java.util.List<Object[]> countByPostIds(@org.springframework.data.repository.query.Param("postIds") java.util.List<String> postIds);
+
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByPostId(String postId);
 }

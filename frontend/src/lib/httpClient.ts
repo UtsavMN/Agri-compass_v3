@@ -21,6 +21,7 @@ export const apiGet = async (path: string, token?: string | null): Promise<any> 
   const res = await fetch(buildUrl(path), {
     headers: {
       "Content-Type": "application/json",
+      "Accept": "application/json",
       ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
     },
   });
@@ -34,6 +35,7 @@ export const apiPost = async (path: string, body: unknown, token?: string | null
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Accept": "application/json",
       ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
     },
     body: JSON.stringify(body),
@@ -57,11 +59,14 @@ export const apiDelete = async (path: string, token?: string | null): Promise<an
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
+      "Accept": "application/json",
       ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
     },
   });
   if (!res.ok) throw new Error(`DELETE ${path} failed: ${res.status}`);
-  return res.json();
+  if (res.status === 204) return null;
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 };
 
 export const apiPut = async (path: string, body: unknown, token?: string | null): Promise<any> => {
@@ -70,6 +75,7 @@ export const apiPut = async (path: string, body: unknown, token?: string | null)
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
+      "Accept": "application/json",
       ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
     },
     body: JSON.stringify(body),
@@ -84,6 +90,7 @@ export const apiPatch = async (path: string, body: unknown, token?: string | nul
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
+      "Accept": "application/json",
       ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
     },
     body: JSON.stringify(body),

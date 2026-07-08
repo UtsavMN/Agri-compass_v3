@@ -262,6 +262,7 @@ public class PostController {
     }
 
     @DeleteMapping("/{id}")
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<Void> deletePost(@PathVariable String id) {
         String currentUserId = userService.syncUser(null).getId();
         Post post = postRepository.findById(id)
@@ -269,6 +270,11 @@ public class PostController {
         if (!post.getUserId().equals(currentUserId)) {
             return ResponseEntity.status(403).build();
         }
+        
+        // Delete related records to prevent foreign key constraint violations
+        commentRepository.deleteByPostId(id);
+        postLikeRepository.deleteByPostId(id);
+        
         postRepository.delete(post);
         return ResponseEntity.noContent().build();
     }

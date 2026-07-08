@@ -78,7 +78,7 @@ export default function Profile() {
       
       {/* COVER PHOTO (Gradient Fallback) */}
       <div className="relative h-48 md:h-56 w-full bg-gradient-to-br from-[#1a1a0e] to-[#0A0A0A] overflow-hidden group">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+
         {profile.cover_photo_url && (
           <img src={profile.cover_photo_url} alt="Cover" className="absolute inset-0 w-full h-full object-cover opacity-80" />
         )}

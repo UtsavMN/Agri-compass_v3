@@ -14,6 +14,8 @@ export const KrishiMitraFloat = () => {
     return () => window.removeEventListener('open-krishimitra', handleOpen);
   }, []);
 
+  if (!isMessagesPage) return null;
+
   return (
     <div className={`fixed ${isMessagesPage ? 'bottom-28' : 'bottom-24 md:bottom-6'} right-6 z-[60] flex flex-col items-end gap-3 no-print`}>
 

@@ -4,7 +4,7 @@ import { useAuth, useUser } from "@clerk/clerk-react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { motion } from "framer-motion";
-import { buildUrl } from "../lib/httpClient";
+import { buildUrl, apiGet, apiPost } from "../lib/httpClient";
 
 interface Message {
   id: string;
@@ -44,30 +44,22 @@ export const ChatPage = () => {
     const setup = async () => {
       setLoading(true);
       const token = await getToken();
-      const base = import.meta.env.VITE_API_BASE_URL ?? "";
       try {
         // Get other user's profile
-        const profileData = await fetch(`${base}/api/users/${otherUserId}/public`).then(r => r.json());
+        const profileData = await apiGet(`/api/users/${otherUserId}/public`, token);
         if (isMounted) setOtherUser(profileData.profile ?? profileData);
 
         // Get or create conversation
-        const convData = await fetch(`${base}/api/conversations/user/${otherUserId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }).then(r => r.json());
+        const convData = await apiGet(`/api/conversations/user/${otherUserId}`, token);
         const convId = convData.conversationId ?? convData.id;
         if (isMounted) setConversationId(convId);
 
         // Load messages
-        const msgData = await fetch(`${base}/api/messages/${convId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }).then(r => r.json());
+        const msgData = await apiGet(`/api/messages/${convId}`, token);
         if (isMounted) setMessages(msgData.messages ?? msgData ?? []);
 
         // Mark as read
-        fetch(`${base}/api/messages/${convId}/read`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => {});
+        apiPost(`/api/messages/${convId}/read`, {}, token).catch(() => {});
       } catch (err) {
         console.error("Chat setup failed:", err);
       } finally {
@@ -135,13 +127,9 @@ export const ChatPage = () => {
         body: JSON.stringify({ conversationId, recipientId: otherUserId, content }),
       });
     } else {
-      const base = import.meta.env.VITE_API_BASE_URL ?? "";
       getToken().then(token => {
-        fetch(`${base}/api/messages/${conversationId}`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ content, recipientId: otherUserId }),
-        }).catch(console.error);
+        apiPost(`/api/messages/${conversationId}`, { content, recipientId: otherUserId }, token)
+          .catch(console.error);
       });
     }
 
