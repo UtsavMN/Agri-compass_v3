@@ -34,7 +34,16 @@ export const apiPost = async (path: string, body: unknown, token?: string | null
     },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
+  if (!res.ok) {
+    let errMsg = `POST ${path} failed: ${res.status}`;
+    try {
+      const errJson = await res.json();
+      if (errJson.error) errMsg = errJson.error;
+    } catch (e) {
+      // ignore JSON parse error
+    }
+    throw new Error(errMsg);
+  }
   return res.json();
 };
 

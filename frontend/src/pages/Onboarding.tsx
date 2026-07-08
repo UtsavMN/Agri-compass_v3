@@ -104,8 +104,8 @@ export default function Onboarding() {
         } : null),
       }, token);
       setStep(3);
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (e: any) {
+      setError(e.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
