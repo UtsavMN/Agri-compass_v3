@@ -179,7 +179,12 @@ export function ChatWindow({ _compact = false }: ChatWindowProps) {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             placeholder="Ask KrishiMitra..."
             disabled={sending}
             className="flex-1 bg-neutral-900 border-neutral-800 text-[#f0ece0] placeholder-neutral-600 focus-visible:ring-[#c49a2a] h-9 text-xs rounded-xl"

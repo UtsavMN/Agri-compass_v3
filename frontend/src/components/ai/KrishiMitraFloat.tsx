@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { MessageCircle, X, Sparkles } from 'lucide-react';
 import { ChatWindow } from './ChatWindow';
 
 export const KrishiMitraFloat = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  const isMessagesPage = location.pathname.startsWith('/messages');
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
@@ -12,7 +15,7 @@ export const KrishiMitraFloat = () => {
   }, []);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 no-print">
+    <div className={`fixed ${isMessagesPage ? 'bottom-28' : 'bottom-24 md:bottom-6'} right-6 z-[60] flex flex-col items-end gap-3 no-print`}>
 
       {/* Expanded chat panel */}
       {isOpen && (
