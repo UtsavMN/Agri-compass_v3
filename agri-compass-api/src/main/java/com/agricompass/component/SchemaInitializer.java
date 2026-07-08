@@ -43,7 +43,20 @@ public class SchemaInitializer {
                 "ALTER TABLE crops ADD COLUMN scientific_name varchar(255);",
                 "ALTER TABLE crops ADD COLUMN soil_requirement_id bigint;",
                 "ALTER TABLE crops ADD COLUMN temperature_range varchar(255);",
-                "ALTER TABLE crops ADD COLUMN yield_info_id bigint;"
+                "ALTER TABLE crops ADD COLUMN yield_info_id bigint;",
+                // Explicitly add user_profiles missing columns
+                "ALTER TABLE user_profiles ADD COLUMN onboarding_completed integer DEFAULT 0;",
+                "ALTER TABLE user_profiles ADD COLUMN language varchar(255) DEFAULT 'kn';",
+                "ALTER TABLE user_profiles ADD COLUMN bio TEXT;",
+                "ALTER TABLE user_profiles ADD COLUMN profile_picture_url varchar(255);",
+                "ALTER TABLE user_profiles ADD COLUMN state varchar(255) DEFAULT 'Karnataka';",
+                "ALTER TABLE user_profiles ADD COLUMN phone varchar(255);",
+                // Explicitly add farms missing columns
+                "ALTER TABLE farms ADD COLUMN current_crop varchar(255);",
+                "ALTER TABLE farms ADD COLUMN soil_type varchar(255);",
+                "ALTER TABLE farms ADD COLUMN npk_n float;",
+                "ALTER TABLE farms ADD COLUMN npk_p float;",
+                "ALTER TABLE farms ADD COLUMN npk_k float;"
             };
             
             for (String migration : migrations) {
