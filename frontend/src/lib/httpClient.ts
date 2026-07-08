@@ -14,11 +14,25 @@ export const buildUrl = (path: string): string => {
   return `${API_BASE_URL}${cleanPath}`;
 };
 
+const getClerkToken = async (): Promise<string | null> => {
+  try {
+    // @ts-ignore
+    if (window.Clerk && window.Clerk.session) {
+      // @ts-ignore
+      return await window.Clerk.session.getToken();
+    }
+  } catch (e) {
+    console.warn("Failed to get Clerk token automatically", e);
+  }
+  return null;
+};
+
 export const apiGet = async (path: string, token?: string | null): Promise<any> => {
+  const actualToken = token || await getClerkToken();
   const res = await fetch(buildUrl(path), {
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
     },
   });
   if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`);
@@ -26,11 +40,12 @@ export const apiGet = async (path: string, token?: string | null): Promise<any> 
 };
 
 export const apiPost = async (path: string, body: unknown, token?: string | null): Promise<any> => {
+  const actualToken = token || await getClerkToken();
   const res = await fetch(buildUrl(path), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
     },
     body: JSON.stringify(body),
   });
@@ -48,11 +63,12 @@ export const apiPost = async (path: string, body: unknown, token?: string | null
 };
 
 export const apiDelete = async (path: string, token?: string | null): Promise<any> => {
+  const actualToken = token || await getClerkToken();
   const res = await fetch(buildUrl(path), {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
     },
   });
   if (!res.ok) throw new Error(`DELETE ${path} failed: ${res.status}`);
@@ -60,11 +76,12 @@ export const apiDelete = async (path: string, token?: string | null): Promise<an
 };
 
 export const apiPut = async (path: string, body: unknown, token?: string | null): Promise<any> => {
+  const actualToken = token || await getClerkToken();
   const res = await fetch(buildUrl(path), {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
     },
     body: JSON.stringify(body),
   });
@@ -73,11 +90,12 @@ export const apiPut = async (path: string, body: unknown, token?: string | null)
 };
 
 export const apiPatch = async (path: string, body: unknown, token?: string | null): Promise<any> => {
+  const actualToken = token || await getClerkToken();
   const res = await fetch(buildUrl(path), {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
     },
     body: JSON.stringify(body),
   });
@@ -86,11 +104,12 @@ export const apiPatch = async (path: string, body: unknown, token?: string | nul
 };
 
 export const apiUpload = async (path: string, body: FormData, token?: string | null): Promise<any> => {
+  const actualToken = token || await getClerkToken();
   const res = await fetch(buildUrl(path), {
     method: "POST",
     headers: {
       // Do NOT set Content-Type to application/json for FormData, browser will set it with boundary
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
     },
     body: body,
   });
