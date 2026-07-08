@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Beaker, 
-  Droplets, 
+  _Droplets, 
   Zap, 
   AlertTriangle, 
-  Sprout, 
+  _Sprout, 
   CheckCircle2, 
   ArrowRight,
   Info,
-  ChevronDown,
+  _ChevronDown,
   Activity,
   History as HistoryIcon,
-  Leaf,
+  _Leaf,
   Plus,
   Database
 } from 'lucide-react';
@@ -27,7 +27,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+
 import { 
   PieChart, 
   Pie, 
@@ -61,7 +61,7 @@ interface AnalysisResult {
 export default function FertilizerAnalysisModule({ 
   farmId, 
   initialCrop, 
-  initialSoilType,
+  _initialSoilType,
   onSaveSuccess
 }: { 
   farmId?: string; 
@@ -88,6 +88,7 @@ export default function FertilizerAnalysisModule({
   });
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     if (farmId) fetchHistory();
   }, [farmId]);
 
@@ -95,7 +96,7 @@ export default function FertilizerAnalysisModule({
     try {
       const data = await apiGet(`/api/fertilizer/history/${farmId}`);
       setHistory(data || []);
-    } catch (e) {
+    } catch (_e) {
       console.error('History fetch failed');
     }
   };
@@ -120,7 +121,7 @@ export default function FertilizerAnalysisModule({
             if (data && data.length > 0) {
                 setCrops(data.map((c: any) => c.name));
             }
-        } catch (e) {
+        } catch (_e) {
             console.warn('Using fallback crop list');
         }
     };

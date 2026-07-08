@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useUser, MOCK_USERS } from '@/store';
+import { useUser } from '@/store';
 import { PostsAPI, Notification } from '@/lib/api/posts'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

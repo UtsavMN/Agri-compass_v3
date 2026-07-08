@@ -1,4 +1,4 @@
-import { AnimatedSection } from "@/components/ui/AnimatedSection";
+
 import { GoldCard } from "@/components/ui/GoldCard";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { useMarketPrices } from "@/hooks/useMarketPrices";

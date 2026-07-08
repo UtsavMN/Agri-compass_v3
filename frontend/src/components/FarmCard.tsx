@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useUser, MOCK_USERS } from '@/store';
+import { useUser } from '@/store';
 import { FarmsAPI, Farm, FarmImage } from '@/lib/api/farms'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'

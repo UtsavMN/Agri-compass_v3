@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './card';
+import { Card,    CardContent } from './card';
 import { Badge } from './badge';
 import { Button } from './button';
 import { Leaf, Star, TrendingUp, Zap } from 'lucide-react';

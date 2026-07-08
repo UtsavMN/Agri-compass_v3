@@ -1,29 +1,29 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import Papa from 'papaparse';
-import { useUser, MOCK_USERS } from '@/store';
+import { useNavigate } from 'react-router-dom';
+
+import { useUser } from '@/store';
 import { useDistrict } from '@/store';
 import { loadDistrictDataFromCSV } from '@/lib/csvLoader';
 import { apiGet } from '@/lib/httpClient';
 import { cropRecommender } from '@/lib/ai/cropRecommender';
-import { WeatherAPI, WeatherResponse } from '@/lib/api/weather';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { Card, CardContent,  CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { CardShimmer, CropCardShimmer } from '@/components/ui/loading-shimmer';
 import { CropCardPremium, Crop } from '@/components/ui/crop-card-premium';
 import { AnimatedSection } from '@/components/ui/AnimatedSection';
-import { StaggerContainer, StaggerItem, TiltCard, CountUp } from '@/components/ui/animations';
+import { StaggerContainer, StaggerItem, TiltCard } from '@/components/ui/animations';
 import { LottieEmptyState } from '@/components/ui/lottie-loading';
-import { PostsAPI, Post } from '@/lib/api/posts';
-import { Sprout, TrendingUp, Users, FileText, Cloud, Leaf, MapPin, Zap, Droplets, Thermometer, MessageSquare, AlertTriangle, RefreshCw, Clock, User, Menu } from 'lucide-react';
-import { useScroll, useTransform, motion, AnimatePresence } from 'framer-motion';
+import {  Post } from '@/lib/api/posts';
+import {    FileText,  Leaf, MapPin, Zap } from 'lucide-react';
+import { useScroll, useTransform } from 'framer-';
 import { MarketTrendCard } from '@/components/dashboard/MarketTrendCard';
-import { KarnatakaMap } from '@/components/dashboard/KarnatakaMap';
+
 import { HeroCarousel } from '@/components/dashboard/HeroCarousel';
-import { DashboardHero } from '@/components/dashboard/DashboardHero';
+
 
 interface CropRecommendation {
   cropName: string;
@@ -32,7 +32,7 @@ interface CropRecommendation {
   expectedYield: string;
 }
 
-interface WeatherData {
+interface _WeatherData {
   temperature: number;
   humidity: number;
   windSpeed: number;
@@ -54,7 +54,7 @@ interface HeroStatCardProps {
   onClick?: () => void;
 }
 
-const HeroStatCard = ({ icon, label, value, sub, onClick }: HeroStatCardProps) => (
+const _HeroStatCard = ({ icon, label, value, sub, onClick }: HeroStatCardProps) => (
   <TiltCard className="h-full animate-fade-in" onClick={onClick}>
     <div className="card-premium bg-[#12120e]/85 backdrop-blur-md border-t-2 border-gold-400/80 p-6 min-h-[5.5rem] flex items-center gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
       <div className="w-10 h-10 rounded-xl bg-gold-400/10 flex items-center justify-center flex-shrink-0">
@@ -73,17 +73,17 @@ export default function Dashboard() {
   const { user } = useUser();
   const navigate = useNavigate();
   const { scrollY } = useScroll();
-  const yBg = useTransform(scrollY, [0, 600], [0, 180]);
+  const _yBg = useTransform(scrollY, [0, 600], [0, 180]);
   const [crops, setCrops] = useState<Crop[]>([]);
   const [loading, setLoading] = useState(true);
-  const { selectedDistrict, setSelectedDistrict } = useDistrict();
-  const [districts, setDistricts] = useState<string[]>([]);
+  const { selectedDistrict, _setSelectedDistrict } = useDistrict();
+  const [_districts, setDistricts] = useState<string[]>([]);
   const [districtData, setDistrictData] = useState<any[]>([]);
   const [cropRecommendations, setCropRecommendations] = useState<CropRecommendation[]>([]);
 
   const [newsItems, setNewsItems] = useState<any[]>([]);
   const [communityPosts, setCommunityPosts] = useState<Post[]>([]);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [_mobileNavOpen, _setMobileNavOpen] = useState(false);
   const [userCount, setUserCount] = useState(0);
 
 
@@ -92,12 +92,14 @@ export default function Dashboard() {
       navigate('/auth');
       return;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     initializeDashboard();
   }, [user, navigate]);
 
   useEffect(() => {
     if (selectedDistrict) {
       loadDistrictData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }
   }, [selectedDistrict]);
 
@@ -105,7 +107,7 @@ export default function Dashboard() {
 
   const initializeDashboard = async () => {
     try {
-      const [loadedDistrictData] = await Promise.all([
+      const [_loadedDistrictData] = await Promise.all([
         loadDistrictDataFromCSV().then(data => {
           setDistrictData(data);
           setDistricts(data.map(d => d.district));
@@ -200,7 +202,7 @@ export default function Dashboard() {
                     <CardContent className="pt-6 pb-6">
                       {cropRecommendations.length > 0 ? (
                         <Accordion type="single" collapsible className="w-full space-y-3">
-                          {cropRecommendations.slice(0, 4).map((rec, index) => {
+                          {cropRecommendations.slice(0, 4).map((rec, _index) => {
                             const districtInfo = districtData.find(d => d.district === selectedDistrict);
                             const recommendedCrops = districtInfo?.recommended_crops?.split(/[,/]/).map((c: string) => c.trim()).filter(Boolean) || [];
                             const isRecommended = recommendedCrops.includes(rec.cropName);
@@ -303,7 +305,7 @@ export default function Dashboard() {
                 </h3>
                 
                 <div className="space-y-4">
-                  {newsItems.map((news, index) => (
+                  {newsItems.map((news, _index) => (
                     <div 
                       key={typeof news === 'string' ? news : news.title} 
                       className="flex items-start gap-4 p-4 rounded-lg bg-[#12120e] border border-[rgba(255,255,255,0.03)] hover:border-gold-400/20 transition-all cursor-pointer group"

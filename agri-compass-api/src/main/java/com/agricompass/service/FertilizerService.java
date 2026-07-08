@@ -30,6 +30,7 @@ public class FertilizerService {
     }
 
     @PostConstruct
+    @SuppressWarnings("unchecked")
     public void init() {
         try {
             ClassPathResource resource = new ClassPathResource("dataset/Crops_data.json");

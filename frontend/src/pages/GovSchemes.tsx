@@ -241,6 +241,7 @@ export default function GovSchemes() {
     return GOVERNMENT_SCHEMES
       .map(scheme => ({ ...scheme, score: calculateEligibilityScore(scheme) }))
       .sort((a, b) => b.score - a.score)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
       .slice(0, 6);
   }, [farms, userProfile]);
 

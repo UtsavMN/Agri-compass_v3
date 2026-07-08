@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import { apiGet } from '@/lib/httpClient';
 import { DISTRICTS } from '@/data/masterData';
 import { CropCardPremium } from '@/components/ui/crop-card-premium';
-import { CropCardShimmer } from '@/components/ui/loading-shimmer';
+
 import { ScrollReveal, StaggerContainer, StaggerItem } from '@/components/ui/animations';
-import { LottieEmptyState } from '@/components/ui/lottie-loading';
-import { Search, Filter, Leaf, MapPin, SortAsc, Activity, Droplets, TrendingUp } from 'lucide-react';
+
+import { Search, Filter, Leaf, MapPin, SortAsc } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+
 
 export default function Crops() {
   const [crops, setCrops] = useState<any[]>([]);
@@ -22,6 +22,7 @@ export default function Crops() {
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     loadCrops();
   }, [page, seasonFilter, districtFilter, sortBy]);
 

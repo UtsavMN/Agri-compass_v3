@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import Papa from 'papaparse';
-import { useUser, MOCK_USERS } from '@/store';
+
+import { useUser } from '@/store';
 import { loadDistrictDataFromCSV } from '@/lib/csvLoader';
 import { FarmsAPI, type Farm } from '@/lib/api/farms';
 import { cropRecommender } from '@/lib/ai/cropRecommender';
 import { SeasonAdvisoryCard } from '@/components/farm/SeasonAdvisoryCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,7 +18,7 @@ import { motion } from 'framer-motion';
 import { useDistrict } from '@/store';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { DISTRICTS } from '@/data/masterData';
-import { Plus, Sprout, MapPin, Ruler, Droplet, Trash2, Cloud, Thermometer, Wind, CloudRain, Shield, Activity, Database, Clock, Sparkles, Pencil } from 'lucide-react';
+import { Plus, Sprout, MapPin,  Droplet, Trash2,     Shield, Activity, Database,  Sparkles, Pencil } from 'lucide-react';
 import FertilizerAnalysisModule from '@/components/features/FertilizerAnalysisModule';
 import { SoilAnalysisContent } from '@/pages/SoilAnalysis';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -41,10 +41,10 @@ export default function MyFarm() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { language } = useLanguage();
-  const isKannada = language === 'kn';
+  const _isKannada = language === 'kn';
   const { selectedDistrict, setSelectedDistrict } = useDistrict();
-  const [districts, setDistricts] = useState<string[]>([]);
-  const [districtData, setDistrictData] = useState<any[]>([]);
+  const [_districts, setDistricts] = useState<string[]>([]);
+  const [_districtData, setDistrictData] = useState<any[]>([]);
 
   const [cropRecommendations, setCropRecommendations] = useState<CropRecommendation[]>([]);
   const [selectedFarmForAnalysis, setSelectedFarmForAnalysis] = useState<Farm | null>(null);
@@ -89,12 +89,14 @@ export default function MyFarm() {
   useEffect(() => {
     if (user) {
       initializePage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }
   }, [user]);
 
   useEffect(() => {
     if (selectedDistrict) {
       loadDistrictData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }
   }, [selectedDistrict]);
 

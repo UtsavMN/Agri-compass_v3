@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { Toaster } from '@/components/ui/toaster';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+
 import { LoadingOverlay } from '@/components/ui/loading-components';
 import { VoiceChatbot } from '@/components/VoiceChatbot';
 

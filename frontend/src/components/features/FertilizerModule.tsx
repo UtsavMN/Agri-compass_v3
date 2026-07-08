@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiPost } from '@/lib/httpClient';
-import { Activity, AlertTriangle, CheckCircle, Sprout, TestTube, ThermometerSun, Zap, Beaker } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle, Sprout, TestTube, ThermometerSun } from 'lucide-react';
 import { ScrollReveal } from '@/components/ui/animations';
 import { Badge } from '@/components/ui/badge';
 

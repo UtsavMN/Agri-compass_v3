@@ -29,7 +29,7 @@ export class WeatherAPI {
 
   // GET /api/weather/:district - Get current weather and advisory with caching
   static async getWeatherForDistrict(district: string): Promise<WeatherResponse | null> {
-    const cacheKey = `weather_${district}`;
+    const _cacheKey = `weather_${district}`;
 
     // Try cache first
     const cached = WeatherCache.getWeather(district);

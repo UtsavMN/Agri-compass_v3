@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import Papa from 'papaparse';
-import { useUser, MOCK_USERS } from '@/store';
+import { useUser } from '@/store';
 import { useDistrict } from '@/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollReveal, FadeIn, StaggerContainer, StaggerItem } from '@/components/ui/animations';
+import { ScrollReveal } from '@/components/ui/animations';
 import { WeatherAPI } from '@/lib/api/weather';
 import { WeatherData, WeatherAdvice } from '@/lib/ai/weatherAdvisor';
-import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge, MapPin, TrendingUp, Thermometer, Info, HelpCircle } from 'lucide-react';
+import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge, MapPin, TrendingUp,  Info } from 'lucide-react';
 
 const SKY_GRADIENTS: Record<string, string> = {
   'clear sky':      'linear-gradient(180deg, #1a2a3a 0%, #0f0f0b 60%)',
@@ -75,6 +75,7 @@ export default function Weather() {
   useEffect(() => {
     if (selectedDistrict) {
       loadWeatherData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }
   }, [selectedDistrict]);
 
@@ -127,7 +128,7 @@ export default function Weather() {
     }
   };
 
-  const getWeatherIcon = (desc: string = '') => {
+  const _getWeatherIcon = (desc: string = '') => {
     const d = desc.toLowerCase();
     if (d.includes('rain') || d.includes('drizzle') || d.includes('shower')) {
       return <CloudRain className="h-20 w-20 text-sky-400 animate-pulse-soft" />;

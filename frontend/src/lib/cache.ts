@@ -133,7 +133,7 @@ class CacheManager {
       }
 
       return cacheItem.data;
-    } catch (error) {
+    } catch (_error) {
       // Invalid cache data
       localStorage.removeItem(this.getCacheKey(key));
       return null;

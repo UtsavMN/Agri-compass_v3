@@ -43,7 +43,7 @@ export const KarnatakaMap = React.memo(() => {
   const data = DISTRICT_CROP_DATA[name];
   const color = data?.color || '#8B7355';
 
-  const { viewBox, centroid } = useMemo(() => {
+  const { viewBox, _centroid } = useMemo(() => {
     if (!pointsStr) return { viewBox: '0 0 500 600', centroid: { x: 250, y: 300 } };
     const pts = parsePoints(pointsStr);
     if (pts.length === 0) return { viewBox: '0 0 500 600', centroid: { x: 250, y: 300 } };

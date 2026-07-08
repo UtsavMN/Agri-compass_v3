@@ -33,6 +33,7 @@ export default function Profile() {
     if (authUser?.id) {
       loadUserPosts();
       loadUserFarms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }
   }, [authUser?.id]);
 

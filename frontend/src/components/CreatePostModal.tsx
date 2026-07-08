@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useUser, MOCK_USERS } from '@/store';
+import { useUser } from '@/store';
 import { PostsAPI } from '@/lib/api/posts'
 import { FarmsAPI } from '@/lib/api/farms'
 import { UploadAPI } from '@/lib/api/upload'
@@ -59,6 +59,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
     if (isOpen && user) {
       loadUserFarms(isMounted)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => { isMounted = false; }
   }, [isOpen, user])
 

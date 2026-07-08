@@ -16,7 +16,9 @@ export const AppLoader = ({ children }: { children: React.ReactNode }) => {
         try {
           const res = await fetch(`${BACKEND_URL}/api/health`, { signal: AbortSignal.timeout(3000) });
           if (res.ok) { setBackendReady(true); clearInterval(timer); return; }
-        } catch {}
+        } catch (_e) {
+          // ignore
+        }
         await new Promise(r => setTimeout(r, 1000));
       }
       setTimedOut(true);

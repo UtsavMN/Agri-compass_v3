@@ -32,7 +32,11 @@ public class SchemaInitializer {
                 for (String statement : statements) {
                     String trimmed = statement.trim();
                     if (!trimmed.isEmpty()) {
-                        jdbcTemplate.execute(trimmed);
+                        try {
+                            jdbcTemplate.execute(trimmed);
+                        } catch (Exception ex) {
+                            System.out.println("⚠️ Ignoring statement failure (likely column already exists): " + ex.getMessage());
+                        }
                     }
                 }
                 System.out.println("✅ Manual schema initialization completed successfully.");

@@ -8,7 +8,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 // Unregister any existing service workers that might be aggressively caching old files
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then((registrations) => {
-    for (let registration of registrations) {
+    for (const registration of registrations) {
       registration.unregister();
     }
   });

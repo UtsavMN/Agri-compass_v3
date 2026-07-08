@@ -35,3 +35,5 @@ create index if not exists idx_listing_type on marketplace_listings (listing_typ
 create index if not exists idx_comments_post on post_comments (post_id);
 create index if not exists idx_post_likes on post_likes (post_id);
 create index if not exists idx_weather_logs on weather_logs (farm_id);
+
+alter table crops add column ai_score_id bigint;

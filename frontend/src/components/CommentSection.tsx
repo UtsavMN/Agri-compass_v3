@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useUser, MOCK_USERS } from '@/store';
+import { useUser } from '@/store';
 import { PostsAPI, Comment } from '@/lib/api/posts'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -28,6 +28,7 @@ export default function CommentSection({ postId, commentsCount, onCommentsCountC
   useEffect(() => {
     if (isExpanded && comments.length === 0) {
       loadComments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }
   }, [isExpanded, comments.length])
 

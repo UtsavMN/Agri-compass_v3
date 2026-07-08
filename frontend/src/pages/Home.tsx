@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useUser, MOCK_USERS } from '@/store';
+import { useUser } from '@/store';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translateToKannada, containsKannada } from '@/lib/ai/translator';
 import { cropRecommender, DetailedCropData } from '@/lib/ai/cropRecommender';
@@ -40,6 +40,7 @@ export default function Home() {
     }
 
     loadPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     loadDetailedCrops();
   }, [user]);
 
@@ -48,6 +49,7 @@ export default function Home() {
       loadPosts();
     }, 300);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => clearTimeout(debounceTimer);
   }, [searchTerm, cropFilter, locationFilter, userFilter]);
 
@@ -347,7 +349,7 @@ export default function Home() {
                       <StaggerItem key={crop.crop}>
                         <CropCard
                           crop={crop}
-                          onViewDetails={(crop) => {
+                          onViewDetails={(_crop) => {
                             // Handle view details - could open modal or navigate
 
                           }}

@@ -145,7 +145,7 @@ export class PostsAPI {
   }
 
   // GET /api/notifications - Get user notifications
-  static async getNotifications(userId: string): Promise<Notification[]> {
+  static async getNotifications(_userId: string): Promise<Notification[]> {
     try {
       return []
     } catch (error) {
@@ -155,7 +155,7 @@ export class PostsAPI {
   }
 
   // POST /api/notifications/:id/read - Mark notification as read
-  static async markNotificationAsRead(notificationId: string): Promise<void> {
+  static async markNotificationAsRead(_notificationId: string): Promise<void> {
     try {
       // Logic for marking read
     } catch (error) {

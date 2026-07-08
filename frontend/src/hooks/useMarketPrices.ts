@@ -36,7 +36,7 @@ export const useMarketPrices = (district: string) => {
           prices: data.prices,
           timestamp: Date.now()
         }));
-      } catch (err) {
+      } catch (_err) {
         // Load from cache if API fails
         const cached = localStorage.getItem(`market_prices_${district}`);
         if (cached) {

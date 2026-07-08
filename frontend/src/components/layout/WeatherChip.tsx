@@ -19,7 +19,7 @@ export const WeatherChip = ({ district }: { district?: string }) => {
         if (mounted && res) {
           setData(res)
         }
-      } catch (e) {
+      } catch (_e) {
         // Silent catch for top nav widget
       } finally {
         if (mounted) setLoading(false)

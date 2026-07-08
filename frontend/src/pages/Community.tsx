@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { useDistrict } from '@/store';
-import { PostsAPI, Post } from '@/lib/api/posts'
+import { PostsAPI } from '@/lib/api/posts'
 import { UploadAPI } from '@/lib/api/upload'
 import { useCommunityFeed } from '@/hooks/useCommunityFeed'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { PostCard } from '@/components/ui/post-card'
 import { useToast } from '@/hooks/use-toast'
 import { ScrollReveal, StaggerContainer, StaggerItem } from '@/components/ui/animations'
-import { LottieEmptyState } from '@/components/ui/lottie-loading'
+
 import { PostListSkeleton } from '@/components/ui/post-skeleton'
 import { Plus, ImagePlus, Video, Search, Calendar, MapPin, X, Activity, Filter, MessageSquare, ShoppingCart } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
@@ -38,7 +38,7 @@ const COMMUNITY_TABS = [
 export default function Community() {
   const { user } = useUser()
   const { toast } = useToast()
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
   const { selectedDistrict } = useDistrict()
   const [activeTab, setActiveTab] = useState<'feed' | 'marketplace'>('feed')
   const [newPostContent, setNewPostContent] = useState('')
@@ -48,7 +48,7 @@ export default function Community() {
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [filterDate, setFilterDate] = useState('')
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
+  const [_suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [feedScope, setFeedScope] = useState<'global' | 'local'>('global')
   const [selectedTopic, setSelectedTopic] = useState('all')
 
@@ -80,7 +80,7 @@ export default function Community() {
 
   const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-  const highlightMatch = (text: string, query: string, caseSensitive = false) => {
+  const _highlightMatch = (text: string, query: string, caseSensitive = false) => {
     if (!query.trim()) return text
     const regex = new RegExp(`(${escapeRegExp(query)})`, caseSensitive ? '' : 'i')
     const parts = text.split(regex)
@@ -116,9 +116,10 @@ export default function Community() {
         try {
           const postDate = new Date(post.created_at)
           return postDate.toISOString().slice(0, 10) === filterDate
-        } catch (e) {
+        } catch (_e) {
           return false
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
       })
   }, [posts, selectedDistrict, debouncedQuery, filterDate, feedScope, selectedTopic])
 

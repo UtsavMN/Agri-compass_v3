@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  ArrowLeft, DollarSign, Droplets, MapPin, ListChecks, Sprout, AlertTriangle,
-  Beaker, Zap, Calendar, Wind, Shield, BarChart3, TrendingUp, History, Info,
+  ArrowLeft, DollarSign, Droplets, MapPin, _ListChecks, Sprout, AlertTriangle,
+  Beaker, _Zap, Calendar, Wind, Shield, BarChart3, TrendingUp, History, Info,
   Leaf, Settings, ExternalLink, Activity, Printer
 } from 'lucide-react';
 import { apiGet } from '@/lib/httpClient';

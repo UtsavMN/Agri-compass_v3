@@ -11,32 +11,32 @@ import { cn } from '@/lib/utils';
 import { useOnboardingGate } from '@/hooks/useOnboardingGate';
 import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  _DropdownMenu,
+  _DropdownMenuContent,
+  _DropdownMenuItem,
+  _DropdownMenuLabel,
+  _DropdownMenuSeparator,
+  _DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
   Home,
   Sprout,
   TrendingUp,
   FileText,
-  User,
-  LogOut,
+  _User,
+  _LogOut,
   Menu,
-  Cloud,
+  _Cloud,
   X,
   Languages,
-  Settings,
+  _Settings,
   MessageSquare,
   Leaf,
   MapPin,
   Mic,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 
 interface LayoutProps {
   children: ReactNode;
@@ -45,18 +45,18 @@ interface LayoutProps {
   hideSidebar?: boolean; // Kept for interface compatibility, unused visually now
 }
 
-import { DISTRICTS } from '@/data/masterData';
+
 import { WeatherChip } from '@/components/layout/WeatherChip';
 
 export default function Layout({
   children,
-  fullBleed = false,
+  _fullBleed = false,
   hideHeader = false,
 }: LayoutProps) {
-  const { user, profile, signOut } = useUser();
+  const { user, _profile, signOut } = useUser();
   const { openUserProfile } = useClerk();
   const { language, toggleLanguage, t } = useLanguage();
-  const { selectedDistrict, setSelectedDistrict } = useDistrict();
+  const { selectedDistrict, _setSelectedDistrict } = useDistrict();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

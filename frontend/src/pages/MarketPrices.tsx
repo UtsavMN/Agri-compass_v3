@@ -7,12 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Sprout, TrendingUp, Search, BarChart3, Leaf, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { ScrollReveal, FadeIn, StaggerContainer, StaggerItem } from '@/components/ui/animations';
+import { ScrollReveal,  StaggerContainer, StaggerItem } from '@/components/ui/animations';
 import { GoldCard } from '@/components/ui/GoldCard';
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { CropCardShimmer, TableShimmer } from '@/components/ui/loading-shimmer';
+import { CropCardShimmer } from '@/components/ui/loading-shimmer';
 import { MarketPricesSection } from '@/components/dashboard/MarketPricesSection';
 
 interface CropEconomic {
@@ -42,12 +42,12 @@ interface MandiRecord {
 export default function MarketPrices() {
   const { toast } = useToast();
   const [economics, setEconomics] = useState<CropEconomic[]>([]);
-  const [mandiPrices, setMandiPrices] = useState<MandiRecord[]>([]);
+  const [_mandiPrices, setMandiPrices] = useState<MandiRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mandiLoading, setMandiLoading] = useState(false);
+  const [_mandiLoading, setMandiLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [seasonFilter, setSeasonFilter] = useState('all');
-  const [selectedCommodity, setSelectedCommodity] = useState('Tomato');
+  const [selectedCommodity, _setSelectedCommodity] = useState('Tomato');
   const { selectedDistrict: globalDistrict, setSelectedDistrict: setGlobalDistrict } = useDistrict();
   const [selectedDistrict, setSelectedDistrict] = useState('all');
 
@@ -65,7 +65,7 @@ export default function MarketPrices() {
   };
   const [viewMode, setViewMode] = useState<'economics' | 'live'>('economics');
 
-  const commodities = [
+  const _commodities = [
     'Tomato', 'Onion', 'Potato', 'Rice', 'Wheat', 'Maize', 'Cotton',
     'Groundnut', 'Soyabean', 'Ragi', 'Jowar', 'Chilli', 'Turmeric',
     'Coconut', 'Arecanut', 'Banana', 'Mango', 'Grapes', 'Pomegranate'
@@ -106,12 +106,14 @@ export default function MarketPrices() {
   ];
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     loadEconomics();
   }, []);
 
   useEffect(() => {
     if (viewMode === 'live') {
       loadMandiPrices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }
   }, [selectedCommodity, selectedDistrict, viewMode]);
 

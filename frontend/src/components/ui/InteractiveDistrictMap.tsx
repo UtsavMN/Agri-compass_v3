@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { apiGet } from '@/lib/httpClient';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './card';
 import { Badge } from './badge';
-import { MapPin, Phone, Landmark, CloudRain, Sun, Leaf, HelpCircle, Compass, Target } from 'lucide-react';
+import {  Phone, Landmark,   Leaf, HelpCircle, Compass, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Inset coordinates for all 30 districts on the Karnataka state outline map
@@ -128,7 +128,7 @@ interface InteractiveDistrictMapProps {
 
 export function InteractiveDistrictMap({
   selectedDistrictName,
-  onSelectDistrictName
+  _onSelectDistrictName
 }: InteractiveDistrictMapProps) {
   const [selectedTalukName, setSelectedTalukName] = useState<string>('');
   const [hoveredTalukName, setHoveredTalukName] = useState<string | null>(null);

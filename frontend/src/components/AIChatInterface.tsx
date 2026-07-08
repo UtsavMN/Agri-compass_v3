@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useUser, MOCK_USERS } from '@/store';
+import { useUser } from '@/store';
 import { AIAPI } from '@/lib/api/ai'
 import { FarmsAPI, Farm } from '@/lib/api/farms'
 import { Button } from '@/components/ui/button'

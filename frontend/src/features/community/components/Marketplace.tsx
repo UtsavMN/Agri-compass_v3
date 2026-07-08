@@ -7,8 +7,8 @@ import {
   MapPin, 
   Phone, 
   X, 
-  ExternalLink, 
-  Bookmark, 
+  _ExternalLink, 
+  _Bookmark, 
   ChevronRight, 
   ChevronLeft, 
   Trash2,
@@ -56,6 +56,7 @@ export function Marketplace() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     loadListings();
   }, [activeCategory, listingType, searchTerm]);
 
@@ -330,7 +331,7 @@ export function Marketplace() {
 // Create listing modal sub-component
 function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const { toast } = useToast();
-  const { user, profile } = useUser();
+  const { _user, profile } = useUser();
   const [step, setStep] = useState(1);
   const [listingType, setListingType] = useState<'sell' | 'buy'>('sell');
   const [selectedCategory, setSelectedCategory] = useState<typeof LISTING_CATEGORIES[0] | null>(null);

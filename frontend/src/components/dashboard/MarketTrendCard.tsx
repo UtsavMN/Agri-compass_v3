@@ -64,7 +64,7 @@ export const MarketTrendCard = React.memo(() => {
   )
 })
 
-export const MarketTrendRow = React.memo(({ crop, index }: { crop: MarketTrend; index: number }) => {
+export const MarketTrendRow = React.memo(({ crop, _index }: { crop: MarketTrend; index: number }) => {
   const hasData = crop.changePercent !== null && crop.price !== null;
   const isUp   = hasData && crop.changePercent! > 0
   const isDown = hasData && crop.changePercent! < 0

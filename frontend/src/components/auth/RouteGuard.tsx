@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { Navigate } from "react-router-dom";
-import { LoadingOverlay } from "@/components/ui/loading-components";
+
 import { useStore } from "@/store";
 import { apiGet, apiPut } from "@/lib/httpClient";
 

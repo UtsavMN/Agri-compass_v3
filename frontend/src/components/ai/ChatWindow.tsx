@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { Send, Sparkles, Mic, MicOff } from 'lucide-react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { callGemini } from '@/lib/geminiClient';
@@ -26,7 +26,7 @@ const STATIC_ANSWERS: Record<string, string> = {
     "Check the Market Prices page for live APMC rates. Current MSP for cotton is ₹6,620/quintal as set by the Government of India.",
 };
 
-export function ChatWindow({ compact = false }: ChatWindowProps) {
+export function ChatWindow({ _compact = false }: ChatWindowProps) {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState<Message[]>([

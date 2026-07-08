@@ -78,6 +78,7 @@ export const ChatPage = () => {
       }
     };
     setup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => { isMounted = false; };
   }, [otherUserId, user?.id]);
 
@@ -106,6 +107,7 @@ export const ChatPage = () => {
 
     client.activate();
     stompRef.current = client;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => { client.deactivate(); };
   }, [conversationId, user?.id]);
 
@@ -143,6 +145,7 @@ export const ChatPage = () => {
       });
     }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     if (inputRef.current) inputRef.current.style.height = "auto";
   }, [input, conversationId, otherUserId, user]);
 

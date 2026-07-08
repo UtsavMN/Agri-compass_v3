@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Cloud, Leaf as Wheat, TrendingUp, Users } from 'lucide-react';
+import { Cloud, Leaf as  TrendingUp, Users } from 'lucide-react';
 import { KarnatakaMap } from './KarnatakaMap';
 import { TiltCard } from '@/components/ui/animations';
 

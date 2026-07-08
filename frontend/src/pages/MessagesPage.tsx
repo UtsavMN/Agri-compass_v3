@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
-import { motion } from "framer-motion";
+
 
 export const MessagesPage = () => {
   const navigate = useNavigate();
@@ -28,6 +28,7 @@ export const MessagesPage = () => {
         setLoading(false);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     load();
   }, []);
 
@@ -47,6 +48,7 @@ export const MessagesPage = () => {
         console.error("Search failed:", err);
       }
     }, 300);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => clearTimeout(t);
   }, [searchQuery]);
 

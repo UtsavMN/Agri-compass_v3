@@ -66,7 +66,7 @@ export const useStore = create<StoreState>()(
         profile: null,
         session: null,
         loading: false,
-        switchUser: (userId: string) => {},
+        switchUser: (_userId: string) => {},
         updateProfile: async (data: Partial<Profile>) => {
           const { user, profile } = get();
           if (!user) return;

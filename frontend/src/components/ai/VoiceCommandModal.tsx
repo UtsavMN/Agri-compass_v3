@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Mic, MicOff, Volume2, Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+
 import { apiGet, apiPost } from '@/lib/httpClient';
 
 interface VoiceCommandModalProps {
@@ -553,6 +553,7 @@ Do NOT wrap the response in markdown code blocks like \`\`\`. Output plain text 
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     };
   }, [isOpen, lang]);
 
