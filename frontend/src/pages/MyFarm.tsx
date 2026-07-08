@@ -18,7 +18,7 @@ import { motion } from 'framer-motion';
 import { useDistrict } from '@/store';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { DISTRICTS } from '@/data/masterData';
-import { Plus, Sprout, MapPin,  Droplet, Trash2,     Shield, Activity, Database,  Sparkles, Pencil } from 'lucide-react';
+import { Plus, Sprout, MapPin,  Droplet, Trash2,     Shield, Activity, Database,  Sparkles, Pencil, Bot, ArrowRight } from 'lucide-react';
 import FertilizerAnalysisModule from '@/components/features/FertilizerAnalysisModule';
 import { SoilAnalysisContent } from '@/pages/SoilAnalysis';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -464,14 +464,17 @@ export default function MyFarm() {
                               </motion.div>
                             ))}
 
-                            <div className="md:col-span-2 p-6 bg-gold-400/5 rounded-[2rem] border border-gold-400/10 flex items-center gap-4">
-                              <div className="p-3 bg-earth-main rounded-2xl border border-gold-400/20">
-                                <Database className="text-gold-400 h-5 w-5" />
+                            <div className="md:col-span-2 p-6 bg-gold-400/5 rounded-[2rem] border border-gold-400/10 flex items-center justify-between gap-4 group cursor-pointer hover:bg-gold-400/10 transition-colors" onClick={() => document.getElementById('krishi-mitra-fab')?.click()}>
+                              <div className="flex items-center gap-4">
+                                <div className="p-3 bg-earth-main rounded-2xl border border-gold-400/20 group-hover:border-gold-400/40 transition-colors">
+                                  <Bot className="text-gold-400 h-5 w-5" />
+                                </div>
+                                <div>
+                                  <h5 className="font-black text-gold-100 uppercase tracking-tight text-sm">Krishi Mitra AI</h5>
+                                  <p className="text-[10px] text-gold-100/40 font-bold uppercase tracking-widest">Get personalized advice for your farms</p>
+                                </div>
                               </div>
-                              <div>
-                                <h5 className="font-black text-gold-100 uppercase tracking-tight text-sm">District Metadata</h5>
-                                <p className="text-[10px] text-gold-100/40 font-bold uppercase tracking-widest">Active Region: {selectedDistrict}</p>
-                              </div>
+                              <ArrowRight className="text-gold-400 h-5 w-5 opacity-50 group-hover:opacity-100 transition-opacity" />
                             </div>
                           </div>
                         ) : (
