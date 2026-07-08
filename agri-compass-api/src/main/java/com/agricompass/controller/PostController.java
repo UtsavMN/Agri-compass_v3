@@ -47,10 +47,10 @@ public class PostController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int limit) {
 
-        String query = (q != null && !q.trim().isEmpty()) ? q : null;
-        String loc = (location != null && !location.trim().isEmpty()) ? location : null;
+        String query = (q != null && !q.trim().isEmpty()) ? q : "";
+        String loc = (location != null && !location.trim().isEmpty()) ? location : "";
         String requestedUser = userId != null ? userId : user;
-        String userIdFilter = (requestedUser != null && !requestedUser.trim().isEmpty()) ? requestedUser : null;
+        String userIdFilter = (requestedUser != null && !requestedUser.trim().isEmpty()) ? requestedUser : "";
 
         String currentUserId = userService.syncUser(null).getId();
         List<String> followedIds = followRepository.findByFollowerId(currentUserId)

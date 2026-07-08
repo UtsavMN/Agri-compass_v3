@@ -119,7 +119,7 @@ export const VoiceChatbot = () => {
         whileHover={{ scale: 1.05, rotate: 5 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-[#C9A84C] text-[#0A0A0A] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(201,168,76,0.4)] z-50 hover:bg-[#D4B86A] transition-all duration-300"
+        className="fixed bottom-24 right-6 md:bottom-10 md:right-10 w-14 h-14 bg-[#C9A84C] text-[#0A0A0A] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(201,168,76,0.4)] z-50 hover:bg-[#D4B86A] transition-all duration-300"
       >
         <Sprout className="w-6 h-6" />
       </motion.button>
@@ -131,7 +131,7 @@ export const VoiceChatbot = () => {
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-24 right-6 w-96 bg-[#0A0A0A]/95 backdrop-blur-2xl border border-[#1E1E1E] rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] z-50 overflow-hidden flex flex-col"
+            className="fixed bottom-40 right-6 md:bottom-28 md:right-10 w-96 max-w-[calc(100vw-3rem)] bg-[#0A0A0A]/95 backdrop-blur-2xl border border-[#1E1E1E] rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] z-50 overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="px-5 py-4 flex items-center justify-between border-b border-[#1E1E1E] bg-[#111111]/50">

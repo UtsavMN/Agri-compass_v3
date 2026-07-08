@@ -15,9 +15,9 @@ public interface PostRepository extends JpaRepository<Post, String> {
     List<Post> findByClerkUserId(String clerkUserId);
 
     @Query("SELECT p FROM Post p WHERE " +
-           "(:q IS NULL OR LOWER(p.content) LIKE LOWER('%' || :q || '%')) AND " +
-           "(:district IS NULL OR LOWER(p.district) LIKE LOWER('%' || :district || '%')) AND " +
-           "(:authorId IS NULL OR p.clerkUserId = :authorId) " +
+           "(:q = '' OR LOWER(p.content) LIKE LOWER('%' || :q || '%')) AND " +
+           "(:district = '' OR LOWER(p.district) LIKE LOWER('%' || :district || '%')) AND " +
+           "(:authorId = '' OR p.clerkUserId = :authorId) " +
            "ORDER BY p.createdAt DESC")
     Page<Post> findWithFilters(@Param("q") String q,
                                @Param("district") String district,
