@@ -60,6 +60,11 @@ public class DatabaseSeeder implements CommandLineRunner {
     @SuppressWarnings("unchecked")
     @Override
     public void run(String... args) throws Exception {
+        if (cropRepo.count() > 0) {
+            System.out.println("✅ Database already seeded. Skipping DatabaseSeeder to speed up startup.");
+            return;
+        }
+
         ObjectMapper mapper = new ObjectMapper();
         TypeReference<List<Map<String, Object>>> typeRef = new TypeReference<>() {};
         
