@@ -64,7 +64,7 @@ export const FarmIntelligenceCard = ({ farmName, acres, district, crop, npk }: F
       </div>
 
       {/* Intelligence Grid */}
-      <div className="grid grid-cols-2 gap-px bg-[#1E1E1E]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-[#1E1E1E]">
         <div className="bg-[#111] p-4">
           <p className="text-[#F5F0E8]/40 text-[10px] font-black uppercase tracking-widest mb-1.5">Current Market Price</p>
           {marketPrice ? (

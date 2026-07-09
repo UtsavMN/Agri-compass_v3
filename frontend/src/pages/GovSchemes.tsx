@@ -137,7 +137,7 @@ export const BankCard = ({ scheme }: { scheme: typeof BANK_SCHEMES[0] }) => {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           <div className="bg-white/3 rounded-lg p-3 border border-white/5">
             <p className="text-[10px] text-[#6a6050] mb-1 font-bold uppercase tracking-wider">Interest Rate</p>
             <p className="text-[13px] font-bold text-[#4a9a6a]">{scheme.interestRate}</p>

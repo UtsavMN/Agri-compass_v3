@@ -52,7 +52,7 @@ export function LightweightDistrictMap() {
           <div className="lg:col-span-2">
             <div className="relative bg-gradient-to-br from-leaf-50 to-blue-50 rounded-xl p-8 border-2 border-leaf-200 min-h-[400px] flex items-center justify-center">
               {/* Simple grid map representation */}
-              <div className="grid grid-cols-3 gap-2 w-full max-w-md">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-full max-w-md">
                 {karnatakaDistricts.slice(0, 9).map((district) => (
                   <button
                     key={district.name}

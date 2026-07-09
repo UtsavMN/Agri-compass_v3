@@ -297,7 +297,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
 
             {/* Image Previews */}
             {previewUrls.length > 0 && (
-              <div className="grid grid-cols-3 gap-2 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-4">
                 {previewUrls.map((url, index) => (
                   <div key={url} className="relative group">
                     <img

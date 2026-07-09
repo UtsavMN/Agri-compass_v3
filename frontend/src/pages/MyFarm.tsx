@@ -322,7 +322,7 @@ export default function MyFarm() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Soil Type</Label>
                           <Select value={formData.soil_type} onValueChange={(v) => setFormData({ ...formData, soil_type: v })}>
@@ -449,7 +449,7 @@ export default function MyFarm() {
                                 </div>
                                 <p className="text-xs text-gold-100/40 leading-relaxed italic mb-6">"{rec.reason}"</p>
 
-                                <div className="grid grid-cols-2 gap-5 pt-5 pb-1 border-t border-earth-border/50">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-5 pb-1 border-t border-earth-border/50">
                                   <div className="min-w-0">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-gold-100/30 block mb-2">Target Yield</span>
                                     <p className="text-sm font-black text-gold-400 break-words leading-snug">{rec.expectedYield}</p>
@@ -535,7 +535,7 @@ export default function MyFarm() {
                               </div>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="p-3 bg-earth-main/50 rounded-2xl border border-earth-border">
                                   <span className="text-[8px] font-black text-gold-100/20 uppercase tracking-widest block mb-1">Size</span>
                                   <div className="flex items-baseline gap-1">

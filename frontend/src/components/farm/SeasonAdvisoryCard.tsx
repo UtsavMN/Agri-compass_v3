@@ -54,7 +54,7 @@ export const SeasonAdvisoryCard = ({ district }: { district: string }) => {
         ))}
       </motion.div>
 
-      <div className="pt-5 mt-auto border-t border-earth-border/40 grid grid-cols-2 gap-4 relative z-10">
+      <div className="pt-5 mt-auto border-t border-earth-border/40 grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
         <div className="bg-[#1a1a14]/60 p-4 min-h-[4.5rem] rounded-xl border border-earth-border/30 flex flex-col justify-center">
           <div className="flex items-center gap-1.5 mb-2">
             <MapPin className="h-3 w-3 text-amber-500/80" />

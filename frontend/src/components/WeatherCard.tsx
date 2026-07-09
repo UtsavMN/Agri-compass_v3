@@ -159,7 +159,7 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
 
         <CardContent className="space-y-4">
           {/* Current Weather */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-3 bg-blue-50 rounded-lg">
               <Thermometer className={`h-6 w-6 mx-auto mb-1 ${getTemperatureColor(weather.temperature)}`} />
               <div className={`text-2xl font-bold ${getTemperatureColor(weather.temperature)}`}>

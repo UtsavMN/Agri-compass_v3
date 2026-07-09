@@ -321,7 +321,7 @@ export default function MarketPrices() {
                           </div>
                           
                           <div className="space-y-4 pt-0">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div className="bg-earth-elevated/40 rounded-2xl p-5 min-h-[4.5rem] border border-earth-border/40 text-center flex flex-col justify-center">
                                 <p className="text-[10px] text-gold-100/30 font-black uppercase tracking-wider">Input Cost</p>
                                 <p className="text-base font-black text-gold-100 mt-2">

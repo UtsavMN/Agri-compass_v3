@@ -396,7 +396,7 @@ export default function CropDetails() {
                         <span className="text-[10px] font-black text-gold-100/30 uppercase tracking-widest block mb-2">Soil Type</span>
                         <p className="text-gold-100 text-lg font-bold">{crop.soilType}</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="p-3 bg-earth-elevated rounded-xl border border-earth-border">
                           <span className="text-[10px] font-black text-gold-100/30 uppercase tracking-widest block mb-1">pH Range</span>
                           <span className="text-sm font-bold text-gold-400">{crop.soilRequirement?.phRange || '6.0-7.5'}</span>

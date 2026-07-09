@@ -158,7 +158,7 @@ export function SchemeRecommender() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
               <p className="text-3xl font-bold">{schemes.length}</p>
               <p className="text-sm text-white/80">Active Schemes</p>

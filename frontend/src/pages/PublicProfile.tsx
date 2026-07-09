@@ -182,7 +182,7 @@ export const PublicProfile = () => {
 
         {/* STATS ROW */}
         <AnimatedSection>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-8">
             {[
               { label: "Total Acres", value: userStats.totalAcres, suffix: " ac" },
               { label: "Active Crops", value: userStats.cropsGrowing },

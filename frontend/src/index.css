@@ -77,6 +77,7 @@
     font-family: var(--font-sans);
     scroll-behavior: smooth;
     color-scheme: dark;
+    overflow-x: hidden;
   }
 
   body {
@@ -85,6 +86,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
+    width: 100%;
   }
 
   /* Typography hierarchy */

@@ -87,7 +87,7 @@ export function DiseaseDetection() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-2xl font-bold">50+</p>
               <p className="text-sm text-white/80">Diseases</p>

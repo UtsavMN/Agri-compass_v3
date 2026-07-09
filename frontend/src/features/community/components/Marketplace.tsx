@@ -429,7 +429,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
           {step === 1 && (
             <div className="space-y-6">
               {/* Sell or Buy */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button onClick={() => setListingType('sell')}
                   className={cn('p-5 rounded-xl border text-left transition-all',
                     listingType === 'sell'
@@ -455,7 +455,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
               {/* Category grid */}
               <div>
                 <p className="text-[11px] text-[#6a6050] uppercase tracking-widest font-bold mb-3">Select Category</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {LISTING_CATEGORIES.map(cat => (
                     <button key={cat.id}
                       onClick={() => { setSelectedCategory(cat); setStep(2); }}
@@ -508,7 +508,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Price (₹)</label>
                   <input
@@ -541,7 +541,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Location / Taluk</label>
                   <input

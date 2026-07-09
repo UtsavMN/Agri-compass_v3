@@ -193,7 +193,7 @@ export default function Weather() {
               </CardContent>
             </Card>
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
               {[...Array(5)].map((_, i) => (
                 <Card key={i} className="card-premium h-40 animate-pulse relative overflow-hidden">
                   <CardContent className="h-full flex flex-col justify-center items-center gap-4">
@@ -231,7 +231,7 @@ export default function Weather() {
                 </div>
 
                 {/* Core Metrics Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-earth-border/20 relative z-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-earth-border/20 relative z-10">
                   <div className="flex items-center space-x-3 p-3 bg-earth-main/50 rounded-2xl border border-earth-border/20 backdrop-blur-sm">
                     <div className="p-2.5 bg-blue-500/10 rounded-xl"><Droplets className="h-5 w-5 text-blue-400" /></div>
                     <div>
@@ -274,7 +274,7 @@ export default function Weather() {
                   <h2 className="text-xs text-gold-400 font-black uppercase tracking-widest flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" /> 5-Day Timeline Forecast
                   </h2>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                     {weatherInfo.weather.forecast.slice(0, 5).map((day, idx) => (
                       <div key={idx} className="card-base p-4 text-center relative overflow-hidden flex flex-col justify-between py-5 hover:border-gold-400/20 transition-all duration-300 card-hover">
                         <div className="absolute top-0 left-0 right-0 h-[2px]"

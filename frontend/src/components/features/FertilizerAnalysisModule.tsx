@@ -291,7 +291,7 @@ export default function FertilizerAnalysisModule({
               </div>
             </div>
 
-            <div className="lg:col-span-2 grid grid-cols-3 gap-4">
+            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
                <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Nitrogen (N)</Label>
                   <div className="relative">
@@ -496,7 +496,7 @@ export default function FertilizerAnalysisModule({
                     <span className="text-[10px] font-black text-gold-400 uppercase tracking-widest">Index</span>
                   </div>
                 </div>
-                <div className="mt-8 grid grid-cols-2 gap-8 w-full border-t border-earth-border pt-6">
+                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-8 w-full border-t border-earth-border pt-6">
                    <div className="text-center">
                       <div className="text-lg font-bold text-gold-100">72%</div>
                       <div className="text-[9px] font-black text-gold-100/30 uppercase tracking-widest">Balance</div>

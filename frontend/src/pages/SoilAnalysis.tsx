@@ -242,7 +242,7 @@ export function SoilAnalysisContent() {
                         <MapPin className="absolute left-3 top-3.5 h-4 w-4" style={{ color: 'var(--text-muted)' }} />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Field Size (Acres)</label>
                         <input
@@ -800,7 +800,7 @@ export function SoilAnalysisContent() {
             <p className="text-xs mt-0.5">Date: {new Date().toISOString().split('T')[0]}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-sm border-b border-black pb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-b border-black pb-4">
             <div>
               <p><strong>Farmer Name:</strong> {farmerName || 'Ramesh Gowda'}</p>
               <p><strong>Location/Taluk:</strong> {location || 'Mandya, Karnataka'}</p>

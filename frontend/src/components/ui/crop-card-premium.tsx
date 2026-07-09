@@ -110,7 +110,7 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
       </div>
 
       <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-5">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5 p-4 min-h-[4.5rem] bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
             <div className="text-[9px] uppercase tracking-widest text-gold-100/40 font-black">Capital</div>
             <div className={`text-sm ${crop.investmentPerAcre ? 'font-bold text-gold-200' : 'font-medium text-gold-200/40'}`}>

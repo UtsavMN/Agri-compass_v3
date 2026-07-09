@@ -148,7 +148,7 @@ export default function FarmCard({ farm, onDelete, onUpdate }: FarmCardProps) {
 
           <CardContent className="space-y-4">
             {/* Farm Stats */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex items-center text-sm">
                 <Ruler className="h-4 w-4 mr-2 text-green-600" />
                 <span className="font-medium">{farm.area_acres} acres</span>
