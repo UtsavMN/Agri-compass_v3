@@ -89,11 +89,11 @@ function App() {
 
                 {/* Protected Routes wrapped in persistent Layout */}
                 <Route element={
-                  <RouteGuard>
-                    <ClerkTokenManager>
+                  <ClerkTokenManager>
+                    <RouteGuard>
                       <MainLayout />
-                    </ClerkTokenManager>
-                  </RouteGuard>
+                    </RouteGuard>
+                  </ClerkTokenManager>
                 }>
                   <Route path="/" element={<Community />} />
                   <Route path="/community" element={<Community />} />
