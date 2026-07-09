@@ -30,7 +30,7 @@ public class Message {
     @Column(name = "read_at")
     private String readAt;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
     private String createdAt;
 
     public Message() {}
@@ -39,6 +39,9 @@ public class Message {
     public void generateId() {
         if (this.id == null) {
             this.id = java.util.UUID.randomUUID().toString();
+        }
+        if (this.createdAt == null) {
+            this.createdAt = java.time.LocalDateTime.now().toString();
         }
     }
 

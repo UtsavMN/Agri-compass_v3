@@ -23,7 +23,7 @@ public class Conversation {
     @JoinColumn(name = "participant_two", insertable = false, updatable = false)
     private UserProfile participantTwoProfile;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
     private String createdAt;
 
     public Conversation() {}
@@ -32,6 +32,9 @@ public class Conversation {
     public void generateId() {
         if (this.id == null) {
             this.id = java.util.UUID.randomUUID().toString();
+        }
+        if (this.createdAt == null) {
+            this.createdAt = java.time.LocalDateTime.now().toString();
         }
     }
 
