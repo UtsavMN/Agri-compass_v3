@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class DatabaseSeeder implements CommandLineRunner {
+public class MockDataSeeder implements CommandLineRunner {
 
     private final UserProfileRepository userProfileRepository;
     private final PostRepository postRepository;
 
-    public DatabaseSeeder(UserProfileRepository userProfileRepository, PostRepository postRepository) {
+    public MockDataSeeder(UserProfileRepository userProfileRepository, PostRepository postRepository) {
         this.userProfileRepository = userProfileRepository;
         this.postRepository = postRepository;
     }
