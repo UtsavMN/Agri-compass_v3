@@ -24,7 +24,7 @@ public class Conversation {
     private UserProfile participantTwoProfile;
 
     @Column(name = "created_at", updatable = false)
-    private String createdAt;
+    private java.time.Instant createdAt;
 
     public Conversation() {}
 
@@ -34,7 +34,7 @@ public class Conversation {
             this.id = java.util.UUID.randomUUID().toString();
         }
         if (this.createdAt == null) {
-            this.createdAt = java.time.Instant.now().toString();
+            this.createdAt = java.time.Instant.now();
         }
     }
 
@@ -53,6 +53,6 @@ public class Conversation {
     public UserProfile getParticipantTwoProfile() { return participantTwoProfile; }
     public void setParticipantTwoProfile(UserProfile participantTwoProfile) { this.participantTwoProfile = participantTwoProfile; }
 
-    public String getCreatedAt() { return createdAt; }
-    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public java.time.Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.time.Instant createdAt) { this.createdAt = createdAt; }
 }

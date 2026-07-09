@@ -67,15 +67,18 @@ public class ConversationController {
             map.put("otherUser", userMap);
             
             map.put("latestMessage", latestMessage != null ? latestMessage.getContent() : "");
-            map.put("updatedAt", latestMessage != null ? latestMessage.getCreatedAt() : c.getCreatedAt());
+            map.put("updatedAt", latestMessage != null && latestMessage.getCreatedAt() != null ? latestMessage.getCreatedAt().toString() : (c.getCreatedAt() != null ? c.getCreatedAt().toString() : null));
             map.put("unreadCount", unreadCount);
             
             result.add(map);
         }
         
         result.sort((a, b) -> {
-            String t1 = (String) a.get("updatedAt");
-            String t2 = (String) b.get("updatedAt");
+            Object t1Obj = a.get("updatedAt");
+            Object t2Obj = b.get("updatedAt");
+            String t1 = t1Obj != null ? t1Obj.toString() : null;
+            String t2 = t2Obj != null ? t2Obj.toString() : null;
+            
             if (t1 == null && t2 == null) return 0;
             if (t1 == null) return 1;
             if (t2 == null) return -1;
