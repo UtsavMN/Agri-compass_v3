@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { apiGet } from "../lib/httpClient";
 
 interface MandiPrice {
   commodity: string;
@@ -21,13 +22,8 @@ export const useMarketPrices = (district: string) => {
     const fetchPrices = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          `/api/market/prices?district=${encodeURIComponent(district)}&limit=20`
-        );
+        const data = await apiGet(`/api/market/prices?district=${encodeURIComponent(district)}&limit=20`);
 
-        if (!response.ok) throw new Error("Failed to fetch");
-
-        const data = await response.json();
         setPrices(data.prices);
         setLastUpdated(new Date());
 

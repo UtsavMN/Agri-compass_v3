@@ -37,12 +37,23 @@ public class ConversationController {
         List<Conversation> conversations = conversationRepository.findByParticipant(currentUserId);
         
         List<Map<String, Object>> result = new ArrayList<>();
+        
+        // Batch fetch all user profiles to prevent N+1 query issue
+        List<String> otherUserIds = conversations.stream()
+                .map(c -> c.getParticipantOne().equals(currentUserId) ? c.getParticipantTwo() : c.getParticipantOne())
+                .collect(java.util.stream.Collectors.toList());
+        
+        List<UserProfile> profiles = userProfileRepository.findAllById(otherUserIds);
+        Map<String, UserProfile> profileMap = new HashMap<>();
+        for (UserProfile p : profiles) {
+            profileMap.put(p.getId(), p);
+        }
+
         for (Conversation c : conversations) {
             String otherUserId = c.getParticipantOne().equals(currentUserId) ? c.getParticipantTwo() : c.getParticipantOne();
-            UserProfile otherProfile = userProfileRepository.findById(otherUserId).orElse(null);
+            UserProfile otherProfile = profileMap.get(otherUserId);
             
-            List<Message> latestMsgs = messageRepository.findByConversationIdOrderByCreatedAtDesc(c.getId());
-            Message latestMessage = latestMsgs.isEmpty() ? null : latestMsgs.get(0);
+            Message latestMessage = messageRepository.findTopByConversationIdOrderByCreatedAtDesc(c.getId());
             
             int unreadCount = messageRepository.countByConversationIdAndReadAtIsNullAndSenderIdNot(c.getId(), currentUserId);
             

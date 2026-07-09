@@ -123,6 +123,14 @@ export const ChatPage = () => {
     // Send via REST API (backend handles broadcasting to WebSocket)
     getToken().then(token => {
       apiPost(`/api/messages/${conversationId}`, { content, recipientId: otherUserId }, token)
+        .then((res: any) => {
+          // Update temp message with real ID and timestamp
+          setMessages(prev => prev.map(m => 
+            m.id === tempMsg.id 
+              ? { ...m, id: res.id, createdAt: res.createdAt, pending: false } 
+              : m
+          ));
+        })
         .catch(console.error);
     });
 
@@ -134,7 +142,9 @@ export const ChatPage = () => {
   const groupByDate = (msgs: Message[]) => {
     const groups: Record<string, Message[]> = {};
     msgs.forEach(msg => {
-      const d = new Date(msg.createdAt);
+      // Fix for iOS Safari date parsing if backend returns space instead of T
+      const safeDateStr = msg.createdAt ? msg.createdAt.replace(' ', 'T') : new Date().toISOString();
+      const d = new Date(safeDateStr);
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
@@ -148,8 +158,10 @@ export const ChatPage = () => {
     return groups;
   };
 
-  const formatTime = (iso: string) =>
-    new Date(iso).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+  const formatTime = (iso: string) => {
+    const safeDateStr = iso ? iso.replace(' ', 'T') : new Date().toISOString();
+    return new Date(safeDateStr).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+  };
 
   return (
     <div className="h-screen bg-[#0A0A0A] flex flex-col">
