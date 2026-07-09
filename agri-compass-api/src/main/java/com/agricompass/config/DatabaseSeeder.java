@@ -65,7 +65,6 @@ public class DatabaseSeeder implements CommandLineRunner {
         p1.setId(UUID.randomUUID().toString());
         p1.setClerkUserId("mock_user_1");
         p1.setContent("Harvested my sugarcane today. The yield is much better than last year despite the erratic rains!");
-        p1.setImageUrl("https://images.unsplash.com/photo-1592982537447-7440770cbfc9?q=80&w=600&auto=format&fit=crop");
 
         Post p2 = new Post();
         p2.setId(UUID.randomUUID().toString());
