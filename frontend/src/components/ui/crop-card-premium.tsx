@@ -56,7 +56,8 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
 
   return (
     <Card
-      className="group overflow-hidden cursor-pointer h-full flex flex-col card-hover"
+      onClick={() => navigate(`/crop/${slugify(crop.name)}`)}
+      className="card-premium group overflow-hidden flex flex-col h-full bg-[#111] hover:bg-[#151515] transition-all cursor-pointer border-earth-border hover:border-gold-400/40 shadow-xl min-h-[380px] lg:min-h-[420px]"
       style={{
         borderColor: accent.border,
         backgroundColor: accent.bg,
@@ -64,7 +65,6 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
         borderStyle: 'solid',
         borderRadius: '14px'
       }}
-      onClick={() => navigate(`/crop/${slugify(crop.name)}`)}
     >
       <div className="h-48 overflow-hidden relative">
         {displayImage ? (
@@ -110,15 +110,15 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
       </div>
 
       <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5 p-4 min-h-[4.5rem] bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <div className="flex flex-col gap-1.5 p-3 sm:p-4 min-h-[4rem] sm:min-h-[4.5rem] bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
             <div className="text-[9px] uppercase tracking-widest text-gold-100/40 font-black">Capital</div>
             <div className={`text-sm ${crop.investmentPerAcre ? 'font-bold text-gold-200' : 'font-medium text-gold-200/40'}`}>
               {crop.investmentPerAcre ? formatCurrency(crop.investmentPerAcre) : 'N/A'}
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5 p-4 min-h-[4.5rem] bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
+          <div className="flex flex-col gap-1.5 p-3 sm:p-4 min-h-[4rem] sm:min-h-[4.5rem] bg-earth-elevated rounded-2xl border border-earth-border group-hover:border-gold-400/20 transition-all">
             <div className="text-[9px] uppercase tracking-widest text-gold-100/40 font-black">Returns</div>
             <div className={`text-sm flex items-center gap-1 ${crop.expectedReturns ? 'font-black text-gold-400' : 'font-medium text-gold-400/40'}`}>
               {crop.expectedReturns ? formatCurrency(crop.expectedReturns) : 'N/A'}

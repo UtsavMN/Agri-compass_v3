@@ -290,7 +290,7 @@ export default function CropDetails() {
                     </Badge>
                   )}
                 </div>
-                <h1 className="text-6xl font-black text-gold-100 tracking-tighter leading-none mb-2 drop-shadow-2xl print:text-black print:text-4xl">{crop.name}</h1>
+                <h1 className="text-4xl md:text-6xl font-black text-gold-100 tracking-tighter leading-none mb-2 drop-shadow-2xl print:text-black print:text-4xl">{crop.name}</h1>
                 {crop.scientificName && crop.scientificName.toLowerCase() !== 'unknown' && (
                   <p className="text-xl italic text-gold-300/80 mb-3 font-medium drop-shadow-2xl print:text-black print:text-lg">{crop.scientificName}</p>
                 )}

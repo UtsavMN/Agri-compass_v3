@@ -152,7 +152,7 @@ export const HeroCarousel = ({
   const hero = heroes[current];
 
   return (
-    <section ref={ref} className="relative w-full pt-28 pb-32 overflow-hidden flex flex-col justify-center items-center">
+    <section ref={ref} className="relative w-full pt-16 md:pt-28 pb-20 md:pb-32 overflow-hidden flex flex-col justify-center items-center">
       {/* Background image with smooth crossfade and Parallax */}
       <motion.div style={{ y }} className="absolute inset-0">
         <AnimatePresence mode="popLayout">
@@ -197,7 +197,7 @@ export const HeroCarousel = ({
 
                 <div className="relative mb-4 max-w-3xl">
 
-                  <h1 className="relative text-4xl md:text-5xl lg:text-6xl font-serif font-black text-[#F5F0E8] tracking-tight leading-none z-10">
+                  <h1 className="relative text-3xl md:text-5xl lg:text-6xl font-serif font-black text-[#F5F0E8] tracking-tight leading-none z-10">
                     {hero.headline}<br />
                     <span className="text-[#c49a2a]">{hero.headlineGold}</span>
                   </h1>
@@ -207,13 +207,13 @@ export const HeroCarousel = ({
                   {hero.subtext}
                 </p>
 
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
                   <Link to={hero.ctaPrimary.href}
-                    className="bg-gradient-to-r from-[#C9A84C] to-[#D4B86A] text-[#0A0A0A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(201,168,76,0.4)]">
+                    className="w-full sm:w-auto bg-gradient-to-r from-[#C9A84C] to-[#D4B86A] text-[#0A0A0A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(201,168,76,0.4)]">
                     {hero.ctaPrimary.label}
                   </Link>
                   <Link to={hero.ctaSecondary.href}
-                    className="bg-transparent border border-[#C9A84C]/40 text-[#C9A84C] hover:text-[#D4B86A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest hover:bg-[#C9A84C]/10 transition-all">
+                    className="w-full sm:w-auto bg-transparent border border-[#C9A84C]/40 text-[#C9A84C] hover:text-[#D4B86A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest hover:bg-[#C9A84C]/10 transition-all">
                     {hero.ctaSecondary.label}
                   </Link>
                 </div>

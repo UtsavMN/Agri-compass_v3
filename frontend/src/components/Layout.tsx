@@ -203,13 +203,6 @@ export default function Layout({
               </button>
             )}
 
-            {/* Mobile Hamburger Button */}
-            <button 
-              className="xl:hidden p-1.5 rounded-lg text-gold-100/70 hover:text-gold-100 hover:bg-earth-card/50 transition-colors"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <Menu className="h-5 w-5" />
-            </button>
           </div>
         </nav>
       )}
@@ -343,9 +336,39 @@ export default function Layout({
       </AnimatePresence>
 
       {/* ===== MAIN CONTENT ===== */}
-      <main className="flex-1 w-full z-10 relative">
+      <main className="flex-1 w-full z-10 relative pb-24 xl:pb-0">
         {children}
       </main>
+
+      {/* ===== MOBILE BOTTOM NAVIGATION BAR ===== */}
+      {!hideHeader && (
+        <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl border-t border-earth-border/40 pb-2 pt-2 px-2 flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+          {navItems.slice(0, 4).map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex flex-col items-center justify-center p-2 rounded-xl transition-all",
+                  isActive ? "text-gold-400" : "text-gold-100/50 hover:text-gold-100"
+                )}
+              >
+                <Icon className={cn("h-5 w-5 mb-1", isActive ? "scale-110 drop-shadow-[0_0_8px_rgba(201,168,76,0.5)]" : "")} />
+                <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
+              </Link>
+            );
+          })}
+          <button 
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex flex-col items-center justify-center p-2 rounded-xl text-gold-100/50 hover:text-gold-100 transition-all"
+          >
+            <Menu className="h-5 w-5 mb-1" />
+            <span className="text-[9px] font-bold uppercase tracking-wider">Menu</span>
+          </button>
+        </div>
+      )}
 
       {/* Floating KrishiMitra Assistant */}
       <KrishiMitraFloat />

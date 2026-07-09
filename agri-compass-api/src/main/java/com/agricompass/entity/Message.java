@@ -31,7 +31,7 @@ public class Message {
     private String readAt;
 
     @Column(name = "created_at", updatable = false)
-    private java.time.Instant createdAt;
+    private String createdAt;
 
     public Message() {}
 
@@ -41,7 +41,7 @@ public class Message {
             this.id = java.util.UUID.randomUUID().toString();
         }
         if (this.createdAt == null) {
-            this.createdAt = java.time.Instant.now();
+            this.createdAt = java.time.Instant.now().toString();
         }
     }
 
@@ -66,6 +66,6 @@ public class Message {
     public String getReadAt() { return readAt; }
     public void setReadAt(String readAt) { this.readAt = readAt; }
 
-    public java.time.Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(java.time.Instant createdAt) { this.createdAt = createdAt; }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 }

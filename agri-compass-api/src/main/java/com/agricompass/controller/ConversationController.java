@@ -67,7 +67,7 @@ public class ConversationController {
             map.put("otherUser", userMap);
             
             map.put("latestMessage", latestMessage != null ? latestMessage.getContent() : "");
-            map.put("updatedAt", latestMessage != null && latestMessage.getCreatedAt() != null ? latestMessage.getCreatedAt().toString() : (c.getCreatedAt() != null ? c.getCreatedAt().toString() : null));
+            map.put("updatedAt", latestMessage != null && latestMessage.getCreatedAt() != null ? latestMessage.getCreatedAt() : (c.getCreatedAt() != null ? c.getCreatedAt() : null));
             map.put("unreadCount", unreadCount);
             
             result.add(map);

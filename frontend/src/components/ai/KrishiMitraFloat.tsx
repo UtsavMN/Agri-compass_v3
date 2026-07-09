@@ -17,7 +17,7 @@ export const KrishiMitraFloat = () => {
   if (isMessagesPage) return null;
 
   return (
-    <div className={`fixed ${isMessagesPage ? 'bottom-28' : 'bottom-24 md:bottom-6'} right-6 z-[60] flex flex-col items-end gap-3 no-print`}>
+    <div className={`fixed ${isMessagesPage ? 'bottom-28' : 'bottom-20 md:bottom-6'} right-4 md:right-6 z-[60] flex flex-col items-end gap-3 no-print`}>
 
       {/* Expanded chat panel */}
       {isOpen && (
@@ -57,7 +57,7 @@ export const KrishiMitraFloat = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="
-          relative w-14 h-14 rounded-full 
+          relative w-12 h-12 md:w-14 md:h-14 rounded-full 
           bg-[#c49a2a] hover:bg-[#d4aa3a]
           shadow-[0_4px_20px_rgba(196,154,42,0.4)]
           flex items-center justify-center
