@@ -5,7 +5,6 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import { Toaster } from '@/components/ui/toaster';
 
 import { LoadingOverlay } from '@/components/ui/loading-components';
-import { VoiceChatbot } from '@/components/VoiceChatbot';
 
 import { PageTransition } from '@/components/layout/PageTransition';
 import Layout from '@/components/Layout';
@@ -121,7 +120,6 @@ function App() {
               </Suspense>
             </ErrorBoundary>
             <Toaster />
-            <VoiceChatbot />
           </LanguageProvider>
         </Router>
       </ThemeProvider>

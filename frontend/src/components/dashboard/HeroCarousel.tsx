@@ -52,11 +52,12 @@ interface HeroStatCardProps {
   label: string;
   value: React.ReactNode;
   sub: string;
+  onClick?: () => void;
 }
 
-const HeroStatCard = ({ icon, label, value, sub }: HeroStatCardProps) => (
+const HeroStatCard = ({ icon, label, value, sub, onClick }: HeroStatCardProps) => (
   <TiltCard className="h-full">
-    <div className="card-premium bg-[#1a1a14]/90 backdrop-blur-xl border-t-2 border-gold-400/80 p-6 min-h-[5.5rem] flex items-center gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
+    <div onClick={onClick} className="card-premium bg-[#1a1a14]/90 backdrop-blur-xl border-t-2 border-gold-400/80 p-6 min-h-[5.5rem] flex items-center gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
       <div className="w-10 h-10 rounded-xl bg-gold-400/20 flex items-center justify-center flex-shrink-0">
         <span className="text-gold-400">{icon}</span>
       </div>
@@ -72,6 +73,10 @@ const HeroStatCard = ({ icon, label, value, sub }: HeroStatCardProps) => (
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef } from "react";
 import { ParticleField } from "@/components/ui/ParticleField";
+import { useDistrict } from "@/store";
+import { useMarketPrices } from "@/hooks/useMarketPrices";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { MarketPricesSection } from "./MarketPricesSection";
 
 export const HeroCarousel = ({ 
   temp, 
@@ -86,10 +91,27 @@ export const HeroCarousel = ({
 }) => {
   const [current, setCurrent] = useState(0);
   const [newsIndex, setNewsIndex] = useState(0);
+  const [marketModalOpen, setMarketModalOpen] = useState(false);
+  
+  const { selectedDistrict } = useDistrict();
+  const { prices, loading: pricesLoading } = useMarketPrices(selectedDistrict);
+
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  let trendLabel = "Market Trends";
+  let trendValue = pricesLoading ? "Loading..." : "No Data";
+  let trendSub = "Recent mandi prices";
+  
+  if (!pricesLoading && prices && prices.length > 0) {
+    const showcase = prices[0];
+    const trendIcon = showcase.trend === 'up' ? '↑' : showcase.trend === 'down' ? '↓' : '-';
+    trendLabel = `${showcase.commodity}`;
+    trendValue = `₹${showcase.modal_price || showcase.modalPrice || 0}/q ${trendIcon}`;
+    trendSub = `${showcase.market} Mandi`;
+  }
 
   const currentNews = newsItems[newsIndex];
   const dynamicNewsText = currentNews ? (typeof currentNews === 'string' ? currentNews : currentNews.title) : 'Stay updated with the latest agricultural news and trade tariffs.';
@@ -227,10 +249,30 @@ export const HeroCarousel = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <HeroStatCard icon={<Cloud size={18} />} label="Current Weather" value={`${temp}°C`} sub={condition} />
             <HeroStatCard icon={<Users size={18} />} label="Active Users" value={String(userCount)} sub="Farmers connected" />
-            <HeroStatCard icon={<TrendingUp size={18} />} label="Market Updates" value={`${newsItems.length || 0} Active`} sub="Recent trade bulletins" />
+            <HeroStatCard 
+              icon={<TrendingUp size={18} />} 
+              label={trendLabel} 
+              value={trendValue} 
+              sub={trendSub} 
+              onClick={() => setMarketModalOpen(true)}
+            />
           </div>
         </div>
       </motion.div>
+      
+      <Dialog open={marketModalOpen} onOpenChange={setMarketModalOpen}>
+        <DialogContent className="max-w-4xl bg-[#0f0f0b] border-[#C9A84C]/20 max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-[#F5F0E8] font-serif">Market Trends</DialogTitle>
+            <DialogDescription className="text-[#F5F0E8]/60">
+              Live mandi prices and trends for {selectedDistrict}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <MarketPricesSection district={selectedDistrict} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
