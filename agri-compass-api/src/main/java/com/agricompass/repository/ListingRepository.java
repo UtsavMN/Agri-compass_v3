@@ -10,10 +10,10 @@ import org.springframework.data.repository.query.Param;
 public interface ListingRepository extends JpaRepository<Listing, Long> {
 
     @Query("SELECT l FROM Listing l WHERE l.active = true AND " +
-           "(:category IS NULL OR LOWER(l.category) = LOWER(:category)) AND " +
-           "(:type IS NULL OR LOWER(l.listingType) = LOWER(:type)) AND " +
-           "(:district IS NULL OR LOWER(l.location) LIKE LOWER(CONCAT('%', :district, '%'))) AND " +
-           "(:search IS NULL OR LOWER(l.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(l.description) LIKE LOWER(CONCAT('%', :search, '%')))")
+           "(:category = '' OR LOWER(l.category) = LOWER(:category)) AND " +
+           "(:type = '' OR LOWER(l.listingType) = LOWER(:type)) AND " +
+           "(:district = '' OR LOWER(l.location) LIKE LOWER(CONCAT('%', :district, '%'))) AND " +
+           "(:search = '' OR LOWER(l.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(l.description) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Listing> findWithFilters(@Param("category") String category,
                                   @Param("type") String type,
                                   @Param("district") String district,

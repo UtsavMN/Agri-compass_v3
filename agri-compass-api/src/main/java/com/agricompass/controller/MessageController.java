@@ -88,7 +88,7 @@ public class MessageController {
         payload.put("id", m.getId());
         payload.put("senderId", m.getSenderId());
         payload.put("content", m.getContent());
-        payload.put("createdAt", m.getCreatedAt());
+        payload.put("createdAt", m.getCreatedAt() != null ? m.getCreatedAt() : java.time.Instant.now().toString());
         payload.put("conversationId", convId);
         
         messagingTemplate.convertAndSend("/topic/messages." + otherUserId, payload);

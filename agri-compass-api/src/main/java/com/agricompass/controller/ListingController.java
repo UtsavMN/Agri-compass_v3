@@ -30,8 +30,13 @@ public class ListingController {
         @RequestParam(required = false) String search
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        String cat = category == null ? "" : category;
+        String t = type == null ? "" : type;
+        String dist = district == null ? "" : district;
+        String q = search == null ? "" : search;
+        
         Page<Listing> listings = listingRepository.findWithFilters(
-            category, type, district, search, pageable
+            cat, t, dist, q, pageable
         );
         return ResponseEntity.ok(listings.map(ListingDTO::from));
     }

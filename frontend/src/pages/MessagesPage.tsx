@@ -30,7 +30,25 @@ export const MessagesPage = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     load();
-  }, []);
+    
+    // Connect to STOMP to listen for incoming messages to refresh the conversation list
+    if (user?.id) {
+      import('@stomp/stompjs').then(({ Client }) => {
+        import('sockjs-client').then(({ default: SockJS }) => {
+          const client = new Client({
+            webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_BASE_URL || ""}/ws`),
+            onConnect: () => {
+              client.subscribe(`/topic/messages.${user.id}`, () => {
+                load(); // Reload conversations when a message arrives
+              });
+            },
+          });
+          client.activate();
+          return () => client.deactivate();
+        });
+      });
+    }
+  }, [user?.id]);
 
   // Debounced search
   useEffect(() => {
