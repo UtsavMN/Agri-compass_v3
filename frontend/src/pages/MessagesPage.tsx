@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
-
+import { apiGet, API_BASE } from "../lib/api";
 
 export const MessagesPage = () => {
   const navigate = useNavigate();
@@ -15,12 +15,9 @@ export const MessagesPage = () => {
   useEffect(() => {
     const load = async () => {
       const token = await getToken();
-      const base = import.meta.env.VITE_API_BASE_URL || "";
+      if (!token) return;
       try {
-        const data = await fetch(
-          `${base}/api/conversations`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        ).then(r => r.json());
+        const data = await apiGet('/api/conversations', token);
         setConversations(data.conversations ?? data ?? []);
       } catch (err) {
         console.error("Failed to load conversations:", err);
@@ -36,7 +33,7 @@ export const MessagesPage = () => {
       import('@stomp/stompjs').then(({ Client }) => {
         import('sockjs-client').then(({ default: SockJS }) => {
           const client = new Client({
-            webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_BASE_URL || ""}/ws`),
+            webSocketFactory: () => new SockJS(`${API_BASE}/ws`),
             onConnect: () => {
               client.subscribe(`/topic/messages.${user.id}`, () => {
                 load(); // Reload conversations when a message arrives
@@ -55,12 +52,8 @@ export const MessagesPage = () => {
     if (searchQuery.length < 2) { setSearchResults([]); return; }
     const t = setTimeout(async () => {
       const token = await getToken();
-      const base = import.meta.env.VITE_API_BASE_URL || "";
       try {
-        const data = await fetch(
-          `${base}/api/users/search?q=${encodeURIComponent(searchQuery)}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        ).then(r => r.json());
+        const data = await apiGet(`/api/users/search?q=${encodeURIComponent(searchQuery)}`, token);
         setSearchResults((data.users ?? data ?? []).filter((u: any) => u.clerkUserId !== user?.id));
       } catch (err) {
         console.error("Search failed:", err);
