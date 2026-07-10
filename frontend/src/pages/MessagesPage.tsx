@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
-import { apiGet, API_BASE } from "../lib/api";
+import { apiGet, buildUrl } from "../lib/httpClient";
 
 export const MessagesPage = () => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ export const MessagesPage = () => {
       import('@stomp/stompjs').then(({ Client }) => {
         import('sockjs-client').then(({ default: SockJS }) => {
           const client = new Client({
-            webSocketFactory: () => new SockJS(`${API_BASE}/ws`),
+            webSocketFactory: () => new SockJS(buildUrl('/ws')),
             onConnect: () => {
               client.subscribe(`/topic/messages.${user.id}`, () => {
                 load(); // Reload conversations when a message arrives
