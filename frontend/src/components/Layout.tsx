@@ -2,6 +2,9 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { KrishiMitraFloat } from '@/components/ai/KrishiMitraFloat';
 import { VoiceCommandModal } from '@/components/ai/VoiceCommandModal';
+import { HelpModal } from '@/components/layout/HelpModal';
+import { SettingsModal } from '@/components/layout/SettingsModal';
+import { FallingLeaves } from '@/components/ui/animations/FallingLeaves';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useClerk } from '@clerk/clerk-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -11,12 +14,12 @@ import { cn } from '@/lib/utils';
 import { useOnboardingGate } from '@/hooks/useOnboardingGate';
 import { Button } from '@/components/ui/button';
 import {
-  _DropdownMenu,
-  _DropdownMenuContent,
-  _DropdownMenuItem,
-  _DropdownMenuLabel,
-  _DropdownMenuSeparator,
-  _DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
   Home,
@@ -29,11 +32,14 @@ import {
   _Cloud,
   X,
   Languages,
-  _Settings,
+  Settings,
   MessageSquare,
   Leaf,
   MapPin,
   Mic,
+  MoreVertical,
+  HelpCircle,
+  Info,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -62,6 +68,8 @@ export default function Layout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useOnboardingGate();
 
@@ -203,6 +211,30 @@ export default function Layout({
               </button>
             )}
 
+            {/* Options Menu (Kebab) */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="h-8 w-8 rounded-full border border-earth-border/40 hover:border-gold-400/50 text-gold-100/60 hover:text-gold-200 bg-[#1a1a14]/60 hover:bg-[#1a1a14]/90 transition-colors flex items-center justify-center focus:outline-none">
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 bg-[#12120e] border border-earth-border/40 text-gold-100">
+                <DropdownMenuLabel className="text-gold-400">Options</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-earth-border/40" />
+                <DropdownMenuItem className="hover:bg-earth-elevated/20 cursor-pointer focus:bg-earth-elevated/20" onSelect={() => setIsSettingsOpen(true)}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="hover:bg-earth-elevated/20 cursor-pointer focus:bg-earth-elevated/20" onSelect={() => setIsHelpOpen(true)}>
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  <span>Help</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="hover:bg-earth-elevated/20 cursor-pointer focus:bg-earth-elevated/20" onSelect={() => window.open('https://agri-compass-dashboard.vercel.app/', '_blank')}>
+                  <Info className="mr-2 h-4 w-4" />
+                  <span>About Us</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </nav>
       )}
@@ -375,6 +407,15 @@ export default function Layout({
 
       {/* Voice Command Dialog Overlay */}
       <VoiceCommandModal isOpen={isVoiceOpen} onClose={() => setIsVoiceOpen(false)} />
+      
+      {/* Help Modal Overlay */}
+      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+      
+      {/* Settings Modal Overlay */}
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      
+      {/* Global Ambient Animation */}
+      <FallingLeaves />
     </div>
   );
 }

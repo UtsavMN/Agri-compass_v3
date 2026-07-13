@@ -169,7 +169,7 @@ export default function Dashboard() {
 
   return (
     <div className="w-full relative animate-fade-in">
-      <div className="min-h-screen bg-earth-main">
+      <div className="min-h-screen">
 
         {/* ===== HERO CAROUSEL (FULL BLEED) ===== */}
         <HeroCarousel 
@@ -180,8 +180,18 @@ export default function Dashboard() {
         />
 
         {/* ===== MAIN CONTENT GRID ===== */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-20">
-          
+        <div className="relative w-full">
+          <div 
+            className="absolute inset-0 z-0 pointer-events-none opacity-20 mix-blend-overlay"
+            style={{
+              backgroundImage: "url('/plant-background-mh4y9mexexlv960o.jpg')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundAttachment: 'fixed',
+              filter: 'brightness(0.6) sepia(0.7) hue-rotate(-10deg) saturate(1.2)'
+            }}
+          />
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-20">
           {/* Popular crops grid */}
           <AnimatedSection delay={0.15}>
             <div>
@@ -321,6 +331,7 @@ export default function Dashboard() {
 
           </div>
 
+        </div>
         </div>
       </div>
     </div>
