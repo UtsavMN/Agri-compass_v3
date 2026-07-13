@@ -1,72 +1,81 @@
 package com.agricompass.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import java.time.LocalDateTime;
+import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
-@Table(name = "post_likes", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"post_id", "user_id"})
+@Table(name = "post_likes", indexes = {
+    @Index(name = "idx_post_likes", columnList = "post_id")
 })
+@IdClass(PostLike.PostLikeId.class)
 public class PostLike {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @Column(name = "post_id")
+    private String postId;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
-
-    @Column(name = "user_id", nullable = false)
-    private String userId;
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    @Id
+    @Column(name = "clerk_user_id")
+    private String clerkUserId;
 
     public PostLike() {}
 
-    public PostLike(String id, Post post, String userId, LocalDateTime createdAt) {
-        this.id = id;
-        this.post = post;
-        this.userId = userId;
-        this.createdAt = createdAt;
+    public PostLike(String postId, String clerkUserId) {
+        this.postId = postId;
+        this.clerkUserId = clerkUserId;
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public String getPostId() { return postId; }
+    public void setPostId(String postId) { this.postId = postId; }
 
-    public Post getPost() { return post; }
-    public void setPost(Post post) { this.post = post; }
+    public String getClerkUserId() { return clerkUserId; }
+    public void setClerkUserId(String clerkUserId) { this.clerkUserId = clerkUserId; }
 
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
+    // --- Alias convenience methods for controller layer ---
+    public String getUserId() { return clerkUserId; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    // --- Builder ---
+    public static Builder builder() { return new Builder(); }
 
-    public static PostLikeBuilder builder() {
-        return new PostLikeBuilder();
-    }
-
-    public static class PostLikeBuilder {
-        private String id;
-        private Post post;
+    public static class Builder {
+        private Long postId;
         private String userId;
-        private LocalDateTime createdAt;
 
-        PostLikeBuilder() {}
-
-        public PostLikeBuilder id(String id) { this.id = id; return this; }
-        public PostLikeBuilder post(Post post) { this.post = post; return this; }
-        public PostLikeBuilder userId(String userId) { this.userId = userId; return this; }
-        public PostLikeBuilder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
+        public Builder postId(Long postId) { this.postId = postId; return this; }
+        public Builder userId(String userId) { this.userId = userId; return this; }
+        public Builder post(Object post) { return this; }
 
         public PostLike build() {
-            return new PostLike(id, post, userId, createdAt);
+            PostLike like = new PostLike();
+            like.postId = this.postId != null ? String.valueOf(this.postId) : null;
+            like.clerkUserId = this.userId;
+            return like;
+        }
+    }
+
+    public static class PostLikeId implements Serializable {
+        private String postId;
+        private String clerkUserId;
+
+        public PostLikeId() {}
+
+        public PostLikeId(String postId, String clerkUserId) {
+            this.postId = postId;
+            this.clerkUserId = clerkUserId;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PostLikeId that = (PostLikeId) o;
+            return Objects.equals(postId, that.postId) && Objects.equals(clerkUserId, that.clerkUserId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(postId, clerkUserId);
         }
     }
 }

@@ -42,28 +42,62 @@ public class DataSeederService {
             List<Map<String, Object>> cropsList = objectMapper.readValue(inputStream, 
                 new TypeReference<List<Map<String, Object>>>() {});
 
+            java.util.List<Crop> cropsToSave = new java.util.ArrayList<>();
+            java.util.Map<String, Map<String, Object>> nameToDataMap = new java.util.HashMap<>();
+
             for (Map<String, Object> data : cropsList) {
                 String displayName = (String) data.get("name");
                 if (displayName == null || displayName.trim().isEmpty()) continue;
+                nameToDataMap.put(displayName, data);
+            }
+            
+            java.util.List<Crop> existingCropsList = cropRepository.findAll();
+            java.util.Map<String, Crop> existingCropsMap = existingCropsList.stream()
+                .collect(java.util.stream.Collectors.toMap(c -> c.getName().toLowerCase(), c -> c, (c1, c2) -> c1));
                 
-                Optional<Crop> existingCrop = cropRepository.findByNameIgnoreCase(displayName);
+            for(java.util.Map.Entry<String, Map<String, Object>> entry : nameToDataMap.entrySet()) {
+                String displayName = entry.getKey();
+                Map<String, Object> data = entry.getValue();
                 
-                Crop crop;
-                if (existingCrop.isEmpty()) {
-                    log.info("Seeding new crop: {}", displayName);
+                Crop crop = existingCropsMap.get(displayName.toLowerCase());
+                if (crop == null) {
                     crop = new Crop();
                     crop.setName(displayName);
-                    populateCropData(crop, data);
-                    crop = cropRepository.save(crop);
-                } else {
-                    crop = existingCrop.get();
-                    log.debug("Updating existing crop: {}", displayName);
-                    populateCropData(crop, data);
-                    crop = cropRepository.save(crop);
                 }
-                
-                seedEconomics(crop, data);
+                populateCropData(crop, data);
+                cropsToSave.add(crop);
             }
+            
+            log.info("Batch saving crops...");
+            java.util.List<Crop> savedCrops = cropRepository.saveAll(cropsToSave);
+            
+            log.info("Batch saving economics...");
+            java.util.List<CropEconomics> existingEcoList = cropEconomicsRepository.findAll();
+            java.util.Map<Long, CropEconomics> existingEcoMap = existingEcoList.stream()
+                .filter(e -> e.getCrop() != null && e.getCrop().getId() != null)
+                .collect(java.util.stream.Collectors.toMap(e -> e.getCrop().getId(), e -> e, (e1, e2) -> e1));
+                
+            java.util.List<CropEconomics> ecosToSave = new java.util.ArrayList<>();
+            for (Crop crop : savedCrops) {
+                Map<String, Object> data = nameToDataMap.get(crop.getName());
+                if (data != null && crop.getId() != null) {
+                    CropEconomics eco = existingEcoMap.get(crop.getId());
+                    if (eco == null) eco = new CropEconomics();
+                    eco.setCrop(crop);
+                    double cost = crop.getInvestmentPerAcre();
+                    double returns = crop.getExpectedReturns();
+                    
+                    eco.setInvestmentPerAcre(cost);
+                    eco.setExpectedReturn(returns);
+                    
+                    if (eco.getMarketPrice() == null) eco.setMarketPrice(2500.0); 
+                    if (eco.getYieldQuintal() == null) eco.setYieldQuintal(returns / 2500.0);
+                    if (eco.getProfitMargin() == null) eco.setProfitMargin(returns - cost);
+                    
+                    ecosToSave.add(eco);
+                }
+            }
+            cropEconomicsRepository.saveAll(ecosToSave);
             log.info("Data seeding completed successfully. Total crops: {}", cropsList.size());
         } catch (Exception e) {
             log.error("Failed to seed crop data", e);
@@ -117,7 +151,7 @@ public class DataSeederService {
         
         if (eco.getMarketPrice() == null) eco.setMarketPrice(2500.0); 
         if (eco.getYieldQuintal() == null) eco.setYieldQuintal(returns / 2500.0);
-        if (eco.getProfitMargin() == null) eco.setProfitMargin(cost > 0 ? ((returns - cost) / cost) * 100 : 50.0);
+        if (eco.getProfitMargin() == null) eco.setProfitMargin(returns - cost);
         
         cropEconomicsRepository.save(eco);
     }

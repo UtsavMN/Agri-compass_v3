@@ -1,0 +1,13 @@
+package com.agricompass.repository;
+
+import com.agricompass.entity.Message;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface MessageRepository extends JpaRepository<Message, String> {
+    List<Message> findByConversationIdOrderByCreatedAtAsc(String conversationId);
+    List<Message> findByConversationIdOrderByCreatedAtDesc(String conversationId);
+    Message findTopByConversationIdOrderByCreatedAtDesc(String conversationId);
+    int countByConversationIdAndReadAtIsNullAndSenderIdNot(String conversationId, String currentUserId);
+}

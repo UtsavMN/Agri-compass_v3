@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser } from '@/store';
 import { PostsAPI } from '@/lib/api/posts'
 import { FarmsAPI } from '@/lib/api/farms'
 import { UploadAPI } from '@/lib/api/upload'
@@ -26,7 +26,7 @@ interface Farm {
 }
 
 export default function CreatePostModal({ isOpen, onClose, onPostCreated }: CreatePostModalProps) {
-  const { user } = useAuth()
+  const { user } = useUser()
   const { toast } = useToast()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -55,9 +55,12 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
   })
 
   useEffect(() => {
+    let isMounted = true;
     if (isOpen && user) {
-      loadUserFarms()
+      loadUserFarms(isMounted)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { isMounted = false; }
   }, [isOpen, user])
 
   useEffect(() => {
@@ -67,17 +70,17 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
     }
   }, [previewUrls])
 
-  const loadUserFarms = async () => {
+  const loadUserFarms = async (isMounted: boolean) => {
     if (!user) return
 
     setLoadingFarms(true)
     try {
       const data = await FarmsAPI.getFarms(user.id)
-      setFarms(data || [])
+      if (isMounted) setFarms(data || [])
     } catch (error) {
       console.error('Error loading farms:', error)
     } finally {
-      setLoadingFarms(false)
+      if (isMounted) setLoadingFarms(false)
     }
   }
 
@@ -109,6 +112,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
     }
 
     setIsLoading(true)
+    let success = false;
     try {
       // Upload images if any
       const imageUrls: string[] = []
@@ -130,6 +134,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
       })
 
       // Reset form
+      previewUrls.forEach(url => URL.revokeObjectURL(url))
       setTitle('')
       setContent('')
       setCropTags([])
@@ -138,8 +143,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
       setMediaFiles([])
       setPreviewUrls([])
 
-      onClose()
-      onPostCreated?.()
+      success = true;
 
       toast({
         title: 'Post created successfully!',
@@ -155,6 +159,10 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
       })
     } finally {
       setIsLoading(false)
+      if (success) {
+        onPostCreated?.()
+        onClose()
+      }
     }
   }
 
@@ -173,7 +181,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Post</DialogTitle>
@@ -231,8 +239,10 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
                   <Sprout className="h-3 w-3" />
                   {tag}
                   <button
+                    type="button"
                     onClick={() => handleCropTagRemove(tag)}
                     className="ml-1 hover:bg-green-200 rounded-full p-0.5"
+                    aria-label={`Remove ${tag} tag`}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -287,9 +297,9 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
 
             {/* Image Previews */}
             {previewUrls.length > 0 && (
-              <div className="grid grid-cols-3 gap-2 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-4">
                 {previewUrls.map((url, index) => (
-                  <div key={index} className="relative group">
+                  <div key={url} className="relative group">
                     <img
                       src={url}
                       alt={`Preview ${index + 1}`}

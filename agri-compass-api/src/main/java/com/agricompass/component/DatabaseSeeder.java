@@ -28,6 +28,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final CropAiScoreRepository aiScoreRepo;
     private final CropGrowingStepRepository stepRepo;
     private final CropDistrictRepository districtRepo;
+    private final CropEconomicsRepository economicsRepo;
 
     public DatabaseSeeder(
             CropRepository cropRepo,
@@ -40,7 +41,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             CropPostHarvestRepository postHarvestRepo,
             CropAiScoreRepository aiScoreRepo,
             CropGrowingStepRepository stepRepo,
-            CropDistrictRepository districtRepo) {
+            CropDistrictRepository districtRepo,
+            CropEconomicsRepository economicsRepo) {
         this.cropRepo = cropRepo;
         this.soilRepo = soilRepo;
         this.nutrientRepo = nutrientRepo;
@@ -52,11 +54,17 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.aiScoreRepo = aiScoreRepo;
         this.stepRepo = stepRepo;
         this.districtRepo = districtRepo;
+        this.economicsRepo = economicsRepo;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void run(String... args) throws Exception {
+        if (cropRepo.count() > 0) {
+            System.out.println("✅ Database already seeded. Skipping DatabaseSeeder to speed up startup.");
+            return;
+        }
+
         ObjectMapper mapper = new ObjectMapper();
         TypeReference<List<Map<String, Object>>> typeRef = new TypeReference<>() {};
         
@@ -71,6 +79,11 @@ public class DatabaseSeeder implements CommandLineRunner {
                 Crop crop = optCrop.orElseGet(Crop::new);
                 
                 crop.setName(name);
+                
+                List<String> districtsList = (List<String>) data.get("recommended_districts_karnataka");
+                if (crop.getDistrict() == null) {
+                    crop.setDistrict(districtsList != null && !districtsList.isEmpty() ? districtsList.get(0) : "Statewide");
+                }
                 
                 List<String> seasonList = (List<String>) data.get("season");
                 crop.setSeason(seasonList != null ? String.join(", ", seasonList) : "Annual");
@@ -161,7 +174,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                         minQ = Math.round(minHa / 2.471);
                         avgQ = Math.round(avgHa / 2.471);
                         maxQ = Math.round(maxHa / 2.471);
-                    } catch (Exception e) {}
+                    } catch (Exception e) {
+                        System.err.println("Failed to parse yield string: " + e.getMessage());
+                    }
                 }
                 yield.setMinimumQuintals(minQ);
                 yield.setAverageQuintals(avgQ);
@@ -216,7 +231,6 @@ public class DatabaseSeeder implements CommandLineRunner {
 
                 // Districts
                 districtRepo.deleteAll(districtRepo.findByCropId(crop.getId()));
-                List<String> districtsList = (List<String>) data.get("recommended_districts_karnataka");
                 if (districtsList != null) {
                     for (String dName : districtsList) {
                         CropDistrict district = new CropDistrict();
@@ -240,6 +254,18 @@ public class DatabaseSeeder implements CommandLineRunner {
                         stepRepo.save(step);
                     }
                 }
+
+                // Crop Economics
+                CropEconomics economics = economicsRepo.findByCropId(crop.getId()).orElseGet(CropEconomics::new);
+                economics.setCrop(crop);
+                economics.setInvestmentPerAcre(crop.getInvestmentPerAcre());
+                double yieldQ = yield.getAverageQuintals();
+                double expectedRet = crop.getExpectedReturns();
+                economics.setYieldQuintal(yieldQ);
+                economics.setExpectedReturn(expectedRet);
+                economics.setProfitMargin(expectedRet - crop.getInvestmentPerAcre());
+                economics.setMarketPrice(yieldQ > 0 ? expectedRet / yieldQ : 2500.0);
+                economicsRepo.save(economics);
             }
             System.out.println("✅ Production-grade Agricultural Dataset (Crops_data.json) Seeded Successfully!");
         } catch (Exception e) {
@@ -257,14 +283,18 @@ public class DatabaseSeeder implements CommandLineRunner {
                 try {
                     return (Integer.parseInt(parts[0].replaceAll("[^0-9]", "")) + 
                             Integer.parseInt(parts[1].replaceAll("[^0-9]", ""))) / 2;
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                    System.err.println("Failed to parse duration: " + e.getMessage());
+                }
             }
             try {
                 java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\d+").matcher(s);
                 if (m.find()) {
                     return Integer.parseInt(m.group());
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                System.err.println("Failed to parse duration regex: " + e.getMessage());
+            }
         }
         return 120;
     }
@@ -285,7 +315,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                     averageHa = Double.parseDouble(parts[0]);
                 }
                 return averageHa / 2.471;
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                System.err.println("Failed to parse cost: " + e.getMessage());
+            }
         }
         return defaultVal;
     }

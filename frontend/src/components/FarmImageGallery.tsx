@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser } from '@/store';
 import { FarmsAPI, FarmImage } from '@/lib/api/farms'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -32,7 +32,7 @@ export default function FarmImageGallery({
   isOpen,
   onClose
 }: FarmImageGalleryProps) {
-  const { user } = useAuth()
+  const { user } = useUser()
   const { toast } = useToast()
   const [isUploading, setIsUploading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<FarmImage | null>(null)
@@ -169,7 +169,7 @@ export default function FarmImageGallery({
                 <p className="text-sm">Upload your first farm image to get started</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {images.map((image) => (
                   <div
                     key={image.id}

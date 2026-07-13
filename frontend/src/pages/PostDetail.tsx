@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -38,7 +37,7 @@ export default function PostDetail() {
   }, [id, toast]);
 
   return (
-    <Layout>
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       <div className="max-w-4xl mx-auto space-y-6 py-8">
         <Button variant="ghost" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Back
@@ -53,17 +52,20 @@ export default function PostDetail() {
         ) : post ? (
           <Card className="overflow-hidden">
             <CardHeader className="bg-leaf-600 text-white">
-              <CardTitle>{post.user.full_name || post.user.username}</CardTitle>
-              <CardDescription>{format(new Date(post.created_at), 'PPPP')}</CardDescription>
+              <CardTitle>{post.user?.full_name || post.user?.username || 'Farmer'}</CardTitle>
+              <CardDescription>{post.created_at ? format(new Date(post.created_at), 'PPPP') : 'Recently'}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={post.user.avatar_url} />
-                  <AvatarFallback>{post.user.username[0]?.toUpperCase()}</AvatarFallback>
+                <Avatar 
+                  className="cursor-pointer hover:opacity-80 transition-opacity" 
+                  onClick={() => navigate(`/profile/${post.user?.id}`)}
+                >
+                  <AvatarImage src={post.user?.avatar_url} />
+                  <AvatarFallback>{((post.user?.username || post.user?.full_name || 'F')[0] || 'F').toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-semibold">@{post.user.username}</p>
+                  <p className="font-semibold">@{post.user?.username || 'farmer'}</p>
                   <p className="text-sm text-tertiary">Post ID: {post.id}</p>
                 </div>
               </div>
@@ -93,6 +95,6 @@ export default function PostDetail() {
           </Card>
         )}
       </div>
-    </Layout>
+    </div>
   );
 }

@@ -23,28 +23,72 @@ public class FarmController {
     private final WeatherLogRepository weatherLogRepository;
     private final FarmImageRepository farmImageRepository;
     private final UserService userService;
+    private final com.agricompass.repository.PostRepository postRepository;
 
-    public FarmController(FarmRepository farmRepository, WeatherLogRepository weatherLogRepository, FarmImageRepository farmImageRepository, UserService userService) {
+    public FarmController(FarmRepository farmRepository, WeatherLogRepository weatherLogRepository, FarmImageRepository farmImageRepository, UserService userService, com.agricompass.repository.PostRepository postRepository) {
         this.farmRepository = farmRepository;
         this.weatherLogRepository = weatherLogRepository;
         this.farmImageRepository = farmImageRepository;
         this.userService = userService;
+        this.postRepository = postRepository;
     }
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getFarms() {
         String userId = userService.syncUser(null).getId();
-        return ResponseEntity.ok(farmRepository.findByUserId(userId).stream().map(this::farmDto).toList());
+        return getFarmsResponse(farmRepository.findByClerkUserId(userId));
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Map<String, Object>>> getFarmsByUserId(@PathVariable String userId) {
+        return getFarmsResponse(farmRepository.findByClerkUserId(userId));
+    }
+
+    private ResponseEntity<List<Map<String, Object>>> getFarmsResponse(List<Farm> farms) {
+        if (farms.isEmpty()) return ResponseEntity.ok(List.of());
+
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+
+        Map<String, List<WeatherLog>> weatherLogs = weatherLogRepository
+            .findByFarmIdInOrderByCreatedAtDesc(farmIds)
+            .stream().collect(java.util.stream.Collectors.groupingBy(log -> log.getFarm().getId()));
+
+        Map<String, List<FarmImage>> farmImages = farmImageRepository
+            .findByFarmIdInOrderByCreatedAtDesc(farmIds)
+            .stream().collect(java.util.stream.Collectors.groupingBy(img -> img.getFarm().getId()));
+
+        List<Map<String, Object>> result = farms.stream()
+            .map(farm -> farmDto(farm,
+                weatherLogs.getOrDefault(farm.getId(), List.of()),
+                farmImages.getOrDefault(farm.getId(), List.of())))
+            .toList();
+
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> createFarm(@RequestBody Map<String, Object> body) {
         String userId = userService.syncUser(null).getId();
+        
+        Double areaAcres = null;
+        if (body.containsKey("area_acres") && body.get("area_acres") != null) {
+            Object val = body.get("area_acres");
+            if (val instanceof Number) {
+                areaAcres = ((Number) val).doubleValue();
+            } else {
+                try {
+                    areaAcres = Double.parseDouble(val.toString());
+                } catch (NumberFormatException e) {
+                    // Ignore invalid format
+                }
+            }
+        }
+        
         Farm farm = Farm.builder()
             .userId(userId)
             .name((String) body.get("name"))
             .location((String) body.get("location"))
-            .areaAcres(body.get("area_acres") != null ? ((Number) body.get("area_acres")).doubleValue() : null)
+            .areaAcres(areaAcres)
             .soilType((String) body.get("soil_type"))
             .irrigationType((String) body.get("irrigation_type"))
             .currentCrop((String) body.get("current_crop"))
@@ -64,7 +108,18 @@ public class FarmController {
 
         if (body.containsKey("name")) farm.setName((String) body.get("name"));
         if (body.containsKey("location")) farm.setLocation((String) body.get("location"));
-        if (body.containsKey("area_acres")) farm.setAreaAcres(((Number) body.get("area_acres")).doubleValue());
+        if (body.containsKey("area_acres") && body.get("area_acres") != null) {
+            Object val = body.get("area_acres");
+            if (val instanceof Number) {
+                farm.setAreaAcres(((Number) val).doubleValue());
+            } else {
+                try {
+                    farm.setAreaAcres(Double.parseDouble(val.toString()));
+                } catch (NumberFormatException e) {
+                    // Ignore invalid format
+                }
+            }
+        }
         if (body.containsKey("soil_type")) farm.setSoilType((String) body.get("soil_type"));
         if (body.containsKey("irrigation_type")) farm.setIrrigationType((String) body.get("irrigation_type"));
         if (body.containsKey("current_crop")) farm.setCurrentCrop((String) body.get("current_crop"));
@@ -137,7 +192,73 @@ public class FarmController {
         return ResponseEntity.ok(farmDto(farm));
     }
 
+    @GetMapping("/{id}/weather")
+    public ResponseEntity<List<Map<String, Object>>> getWeatherLogs(@PathVariable String id) {
+        String userId = userService.syncUser(null).getId();
+        Farm farm = farmRepository.findById(id).orElseThrow(() -> new RuntimeException("Farm not found"));
+        if (!farm.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        List<Map<String, Object>> logs = weatherLogRepository.findByFarmIdOrderByCreatedAtDesc(id).stream().map(log -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", log.getId());
+            m.put("notes", log.getNotes());
+            m.put("temperature", log.getTemperature());
+            m.put("humidity", log.getHumidity());
+            m.put("conditions", log.getConditions());
+            m.put("created_at", log.getCreatedAt() != null ? log.getCreatedAt().toString() : null);
+            return m;
+        }).toList();
+        return ResponseEntity.ok(logs);
+    }
+
+    @GetMapping("/{id}/images")
+    public ResponseEntity<List<Map<String, Object>>> getFarmImages(@PathVariable String id) {
+        String userId = userService.syncUser(null).getId();
+        Farm farm = farmRepository.findById(id).orElseThrow(() -> new RuntimeException("Farm not found"));
+        if (!farm.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        List<Map<String, Object>> imgs = farmImageRepository.findByFarmIdOrderByCreatedAtDesc(id).stream().map(img -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", img.getId());
+            m.put("image_url", img.getImageUrl());
+            m.put("caption", img.getCaption());
+            m.put("created_at", img.getCreatedAt() != null ? img.getCreatedAt().toString() : null);
+            return m;
+        }).toList();
+        return ResponseEntity.ok(imgs);
+    }
+
+    @PostMapping("/{id}/share")
+    public ResponseEntity<com.agricompass.entity.Post> shareFarmToCommunity(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        String userId = userService.syncUser(null).getId();
+        Farm farm = farmRepository.findById(id).orElseThrow(() -> new RuntimeException("Farm not found"));
+        if (!farm.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        String content = (String) body.get("content");
+        String postBody = content + "\n\n(Shared from my farm in " + farm.getLocation() + ")";
+        
+        com.agricompass.entity.Post post = com.agricompass.entity.Post.builder()
+            .userId(userId)
+            .body(postBody)
+            .location(farm.getLocation())
+            .build();
+        post = postRepository.save(post);
+        
+        return ResponseEntity.ok(post);
+    }
+
     private Map<String, Object> farmDto(Farm farm) {
+        return farmDto(farm, 
+            weatherLogRepository.findByFarmIdOrderByCreatedAtDesc(farm.getId()),
+            farmImageRepository.findByFarmIdOrderByCreatedAtDesc(farm.getId())
+        );
+    }
+
+    private Map<String, Object> farmDto(Farm farm, List<WeatherLog> weatherLogList, List<FarmImage> farmImageList) {
         Map<String, Object> dto = new HashMap<>();
         dto.put("id", farm.getId());
         dto.put("name", farm.getName());
@@ -146,9 +267,30 @@ public class FarmController {
         dto.put("soil_type", farm.getSoilType());
         dto.put("irrigation_type", farm.getIrrigationType());
         dto.put("current_crop", farm.getCurrentCrop());
-        dto.put("created_at", farm.getCreatedAt());
-        dto.put("weather_logs", farm.getWeatherLogs());
-        dto.put("images", farm.getImages());
+        dto.put("created_at", farm.getCreatedAt() != null ? farm.getCreatedAt().toString() : null);
+        List<Map<String, Object>> logs = weatherLogList.stream().map(log -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", log.getId());
+            m.put("notes", log.getNotes());
+            m.put("temperature", log.getTemperature());
+            m.put("humidity", log.getHumidity());
+            m.put("conditions", log.getConditions());
+            m.put("created_at", log.getCreatedAt() != null ? log.getCreatedAt().toString() : null);
+            return m;
+        }).toList();
+
+        List<Map<String, Object>> imgs = farmImageList.stream().map(img -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", img.getId());
+            m.put("image_url", img.getImageUrl());
+            m.put("caption", img.getCaption());
+            m.put("created_at", img.getCreatedAt() != null ? img.getCreatedAt().toString() : null);
+            return m;
+        }).toList();
+
+        dto.put("weather_logs", logs);
+        dto.put("images", imgs);
+        
         return dto;
     }
 }

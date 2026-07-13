@@ -7,15 +7,20 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
+
 public interface PostRepository extends JpaRepository<Post, String> {
-    List<Post> findByUserId(String userId);
+    List<Post> findByClerkUserId(String clerkUserId);
 
     @Query("SELECT p FROM Post p WHERE " +
-           "(:q IS NULL OR LOWER(p.body) LIKE LOWER(CONCAT('%', :q, '%'))) AND " +
-           "(:location IS NULL OR LOWER(p.location) LIKE LOWER(CONCAT('%', :location, '%'))) AND " +
-           "(:userId IS NULL OR p.userId = :userId) " +
+           "(:q = '' OR LOWER(p.content) LIKE LOWER('%' || :q || '%')) AND " +
+           "(:district = '' OR LOWER(p.district) LIKE LOWER('%' || :district || '%')) AND " +
+           "(:authorId = '' OR p.clerkUserId = :authorId) " +
            "ORDER BY p.createdAt DESC")
-    List<Post> findWithFilters(@Param("q") String q,
-                               @Param("location") String location,
-                               @Param("userId") String userId);
+    Page<Post> findWithFilters(@Param("q") String q,
+                               @Param("district") String district,
+                               @Param("authorId") String authorId,
+                               Pageable pageable);
 }

@@ -62,7 +62,7 @@ export class WeatherAdvisor {
       };
     } catch (error) {
       console.error('Weather API error:', error);
-      return this.getMockWeatherData(district);
+      return null; // TODO: fetch real data from OpenWeatherAPI
     }
   }
 
@@ -102,27 +102,6 @@ export class WeatherAdvisor {
     };
 
     return coordinates[district] || null;
-  }
-
-  private getMockWeatherData(_: string | undefined = undefined): WeatherData {
-    const today = new Date();
-    return {
-      temperature: 28 + Math.floor(Math.random() * 10),
-      humidity: 60 + Math.floor(Math.random() * 20),
-      windSpeed: 5 + Math.floor(Math.random() * 10),
-      description: 'partly cloudy',
-      forecast: Array.from({ length: 5 }, (_, i) => {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        return {
-          date: date.toISOString().split('T')[0],
-          temp_max: 30 + Math.floor(Math.random() * 5),
-          temp_min: 20 + Math.floor(Math.random() * 5),
-          description: ['sunny', 'partly cloudy', 'cloudy', 'light rain'][Math.floor(Math.random() * 4)],
-          precipitation: Math.floor(Math.random() * 30)
-        };
-      })
-    };
   }
 
   async getFarmingAdvice(weatherData: WeatherData, district: string): Promise<WeatherAdvice> {

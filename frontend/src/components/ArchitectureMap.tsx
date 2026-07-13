@@ -106,7 +106,7 @@ export default function ArchitectureMap() {
           />
         </div>
 
-        {nodes.map((node, i) => {
+        {nodes.map((node, _i) => {
           const Icon = node.icon;
           const isSelected = selectedNode?.id === node.id;
           

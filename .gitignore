@@ -41,3 +41,5 @@ agri-compass-api/*.txt
 *.patch
 .sixth/
 bin/
+jdk-17/
+*.zip

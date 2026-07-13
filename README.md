@@ -91,5 +91,24 @@ The application relies on several external APIs to provide core functionality:
 - **Maven/Java Errors:** Ensure you are using specifically **Java 17**. You can check via `java -version`.
 - **Missing Data (Weather/Market):** Check your `.env` file to ensure `OPENWEATHER_API_KEY` and `DATA_GOV_API_KEY` are populated correctly.
 
+## 🚀 Production Deployment Checklist
+
+When hosting the application on platforms like Vercel (Frontend) and Render/Railway (Backend), you **must** configure the following Environment Variables in your hosting dashboard, otherwise the app will crash or fail to connect.
+
+### Frontend (Vercel)
+- `VITE_API_BASE_URL`: Must be set to your deployed backend URL (e.g., `https://agri-compass-api.onrender.com`). If missing, the frontend will try to query itself and fail with HTML errors.
+- `VITE_CLERK_PUBLISHABLE_KEY`: Your Clerk frontend key.
+
+### Backend (Render / Railway)
+- **Database (PostgreSQL required for prod):**
+  - `DB_URL` (or `SPRING_DATASOURCE_URL`): `jdbc:postgresql://<host>:<port>/<db>` (Do NOT use SQLite in production as it locks in serverless/ephemeral environments).
+  - `SPRING_JPA_DATABASE_PLATFORM`: `org.hibernate.dialect.PostgreSQLDialect`
+  - `SPRING_DATASOURCE_DRIVER_CLASS_NAME`: `org.postgresql.Driver`
+  - `SPRING_DATASOURCE_USERNAME` & `SPRING_DATASOURCE_PASSWORD`
+- **CORS:**
+  - `CORS_ORIGINS`: Must include your Vercel frontend URL (e.g., `https://agri-compass.vercel.app`).
+- **Keys:**
+  - `GEMINI_API_KEY`, `OPENWEATHER_API_KEY`, `DATA_GOV_API_KEY`
+
 ---
 *Built by Utsav & Aniruddh.*

@@ -11,9 +11,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!-- Preload critical resources -->
-    <link rel="modulepreload" href="/src/main.tsx" />
-
     <!-- Security headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
@@ -101,8 +98,9 @@
       window.__triggerGTranslate = function (lang) {
         var select = document.querySelector('.goog-te-combo');
         if (!select) return false;
-        if (select.value !== lang) {
-          select.value = lang;
+        var targetValue = lang === 'en' ? '' : lang;
+        if (select.value !== targetValue) {
+          select.value = targetValue;
           // Dispatch both 'change' and 'input' for maximum compatibility
           select.dispatchEvent(new Event('change', { bubbles: true }));
           select.dispatchEvent(new Event('input',  { bubbles: true }));

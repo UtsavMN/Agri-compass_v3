@@ -8,6 +8,8 @@ export interface WeatherResponse {
   weather: WeatherData
   advisory: WeatherAdvice
   timestamp: string
+  fallback?: boolean
+  cached?: boolean
 }
 
 export interface WeatherLog {
@@ -27,12 +29,12 @@ export class WeatherAPI {
 
   // GET /api/weather/:district - Get current weather and advisory with caching
   static async getWeatherForDistrict(district: string): Promise<WeatherResponse | null> {
-    const cacheKey = `weather_${district}`;
+    const _cacheKey = `weather_${district}`;
 
     // Try cache first
     const cached = WeatherCache.getWeather(district);
     if (cached) {
-      return cached;
+      return { ...cached, cached: true };
     }
 
     // Check network status
@@ -62,7 +64,8 @@ export class WeatherAPI {
             district,
             weather: weatherData,
             advisory,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            fallback: true
           };
 
           // Cache fallback data with shorter TTL

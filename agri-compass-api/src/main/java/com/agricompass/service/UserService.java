@@ -1,147 +1,110 @@
 package com.agricompass.service;
 
-import com.agricompass.entity.User;
 import com.agricompass.entity.UserProfile;
-import com.agricompass.repository.UserRepository;
 import com.agricompass.repository.UserProfileRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Optional;
 
 @Service
 public class UserService {
 
-    private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
 
-    public UserService(UserRepository userRepository, UserProfileRepository userProfileRepository) {
-        this.userRepository = userRepository;
+    public UserService(UserProfileRepository userProfileRepository) {
         this.userProfileRepository = userProfileRepository;
     }
 
     @Transactional
-    public User syncUser(Jwt jwt) {
+    public UserProfile syncUserProfile(Jwt jwt) {
         if (jwt == null) {
-            // Check for mock user header
-            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            String mockUserId = "dev_user";
-            String mockName = "Dev User";
-            if (attributes != null) {
-                HttpServletRequest request = attributes.getRequest();
-                String headerUser = request.getHeader("X-Mock-User-Id");
-                if (headerUser != null && !headerUser.trim().isEmpty()) {
-                    mockUserId = headerUser;
-                    if (mockUserId.equals("user_a")) mockName = "Farmer A (Mock)";
-                    else if (mockUserId.equals("user_b")) mockName = "Farmer B (Mock)";
-                    else mockName = mockUserId;
+            // Try to get JWT from SecurityContext
+            var auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof Jwt contextJwt) {
+                jwt = contextJwt;
+            } else if (auth != null && auth.getName() != null) {
+                // Fallback: use auth name as clerk ID
+                String clerkId = auth.getName();
+                Optional<UserProfile> existingProfile = userProfileRepository.findById(clerkId);
+                if (existingProfile.isPresent()) {
+                    return existingProfile.get();
                 }
-            }
-
-            // Provide a mock user when security is disabled
-            Optional<User> existingUser = userRepository.findByUsername(mockUserId);
-            User user;
-            if (existingUser.isPresent()) {
-                user = existingUser.get();
+                UserProfile profile = new UserProfile();
+                profile.setClerkUserId(clerkId);
+                profile.setUsernameHandle(clerkId);
+                profile.setFullName("New User");
+                profile.setDistrict("Unknown");
+                return userProfileRepository.save(profile);
             } else {
-                user = User.builder()
-                        .id(mockUserId)
-                        .username(mockUserId)
-                        .email(mockUserId + "@example.com")
-                        .passwordHash("MOCK_AUTH")
-                        .build();
-                user = userRepository.save(user);
+                return null;
             }
-
-            // Ensure profile exists for the mock user
-            if (!userProfileRepository.existsById(mockUserId)) {
-                UserProfile profile = UserProfile.builder()
-                        .id(mockUserId)
-                        .user(user)
-                        .username(mockUserId)
-                        .email(mockUserId + "@example.com")
-                        .fullName(mockName)
-                        .build();
-                userProfileRepository.save(profile);
-            }
-
-            return user;
         }
 
         String clerkId = jwt.getSubject();
-        String email = jwt.getClaimAsString("email");
         String username = jwt.getClaimAsString("username");
         if (username == null) {
-            username = email != null ? email.split("@")[0] : clerkId;
+            username = clerkId;
         }
 
-        Optional<User> existingUser = userRepository.findById(clerkId);
-        User user;
+        Optional<UserProfile> existingProfile = userProfileRepository.findById(clerkId);
+        UserProfile profile;
 
-        if (existingUser.isPresent()) {
-            user = existingUser.get();
-            // Update email if changed
-            if (email != null && !email.equals(user.getEmail())) {
-                user.setEmail(email);
-                userRepository.save(user);
-            }
-            
-            // Check if profile exists for existing user (self-healing)
-            if (!userProfileRepository.existsById(clerkId)) {
-                UserProfile profile = UserProfile.builder()
-                        .id(clerkId)
-                        .user(user)
-                        .username(username)
-                        .email(user.getEmail())
-                        .fullName(jwt.getClaimAsString("name"))
-                        .avatarUrl(jwt.getClaimAsString("picture"))
-                        .build();
-                userProfileRepository.save(profile);
-            }
+        if (existingProfile.isPresent()) {
+            profile = existingProfile.get();
         } else {
-            // Create new user
-            user = User.builder()
-                    .id(clerkId)
-                    .username(username)
-                    .email(email != null ? email : clerkId + "@clerk.user")
-                    .passwordHash("EXTERNAL_AUTH") // Placeholder since auth is external
-                    .build();
-            user = userRepository.save(user);
-
-            // Create initial profile
-            UserProfile profile = UserProfile.builder()
-                    .id(clerkId)
-                    .user(user)
-                    .username(username)
-                    .email(user.getEmail())
-                    .fullName(jwt.getClaimAsString("name"))
-                    .avatarUrl(jwt.getClaimAsString("picture"))
-                    .build();
-            userProfileRepository.save(profile);
+            profile = new UserProfile();
+            profile.setClerkUserId(clerkId);
+            profile.setUsernameHandle(username);
+            profile.setFullName(jwt.getClaimAsString("name") != null ? jwt.getClaimAsString("name") : "New User");
+            profile.setDistrict("Unknown");
+            profile = userProfileRepository.save(profile);
         }
 
-        return user;
+        return profile;
+    }
+
+    public UserProfile syncUser(Object ignored) {
+        return syncUserProfile(null);
+    }
+
+    public UserProfile getProfileById(String id) {
+        return userProfileRepository.findById(id).orElse(null);
     }
 
     @Transactional
-    public UserProfile syncUserProfile(Jwt jwt) {
-        User user = syncUser(jwt);
-        return userProfileRepository.findById(user.getId())
-                .orElseThrow(() -> new RuntimeException("Profile not found for user: " + user.getId()));
-    }
+    public UserProfile updateProfileForUser(String id, String fullName, String avatarUrl, String location, String phone, String languagePreference, String district, String usernameHandle, String bio) {
+        UserProfile profile = userProfileRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Profile not found for id: " + id));
 
-    @Transactional
-    public UserProfile updateProfile(String fullName, String avatarUrl) {
-        UserProfile profile = syncUserProfile(null);
-        
         if (fullName != null) profile.setFullName(fullName);
-        if (avatarUrl != null) profile.setAvatarUrl(avatarUrl);
-        
+        if (avatarUrl != null) profile.setProfilePictureUrl(avatarUrl);
+        if (location != null) profile.setDistrict(location);
+        if (phone != null) profile.setPhone(phone);
+        if (languagePreference != null) profile.setLanguage(languagePreference);
+        if (district != null) profile.setDistrict(district);
+        if (usernameHandle != null) profile.setUsernameHandle(usernameHandle);
+        if (bio != null) profile.setBio(bio);
+
         return userProfileRepository.save(profile);
+    }
+
+    @Transactional
+    public UserProfile updateProfile(String fullName, String avatarUrl, String location, String phone, String languagePreference, String district, String usernameHandle, String bio) {
+        UserProfile current = syncUser(null);
+        if (current == null) {
+            throw new RuntimeException("No authenticated user found");
+        }
+        return updateProfileForUser(current.getId(), fullName, avatarUrl, location, phone, languagePreference, district, usernameHandle, bio);
+    }
+
+    public UserProfile updateProfile(UserProfile profile) {
+        return userProfileRepository.save(profile);
+    }
+
+    public long countUsers() {
+        return userProfileRepository.count();
     }
 }

@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { apiGet } from '@/lib/httpClient';
-import Layout from '@/components/Layout';
+import { DISTRICTS } from '@/data/masterData';
 import { CropCardPremium } from '@/components/ui/crop-card-premium';
-import { CropCardShimmer } from '@/components/ui/loading-shimmer';
+
 import { ScrollReveal, StaggerContainer, StaggerItem } from '@/components/ui/animations';
-import { LottieEmptyState } from '@/components/ui/lottie-loading';
-import { Search, Filter, Leaf, MapPin, SortAsc, Activity, Droplets, TrendingUp } from 'lucide-react';
+
+import { Search, Filter, Leaf, MapPin, SortAsc } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+
 
 export default function Crops() {
   const [crops, setCrops] = useState<any[]>([]);
@@ -22,24 +22,42 @@ export default function Crops() {
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     loadCrops();
   }, [page, seasonFilter, districtFilter, sortBy]);
 
   const loadCrops = async () => {
     try {
       setLoading(true);
-      let url = `/api/crops?page=${page}&size=12&sortBy=${sortBy}`;
       
-      // If we have search, use search endpoint (simplified for this demo, usually handled by backend)
+      let cropList: any[] = [];
+      let calculatedTotalPages = 1;
+      
       if (searchTerm) {
-        const searchResults = await apiGet(`/api/crops/search?query=${encodeURIComponent(searchTerm)}`);
-        setCrops(searchResults || []);
-        setTotalPages(1);
+        cropList = await apiGet(`/api/crops/search?query=${encodeURIComponent(searchTerm)}`);
+        calculatedTotalPages = 1;
+      } else if (districtFilter !== 'all') {
+        cropList = await apiGet(`/api/crops/district/${encodeURIComponent(districtFilter)}`);
+        calculatedTotalPages = 1;
+      } else if (seasonFilter !== 'all') {
+        cropList = await apiGet(`/api/crops/season/${encodeURIComponent(seasonFilter)}`);
+        calculatedTotalPages = 1;
       } else {
-        const data = await apiGet(url);
-        setCrops(data.content || []);
-        setTotalPages(data.totalPages || 1);
+        const data = await apiGet(`/api/crops?page=${page}&size=12&sortBy=${sortBy}`);
+        cropList = data.content || [];
+        calculatedTotalPages = data.totalPages ?? data.total_pages ?? 1;
       }
+
+      // Apply client-side intersection filters if both are active
+      let filtered = [...cropList];
+      if (districtFilter !== 'all' && seasonFilter !== 'all') {
+        filtered = filtered.filter(crop => 
+          crop.season && crop.season.toLowerCase().includes(seasonFilter.toLowerCase())
+        );
+      }
+      
+      setCrops(filtered);
+      setTotalPages(calculatedTotalPages);
     } catch (error) {
       console.error('Error loading crops:', error);
     } finally {
@@ -53,21 +71,37 @@ export default function Crops() {
   };
 
   const seasons = ['Kharif', 'Rabi', 'Zaid', 'Summer', 'Pre-Monsoon', 'Year-round'];
-  const districts = ['Mandya', 'Raichur', 'Mysuru', 'Davanagere', 'Shimoga', 'Hassan', 'Tumkur', 'Belgaum', 'Gulbarga'];
+  const districts = DISTRICTS;
 
   return (
-    <Layout>
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
       <div className="space-y-8 pb-12">
         <ScrollReveal direction="down">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-5xl font-black text-gold-100 tracking-tighter">CROP REGISTRY</h1>
-              <p className="text-gold-100/40 mt-1 uppercase tracking-widest text-[10px] font-black">Production-grade Agricultural Intelligence Database</p>
+          <div className="relative overflow-hidden rounded-3xl border border-earth-border/40 bg-earth-elevated/10 mb-6">
+            {/* Subtle crop field photo strip — 200px tall */}
+            <div className="absolute inset-0 h-[200px]">
+              <img
+                src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?fit=crop&w=1600&h=200&q=60"
+                className="w-full h-full object-cover opacity-25"
+                alt=""
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0b]/60 to-[#0f0f0b]" />
             </div>
-            <div className="flex items-center gap-2">
-              <Badge className="bg-gold-400/10 text-gold-400 border border-gold-400/20 px-3 py-1 font-black text-[10px] uppercase">
-                {crops.length} ENTRIES LOADED
-              </Badge>
+
+            <div className="relative z-10 px-8 pt-10 pb-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div>
+                  <p className="text-[11px] text-[#c49a2a] uppercase tracking-widest mb-2 font-semibold">
+                    Production-grade agricultural intelligence
+                  </p>
+                  <h1 className="font-serif text-4xl font-bold text-[#f0ece0] tracking-tight">
+                    Crop Registry
+                  </h1>
+                </div>
+                <span className="text-[12px] text-[#a09880] border border-[rgba(255,255,255,0.08)] bg-earth-main/50 px-4 py-1.5 rounded-full font-medium shrink-0">
+                  {crops.length} crops loaded
+                </span>
+              </div>
             </div>
           </div>
         </ScrollReveal>
@@ -94,7 +128,7 @@ export default function Crops() {
                   </SelectTrigger>
                   <SelectContent className="bg-earth-elevated border-earth-border">
                     <SelectItem value="all" className="text-gold-100 font-bold">ALL REGIONS</SelectItem>
-                    {districts.map((d) => (
+                    {Object.keys(districts).map((d) => (
                       <SelectItem key={d} value={d} className="text-gold-100 font-bold">{d.toUpperCase()}</SelectItem>
                     ))}
                   </SelectContent>
@@ -196,6 +230,7 @@ export default function Crops() {
           </div>
         )}
       </div>
-    </Layout>
+    </div>
   );
 }
+

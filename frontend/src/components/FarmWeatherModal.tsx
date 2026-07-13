@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser } from '@/store';
 import { FarmsAPI, WeatherLog } from '@/lib/api/farms'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,7 +25,7 @@ interface FarmWeatherModalProps {
 }
 
 export default function FarmWeatherModal({ farmId, farmName, isOpen, onClose }: FarmWeatherModalProps) {
-  const { user } = useAuth()
+  const { user } = useUser()
   const { toast } = useToast()
   const [logs, setLogs] = useState<WeatherLog[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -215,7 +215,7 @@ export default function FarmWeatherModal({ farmId, farmName, isOpen, onClose }: 
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
                       {log.temperature && (
                         <div className="flex items-center gap-2">
                           <Thermometer className="h-4 w-4 text-red-500" />

@@ -98,7 +98,7 @@ export class DiseaseDetector {
     return await response.json();
   }
 
-  private parseHuggingFaceResponse(response: Record<string, unknown>): DiseaseDetectionResult {
+  private parseHuggingFaceResponse(_response: Record<string, unknown>): DiseaseDetectionResult {
     // This would need to be adapted based on the actual model's response format
     // For now, return a mock result
     return {

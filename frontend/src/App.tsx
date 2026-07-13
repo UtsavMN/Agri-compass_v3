@@ -1,63 +1,130 @@
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
-import { DistrictProvider } from '@/contexts/DistrictContext';
 import { Toaster } from '@/components/ui/toaster';
 
-import Dashboard from '@/pages/Dashboard';
-import CropDetails from '@/pages/CropDetails';
-import MyFarm from '@/pages/MyFarm';
-import MarketPrices from '@/pages/MarketPrices';
-import GovSchemes from '@/pages/GovSchemes';
-import AirAgent from '@/pages/AirAgent';
-import Community from '@/pages/Community';
-import Profile from '@/pages/Profile';
-import Weather from '@/pages/Weather';
-import Auth from '@/pages/Auth';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
-import Home from '@/pages/Home';
-import PostDetail from './pages/PostDetail';
-import NotFound from '@/pages/NotFound';
-import Crops from '@/pages/Crops';
-import SoilAnalysis from '@/pages/SoilAnalysis';
+import { LoadingOverlay } from '@/components/ui/loading-components';
 
+import { PageTransition } from '@/components/layout/PageTransition';
+import Layout from '@/components/Layout';
+import { Outlet } from 'react-router-dom';
+
+// Lazy loaded routes
+const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
+const CropDetails = React.lazy(() => import('@/pages/CropDetails'));
+const MyFarm = React.lazy(() => import('@/pages/MyFarm'));
+const MarketPrices = React.lazy(() => import('@/pages/MarketPrices'));
+const GovSchemes = React.lazy(() => import('@/pages/GovSchemes'));
+const AirAgent = React.lazy(() => import('@/pages/AirAgent'));
+const Community = React.lazy(() => import('@/pages/Community'));
+const Profile = React.lazy(() => import('@/pages/Profile'));
+const Weather = React.lazy(() => import('@/pages/Weather'));
+const Auth = React.lazy(() => import('@/pages/Auth'));
+const ForgotPassword = React.lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = React.lazy(() => import('@/pages/ResetPassword'));
+const Home = React.lazy(() => import('@/pages/Home'));
+const PostDetail = React.lazy(() => import('./pages/PostDetail'));
+const NotFound = React.lazy(() => import('@/pages/NotFound'));
+const Crops = React.lazy(() => import('@/pages/Crops'));
+const SoilAnalysis = React.lazy(() => import('@/pages/SoilAnalysis'));
+const Onboarding = React.lazy(() => import('@/pages/Onboarding'));
+const OnboardingCheck = React.lazy(() => import('@/pages/OnboardingCheck'));
+const MessagesPage = React.lazy(() => import('@/pages/MessagesPage'));
+const ChatPage = React.lazy(() => import('@/pages/ChatPage'));
+const PublicProfile = React.lazy(() => import('@/pages/PublicProfile'));
+const FollowersPage = React.lazy(() => import('@/pages/FollowersPage'));
+const FollowingPage = React.lazy(() => import('@/pages/FollowingPage'));
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+const MainLayout = () => {
+  return (
+    <Layout>
+      <PageTransition>
+        <Outlet />
+      </PageTransition>
+    </Layout>
+  );
+};
+
+import { ClerkProvider } from '@clerk/clerk-react';
+import { RouteGuard } from '@/components/auth/RouteGuard';
+import { ClerkTokenManager } from '@/components/auth/ClerkTokenManager';
+import { dark } from '@clerk/themes';
+
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!PUBLISHABLE_KEY) {
+  console.error("Missing Publishable Key");
+}
+
+import { AppLoader } from '@/components/AppLoader';
+import { startKeepAlive } from '@/lib/keepAlive';
+
+startKeepAlive(); // Ping the server to keep it awake on Render
 
 function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <LanguageProvider>
-          <DistrictProvider>
-            <Router>
-              <Routes>
-                <Route path="/" element={<Community />} />
-                <Route path="/community" element={<Community />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
+    <AppLoader>
+      <ClerkProvider 
+        publishableKey={PUBLISHABLE_KEY}
+        appearance={{ baseTheme: dark }}
+        signInFallbackRedirectUrl="/onboarding-check"
+        signUpFallbackRedirectUrl="/onboarding"
+      >
+        <ThemeProvider>
+          <Router>
+            <LanguageProvider>
+              <ErrorBoundary>
+                <Suspense fallback={<LoadingOverlay message="Loading Agri Compass..." transparent />}>
+                  <Routes>
+                  {/* Public Routes without persistent Layout */}
+                <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
+                <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
+                <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+                
+                {/* Onboarding Routes */}
+                <Route path="/onboarding" element={<PageTransition><Onboarding /></PageTransition>} />
+                <Route path="/onboarding-check" element={<PageTransition><OnboardingCheck /></PageTransition>} />
 
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/crop/:cropName" element={<CropDetails />} />
-                <Route path="/my-farm" element={<MyFarm />} />
-                <Route path="/market-prices" element={<MarketPrices />} />
-                <Route path="/schemes" element={<GovSchemes />} />
-                <Route path="/air-agent" element={<AirAgent />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/weather" element={<Weather />} />
-                <Route path="/post/:id" element={<PostDetail />} />
-                <Route path="/crops" element={<Crops />} />
-                <Route path="/soil-analysis" element={<SoilAnalysis />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
-            </Router>
-          </DistrictProvider>
-        </LanguageProvider>
+                {/* Protected Routes wrapped in persistent Layout */}
+                <Route element={
+                  <ClerkTokenManager>
+                    <RouteGuard>
+                      <MainLayout />
+                    </RouteGuard>
+                  </ClerkTokenManager>
+                }>
+                  <Route path="/" element={<Community />} />
+                  <Route path="/community" element={<Community />} />
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/crop/:cropName" element={<CropDetails />} />
+                  <Route path="/my-farm" element={<MyFarm />} />
+                  <Route path="/market-prices" element={<MarketPrices />} />
+                  <Route path="/schemes" element={<GovSchemes />} />
+                  <Route path="/air-agent" element={<AirAgent />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/weather" element={<Weather />} />
+                  <Route path="/post/:id" element={<PostDetail />} />
+                  <Route path="/crops" element={<Crops />} />
+                  <Route path="/soil-analysis" element={<SoilAnalysis />} />
+                  <Route path="/messages" element={<MessagesPage />} />
+                  <Route path="/messages/:userId" element={<ChatPage />} />
+                  <Route path="/profile/:userId" element={<PublicProfile />} />
+                  <Route path="/profile/:userId/followers" element={<FollowersPage />} />
+                  <Route path="/profile/:userId/following" element={<FollowingPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
+            <Toaster />
+          </LanguageProvider>
+        </Router>
       </ThemeProvider>
-    </AuthProvider>
+    </ClerkProvider>
+    </AppLoader>
   );
 }
 

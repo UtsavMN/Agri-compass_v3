@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
+import { useUser } from '@/store';
 import { PostsAPI, Comment } from '@/lib/api/posts'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -15,8 +16,9 @@ interface CommentSectionProps {
 }
 
 export default function CommentSection({ postId, commentsCount, onCommentsCountChange }: CommentSectionProps) {
-  const { user } = useAuth()
+  const { user } = useUser()
   const { toast } = useToast()
+  const navigate = useNavigate()
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
   const [isExpanded, setIsExpanded] = useState(false)
@@ -26,6 +28,7 @@ export default function CommentSection({ postId, commentsCount, onCommentsCountC
   useEffect(() => {
     if (isExpanded && comments.length === 0) {
       loadComments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }
   }, [isExpanded, comments.length])
 
@@ -105,7 +108,10 @@ export default function CommentSection({ postId, commentsCount, onCommentsCountC
             <>
               {comments.map((comment) => (
                 <div key={comment.id} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Avatar className="h-8 w-8">
+                  <Avatar 
+                    className="h-8 w-8 cursor-pointer hover:opacity-80 transition-opacity" 
+                    onClick={() => navigate(`/profile/${comment.user.id}`)}
+                  >
                     <AvatarImage src={comment.user.avatar_url} />
                     <AvatarFallback>
                       {comment.user.username[0].toUpperCase()}
@@ -139,7 +145,10 @@ export default function CommentSection({ postId, commentsCount, onCommentsCountC
           {/* Add Comment */}
           {user && (
             <div className="flex gap-3">
-              <Avatar className="h-8 w-8">
+              <Avatar 
+                className="h-8 w-8 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => navigate(`/profile/${user?.id}`)}
+              >
                 <AvatarImage src={user.user_metadata?.avatar_url} />
                 <AvatarFallback>
                   {user.email?.[0].toUpperCase() || 'U'}

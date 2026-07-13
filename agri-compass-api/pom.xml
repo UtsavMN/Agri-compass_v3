@@ -56,6 +56,13 @@
       <artifactId>sqlite-jdbc</artifactId>
     </dependency>
 
+    <!-- Turso (LibSQL) network driver -->
+    <dependency>
+        <groupId>com.dbeaver.jdbc</groupId>
+        <artifactId>com.dbeaver.jdbc.driver.libsql</artifactId>
+        <version>1.0.7</version>
+    </dependency>
+
 
     <!-- Hibernate Community dialect for SQLite -->
     <dependency>
@@ -74,6 +81,13 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>s3</artifactId>
       <version>2.25.27</version>
+    </dependency>
+
+    <!-- Cloudinary (for file uploads) -->
+    <dependency>
+      <groupId>com.cloudinary</groupId>
+      <artifactId>cloudinary-http44</artifactId>
+      <version>1.36.0</version>
     </dependency>
 
     <!-- Test -->
@@ -105,6 +119,23 @@
       <artifactId>jjwt-jackson</artifactId>
       <version>0.12.6</version>
       <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-websocket</artifactId>
+    </dependency>
+
+    <!-- PostgreSQL Driver for Production Database -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <!-- Lombok -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
     </dependency>
   </dependencies>
 

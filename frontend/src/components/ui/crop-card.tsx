@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
 import { Button } from './button';
 import { Badge } from './badge';
@@ -11,7 +11,7 @@ interface CropCardProps {
   onViewDetails?: (crop: DetailedCropData) => void;
 }
 
-export function CropCard({ crop, onViewDetails }: CropCardProps) {
+export const CropCard = React.memo(function CropCard({ crop, onViewDetails }: CropCardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleViewDetails = () => {
@@ -184,4 +184,4 @@ export function CropCard({ crop, onViewDetails }: CropCardProps) {
       </Dialog>
     </>
   );
-}
+});

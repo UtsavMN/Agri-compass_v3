@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser } from '@/store';
 import { PostsAPI, Notification } from '@/lib/api/posts'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +14,7 @@ import { Bell, Heart, MessageCircle, UserPlus, AtSign } from 'lucide-react'
 import { format } from 'date-fns'
 
 export default function NotificationBell() {
-  const { user } = useAuth()
+  const { user } = useUser()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)

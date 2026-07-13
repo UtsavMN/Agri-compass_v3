@@ -133,7 +133,7 @@ class CacheManager {
       }
 
       return cacheItem.data;
-    } catch (error) {
+    } catch (_error) {
       // Invalid cache data
       localStorage.removeItem(this.getCacheKey(key));
       return null;
@@ -154,6 +154,17 @@ class CacheManager {
       }
     }
 
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+  }
+
+  static clearByPrefix(prefix: string): void {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(`${this.CACHE_PREFIX}${prefix}`)) {
+        keysToRemove.push(key);
+      }
+    }
     keysToRemove.forEach(key => localStorage.removeItem(key));
   }
 
@@ -254,9 +265,7 @@ export class PostsCache {
   }
 
   static invalidateFeed(): void {
-    // Clear all post-related cache
-    CacheManager.clear(); // For simplicity, clear all cache
-    // In production, you might want to be more selective
+    CacheManager.clearByPrefix('posts_');
   }
 }
 

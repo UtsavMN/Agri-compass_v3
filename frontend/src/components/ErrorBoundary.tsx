@@ -25,6 +25,20 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+    // Auto-reload on chunk load error (common after new deployments)
+    if (
+      error.name === 'ChunkLoadError' ||
+      error.message.includes('Failed to fetch dynamically imported module') ||
+      error.message.includes('dynamically imported module') ||
+      error.message.includes('Failed to load module script') ||
+      error.message.includes('application/octet-stream')
+    ) {
+      // Force a hard reload from server
+      window.location.reload();
+      return;
+    }
+
     this.setState({
       error,
       errorInfo,
@@ -55,17 +69,17 @@ export class ErrorBoundary extends Component<Props, State> {
               <AlertTriangle className="h-8 w-8 text-red-500" />
             </div>
             <h2 className="text-2xl font-black text-gold-100 tracking-tight mb-2">
-              System Fault Detected
+              Something went wrong
             </h2>
             <p className="text-gold-100/40 text-sm font-medium italic mb-6">
-              An unexpected protocol error occurred during asset processing.
+              An unexpected error occurred. Please try again.
             </p>
           </div>
 
           <div className="space-y-4">
             <Button onClick={this.handleRetry} className="btn-gold w-full h-12 shadow-gold-glow">
               <RefreshCw className="h-4 w-4 mr-3" />
-              Re-initialize Module
+              Try again
             </Button>
 
             <Button
@@ -73,14 +87,14 @@ export class ErrorBoundary extends Component<Props, State> {
               onClick={() => window.location.href = '/'}
               className="w-full text-gold-100/40 hover:text-gold-100"
             >
-              Return to Relay Base
+              Go to Dashboard
             </Button>
           </div>
 
-          {process.env.NODE_ENV === 'development' && this.state.error && (
+          {(import.meta.env.DEV || process.env.NODE_ENV === 'development') && this.state.error && (
             <details className="mt-8 text-left border-t border-earth-border pt-6">
               <summary className="cursor-pointer text-[10px] font-black uppercase tracking-widest text-gold-100/20 hover:text-gold-400 transition-colors">
-                Diagnostic Metadata (Dev)
+                Error Details (Dev)
               </summary>
               <pre className="mt-4 text-[10px] bg-earth-main p-4 rounded-xl overflow-auto max-h-48 text-red-400/80 border border-red-500/10 font-mono">
                 {this.state.error.toString()}

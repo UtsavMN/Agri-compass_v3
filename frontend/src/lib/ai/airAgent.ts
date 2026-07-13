@@ -11,10 +11,15 @@ Always provide actionable, farmer-friendly advice. Use district-specific informa
 
   async sendMessage(messages: ChatMessage[], district?: string): Promise<string> {
     try {
-      // Add system context to the user's message
       const systemContext = this.systemPrompt + (district ? ` Current district context: ${district}` : '');
-      const userMessage = messages[messages.length - 1].content;
-      const contextualizedMessage = `${systemContext}\n\nUser question: ${userMessage}`;
+      
+      // Build conversation context from recent messages (last 10)
+      const recentMessages = messages.slice(-10);
+      const conversationContext = recentMessages
+        .map(m => `${m.role === 'user' ? 'Farmer' : 'KrishiMitra'}: ${m.content}`)
+        .join('\n');
+      
+      const contextualizedMessage = `${systemContext}\n\nConversation so far:\n${conversationContext}\n\nRespond to the farmer's latest message above. Keep context from the conversation.`;
       
       return await chatWithAI(contextualizedMessage);
     } catch (error) {

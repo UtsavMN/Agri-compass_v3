@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Avatar, AvatarImage, AvatarFallback } from './avatar'
 import { Button } from './button'
@@ -43,7 +44,7 @@ interface PostCardProps {
   currentUserId?: string
 }
 
-export function PostCard({
+export const PostCard = React.memo(function PostCard({
   post,
   onLike,
   onComment,
@@ -57,6 +58,7 @@ export function PostCard({
   const [isLoadingComments, setIsLoadingComments] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (isCommenting) {
@@ -99,16 +101,16 @@ export function PostCard({
 
   return (
     <Card className="card-premium border-none shadow-premium mb-6 overflow-hidden">
-      <div className="p-5">
+      <div className="p-6 md:p-8">
         <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
+          <button className="flex items-center gap-3 text-left hover:opacity-80 transition-opacity" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (post.user?.id) navigate(`/profile/${post.user.id}`); }}>
             <Avatar className="h-10 w-10 border border-gold-400/20">
-              <AvatarImage src={post.user.avatar_url} />
-              <AvatarFallback className="bg-gold-400/10 text-gold-400 font-bold">{post.user.username[0].toUpperCase()}</AvatarFallback>
+              <AvatarImage src={post.user?.avatar_url} />
+              <AvatarFallback className="bg-gold-400/10 text-gold-400 font-bold">{((post.user?.username || post.user?.full_name || 'Farmer')[0] || 'F').toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
               <div className="flex items-center gap-2">
-                 <p className="font-black text-gold-100 uppercase tracking-tight text-sm">{post.user.full_name || post.user.username}</p>
+                 <p className="font-black text-gold-100 uppercase tracking-tight text-sm">{post.user?.full_name || post.user?.username || 'Farmer'}</p>
                  {post.location && (
                    <span className="flex items-center text-[10px] text-gold-400/60 font-bold uppercase tracking-tighter bg-gold-400/5 px-2 py-0.5 rounded-full border border-gold-400/10">
                      <MapPin size={8} className="mr-1" /> {post.location}
@@ -116,11 +118,11 @@ export function PostCard({
                  )}
               </div>
               <p className="text-[10px] font-bold text-gold-100/30 uppercase tracking-widest mt-0.5">
-                {format(new Date(post.created_at), 'MMMM dd, yyyy')}
+                {post.created_at ? format(new Date(post.created_at), 'MMMM dd, yyyy') : 'Recently'}
               </p>
             </div>
-          </div>
-          {currentUserId === post.user.id && (
+          </button>
+          {currentUserId === post.user?.id && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-gold-100/40 hover:text-gold-100">
@@ -183,7 +185,7 @@ export function PostCard({
             className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:text-gold-400 transition-all"
           >
             <MessageCircle className="h-4 w-4" />
-            {post._count?.comments || 0} <span className="hidden sm:inline">Responses</span>
+            {post._count?.comments || 0} <span className="hidden sm:inline">Comments</span>
           </button>
           
           <button 
@@ -191,7 +193,7 @@ export function PostCard({
             className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:text-gold-400 transition-all ml-auto"
           >
             <Share2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Broadcast</span>
+            <span className="hidden sm:inline">Share</span>
           </button>
         </div>
 
@@ -216,27 +218,31 @@ export function PostCard({
                       animate={{ opacity: 1, x: 0 }}
                       className="flex gap-4 p-4 bg-earth-elevated/40 rounded-2xl border border-earth-border/50"
                     >
-                      <Avatar className="h-8 w-8 border border-gold-400/10">
-                        <AvatarImage src={comment.user.avatar_url} />
-                        <AvatarFallback className="bg-gold-400/5 text-gold-400 text-[10px] font-black">{comment.user.username[0].toUpperCase()}</AvatarFallback>
-                      </Avatar>
+                      <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (comment.user?.id) navigate(`/profile/${comment.user.id}`); }} className="flex-shrink-0 hover:opacity-80 transition-opacity">
+                        <Avatar className="h-8 w-8 border border-gold-400/10">
+                          <AvatarImage src={comment.user?.avatar_url} />
+                          <AvatarFallback className="bg-gold-400/5 text-gold-400 text-[10px] font-black">{((comment.user?.username || comment.user?.full_name || 'F')[0] || 'F').toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                      </button>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-black text-[10px] text-gold-100 uppercase tracking-tighter">{comment.user.full_name || comment.user.username}</span>
-                          <span className="text-[9px] font-bold text-gold-100/20 uppercase tracking-widest">{format(new Date(comment.created_at), 'MMM d')}</span>
+                          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (comment.user?.id) navigate(`/profile/${comment.user.id}`); }} className="font-black text-[10px] text-gold-100 uppercase tracking-tighter hover:text-gold-400">
+                            {comment.user?.full_name || comment.user?.username || 'Farmer'}
+                          </button>
+                          <span className="text-[9px] font-bold text-gold-100/20 uppercase tracking-widest">{comment.created_at ? format(new Date(comment.created_at), 'MMM d') : 'Recently'}</span>
                         </div>
                         <p className="text-xs text-gold-100/60 leading-relaxed">{comment.content}</p>
                       </div>
                     </motion.div>
                   ))
                 ) : (
-                  <p className="text-[10px] text-gold-100/20 text-center italic font-bold uppercase tracking-widest py-4">Station silence. Be the first to respond.</p>
+                  <p className="text-[10px] text-gold-100/20 text-center italic font-bold uppercase tracking-widest py-4">No comments yet. Be the first to comment.</p>
                 )}
               </div>
-
+ 
               <div className="flex flex-col gap-3">
                 <Textarea
-                  placeholder="Input response data..."
+                  placeholder="Write a comment..."
                   value={commentContent}
                   onChange={(e) => setCommentContent(e.target.value)}
                   className="bg-earth-main border-earth-border focus:border-gold-400 text-gold-100 text-xs min-h-[80px] rounded-xl placeholder:text-gold-100/20"
@@ -250,7 +256,7 @@ export function PostCard({
                     disabled={isSubmitting || !commentContent.trim()}
                     className="btn-gold px-6 h-9 text-[10px] font-black uppercase tracking-[0.2em]"
                   >
-                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Transmit Response'}
+                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post Comment'}
                   </Button>
                 </div>
               </div>
@@ -260,4 +266,4 @@ export function PostCard({
       </div>
     </Card>
   )
-}
+})
