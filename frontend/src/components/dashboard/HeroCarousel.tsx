@@ -127,6 +127,16 @@ export const HeroCarousel = ({
       badge: 'LIVE NEWS UPDATES',
       ctaPrimary: { label: 'Read More', href: currentNews?.url || '/market-prices' },
       ctaSecondary: { label: 'All Updates', href: '/market-prices' },
+    },
+    {
+      id: 'about',
+      image: '/plant-background-mh4y9mexexlv960o.jpg',
+      headline: 'AGRI',
+      headlineGold: '-COMPASS',
+      subtext: 'Discover the vision behind Agri-Compass. Learn about our mission to empower farmers with data-driven insights and explore the team building the future of agriculture.',
+      badge: 'ABOUT US',
+      ctaPrimary: { label: 'About Us', href: 'https://agri-compass-dashboard.vercel.app/' },
+      ctaSecondary: { label: 'The Team', href: 'https://agri-compass-dashboard.vercel.app/' },
     }
   ];
 
@@ -208,14 +218,28 @@ export const HeroCarousel = ({
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
-                  <Link to={hero.ctaPrimary.href}
-                    className="w-full sm:w-auto bg-gradient-to-r from-[#C9A84C] to-[#D4B86A] text-[#0A0A0A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(201,168,76,0.4)]">
-                    {hero.ctaPrimary.label}
-                  </Link>
-                  <Link to={hero.ctaSecondary.href}
-                    className="w-full sm:w-auto bg-transparent border border-[#C9A84C]/40 text-[#C9A84C] hover:text-[#D4B86A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest hover:bg-[#C9A84C]/10 transition-all">
-                    {hero.ctaSecondary.label}
-                  </Link>
+                  {hero.ctaPrimary.href.startsWith('http') ? (
+                    <a href={hero.ctaPrimary.href} target="_blank" rel="noopener noreferrer"
+                      className="w-full sm:w-auto bg-gradient-to-r from-[#C9A84C] to-[#D4B86A] text-[#0A0A0A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(201,168,76,0.4)]">
+                      {hero.ctaPrimary.label}
+                    </a>
+                  ) : (
+                    <Link to={hero.ctaPrimary.href}
+                      className="w-full sm:w-auto bg-gradient-to-r from-[#C9A84C] to-[#D4B86A] text-[#0A0A0A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(201,168,76,0.4)]">
+                      {hero.ctaPrimary.label}
+                    </Link>
+                  )}
+                  {hero.ctaSecondary.href.startsWith('http') ? (
+                    <a href={hero.ctaSecondary.href} target="_blank" rel="noopener noreferrer"
+                      className="w-full sm:w-auto bg-transparent border border-[#C9A84C]/40 text-[#C9A84C] hover:text-[#D4B86A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest hover:bg-[#C9A84C]/10 transition-all">
+                      {hero.ctaSecondary.label}
+                    </a>
+                  ) : (
+                    <Link to={hero.ctaSecondary.href}
+                      className="w-full sm:w-auto bg-transparent border border-[#C9A84C]/40 text-[#C9A84C] hover:text-[#D4B86A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest hover:bg-[#C9A84C]/10 transition-all">
+                      {hero.ctaSecondary.label}
+                    </Link>
+                  )}
                 </div>
               </motion.div>
             </AnimatePresence>
