@@ -117,6 +117,16 @@ export const HeroCarousel = ({
   const dynamicNewsText = currentNews ? (typeof currentNews === 'string' ? currentNews : currentNews.title) : 'Stay updated with the latest agricultural news and trade tariffs.';
   
   const heroes = [
+    {
+      id: 'about',
+      image: '/plant-background-mh4y9mexexlv960o.jpg',
+      headline: 'AGRI',
+      headlineGold: 'COMPASS',
+      subtext: 'Discover the vision behind Agri-Compass. Learn about our mission to empower farmers with data-driven insights and explore the team building the future of agriculture.',
+      badge: 'ABOUT US',
+      ctaPrimary: { label: 'About Us', href: 'https://agri-compass-dashboard.vercel.app/' },
+      ctaSecondary: { label: 'The Team', href: 'https://agri-compass-dashboard.vercel.app/' },
+    },
     ...BASE_HEROES,
     {
       id: 'news',
@@ -127,16 +137,6 @@ export const HeroCarousel = ({
       badge: 'LIVE NEWS UPDATES',
       ctaPrimary: { label: 'Read More', href: currentNews?.url || '/market-prices' },
       ctaSecondary: { label: 'All Updates', href: '/market-prices' },
-    },
-    {
-      id: 'about',
-      image: '/plant-background-mh4y9mexexlv960o.jpg',
-      headline: 'AGRI',
-      headlineGold: '-COMPASS',
-      subtext: 'Discover the vision behind Agri-Compass. Learn about our mission to empower farmers with data-driven insights and explore the team building the future of agriculture.',
-      badge: 'ABOUT US',
-      ctaPrimary: { label: 'About Us', href: 'https://agri-compass-dashboard.vercel.app/' },
-      ctaSecondary: { label: 'The Team', href: 'https://agri-compass-dashboard.vercel.app/' },
     }
   ];
 
