@@ -527,3 +527,41 @@
 .animate-border-glow {
   animation: borderGlow 3s infinite;
 }
+
+/* ============================================ */
+/* Outdoor High Contrast Mode                   */
+/* ============================================ */
+body.outdoor-mode-active {
+  --bg-main: #000000;
+  --bg-card: #050505;
+  --bg-elevated: #111111;
+  
+  --text-primary: #FFFFFF;
+  --text-secondary: #E0E0E0;
+  --text-muted: #B0B0B0;
+  
+  --accent: #FFCC00;
+  --accent-soft: rgba(255, 204, 0, 0.2);
+  --accent-hover: #FFE680;
+  --accent-dark: #CCAA00;
+  
+  --border-subtle: #555555;
+  --border-medium: #888888;
+  
+  --background: #000000;
+  --foreground: #FFFFFF;
+  --card: #050505;
+  --card-foreground: #FFFFFF;
+  --popover: #000000;
+  --popover-foreground: #FFFFFF;
+  --primary: #FFCC00;
+  --secondary: #111111;
+  --muted: #111111;
+  --accent-tw: #FFCC00;
+  --border: #555555;
+}
+
+body.outdoor-mode-active * {
+  border-color: var(--border-subtle);
+}
+

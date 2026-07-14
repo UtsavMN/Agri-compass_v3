@@ -59,7 +59,7 @@ export default function Layout({
   _fullBleed = false,
   hideHeader = false,
 }: LayoutProps) {
-  const { user, _profile, signOut } = useUser();
+  const { user, profile, signOut } = useUser();
   const { openUserProfile } = useClerk();
   const { language, toggleLanguage, t } = useLanguage();
   const { selectedDistrict, _setSelectedDistrict } = useDistrict();
@@ -105,6 +105,21 @@ export default function Layout({
     };
   }, [user]);
 
+  useEffect(() => {
+    if (profile?.preferences) {
+      try {
+        const prefs = JSON.parse(profile.preferences);
+        if (prefs.outdoorMode) {
+          document.body.classList.add('outdoor-mode-active');
+        } else {
+          document.body.classList.remove('outdoor-mode-active');
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [profile?.preferences]);
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
@@ -120,10 +135,10 @@ export default function Layout({
   ];
 
   return (
-    <div className="min-h-screen bg-earth-main flex flex-col text-[#e2dcd0] relative overflow-hidden">
+    <div className="min-h-screen bg-earth-main flex flex-col text-[#e2dcd0] relative overflow-hidden print:bg-white print:text-black">
       {/* Global Background */}
       <div
-        className="fixed inset-0 z-0 pointer-events-none"
+        className="fixed inset-0 z-0 pointer-events-none print:hidden"
         style={{
           backgroundImage: "url('/plant-background-mh4y9mexexlv960o.jpg')",
           backgroundSize: 'cover',
@@ -134,7 +149,7 @@ export default function Layout({
       />
       {/* ===== FLOATING GLASS NAVBAR ===== */}
       {!hideHeader && (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-earth-main/80 backdrop-blur-xl border-b border-earth-border/40 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between transition-all duration-300">
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-earth-main/80 backdrop-blur-xl border-b border-earth-border/40 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between transition-all duration-300 print:hidden">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2.5 cursor-pointer animate-fade-in" onClick={() => navigate('/dashboard')}>
               <Sprout className="h-6.5 w-6.5 text-gold-400" />
@@ -366,7 +381,7 @@ export default function Layout({
 
       {/* ===== MOBILE BOTTOM NAVIGATION BAR ===== */}
       {!hideHeader && (
-        <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl border-t border-earth-border/40 pb-2 pt-2 px-2 flex items-center justify-start sm:justify-around overflow-x-auto snap-x shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+        <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl border-t border-earth-border/40 pb-2 pt-2 px-2 flex items-center justify-start sm:justify-around overflow-x-auto snap-x shadow-[0_-10px_40px_rgba(0,0,0,0.5)] print:hidden">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
