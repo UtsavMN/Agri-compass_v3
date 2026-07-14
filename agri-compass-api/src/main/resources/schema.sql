@@ -37,3 +37,7 @@ create index if not exists idx_post_likes on post_likes (post_id);
 create index if not exists idx_weather_logs on weather_logs (farm_id);
 
 alter table crops add column ai_score_id bigint;
+
+create table if not exists farm_updates (id varchar(255) not null, farm_id varchar(255) not null, clerk_user_id varchar(255) not null, post_text TEXT not null, image_urls TEXT, created_at varchar(255), updated_at varchar(255), primary key (id));
+create index if not exists idx_farm_updates_farm on farm_updates (farm_id);
+create index if not exists idx_farm_updates_user on farm_updates (clerk_user_id);

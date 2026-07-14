@@ -3,8 +3,6 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@/store';
 import { loadDistrictDataFromCSV } from '@/lib/csvLoader';
 import { FarmsAPI, type Farm } from '@/lib/api/farms';
-import { cropRecommender } from '@/lib/ai/cropRecommender';
-import { SeasonAdvisoryCard } from '@/components/farm/SeasonAdvisoryCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -22,17 +20,13 @@ import { Plus, Sprout, MapPin,  Droplet, Trash2,     Shield, Activity, Database,
 import FertilizerAnalysisModule from '@/components/features/FertilizerAnalysisModule';
 import { SoilAnalysisContent } from '@/pages/SoilAnalysis';
 import { EmptyState } from '@/components/ui/EmptyState';
-
+import { CropAutocomplete } from '@/components/farm/CropAutocomplete';
+import { FarmBlog } from '@/components/farm/FarmBlog';
 // Local types for UI specific state if needed, but we use the API Farm type
 
 
 
-interface CropRecommendation {
-  cropName: string;
-  reason: string;
-  season: string;
-  expectedYield: string;
-}
+
 
 export default function MyFarm() {
   const { user, profile } = useUser();
@@ -46,7 +40,6 @@ export default function MyFarm() {
   const [_districts, setDistricts] = useState<string[]>([]);
   const [_districtData, setDistrictData] = useState<any[]>([]);
 
-  const [cropRecommendations, setCropRecommendations] = useState<CropRecommendation[]>([]);
   const [selectedFarmForAnalysis, setSelectedFarmForAnalysis] = useState<Farm | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [activeTab, setActiveTab] = useState<'farms' | 'soil-ai'>('farms');
@@ -143,12 +136,7 @@ export default function MyFarm() {
 
   const loadDistrictData = async () => {
     if (!selectedDistrict) return;
-    try {
-      const recommendations = await cropRecommender.getRecommendations(selectedDistrict);
-      setCropRecommendations(recommendations);
-    } catch (error) {
-      console.error('Error loading district data:', error);
-    }
+    // Removed cropRecommender logic
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -259,7 +247,7 @@ export default function MyFarm() {
                     <Plus className="mr-2 h-4 w-4" />
                     Add Farm
                   </Button>
-                  <DialogContent className="bg-earth-elevated border-earth-border text-gold-100 max-w-md">
+                  <DialogContent className="sm:max-w-[425px] bg-earth-elevated border-earth-border/50 text-gold-100 p-0 shadow-premium">
                     <DialogHeader>
                       <DialogTitle className="text-2xl font-black">
                         {editingFarmId ? 'Edit Farm Details' : 'Add New Farm'}
@@ -311,16 +299,10 @@ export default function MyFarm() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Current Crop</Label>
-                        <Select value={formData.current_crop} onValueChange={(v) => setFormData({ ...formData, current_crop: v })}>
-                          <SelectTrigger className="bg-earth-main border-earth-border text-gold-100 rounded-xl h-11">
-                            <SelectValue placeholder="Select Crop" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-earth-elevated border-earth-border">
-                            {['Rice', 'Maize', 'Tomato', 'Wheat', 'Cotton', 'Sugarcane', 'Coffee'].map(t => (
-                              <SelectItem key={t} value={t} className="text-gold-100 uppercase text-[10px] font-bold">{t}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <CropAutocomplete
+                          value={formData.current_crop}
+                          onChange={(v) => setFormData({ ...formData, current_crop: v })}
+                        />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -411,81 +393,6 @@ export default function MyFarm() {
             </ScrollReveal>
           ) : (
             <div className="space-y-16">
-              {/* Environmental Intelligence Section */}
-              {selectedDistrict && (
-                <ScrollReveal direction="up" delay={0.1}>
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <SeasonAdvisoryCard district={selectedDistrict} />
-
-                    {/* Cultivation Optimization */}
-                    <Card className="card-premium lg:col-span-2 overflow-hidden border-none shadow-premium">
-                      <CardHeader className="bg-gold-400/5 p-6 border-b border-gold-400/10">
-                        <CardTitle className="text-gold-100 font-black tracking-tight flex items-center text-lg">
-                          <Shield className="h-5 w-5 mr-3 text-gold-400" />
-                          Yield Optimization Protocols
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-6">
-                        {cropRecommendations.length > 0 ? (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {cropRecommendations.slice(0, 2).map((rec, index) => (
-                              <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                className={`p-6 md:p-7 bg-earth-main/30 rounded-[2rem] border border-earth-border group hover:border-gold-400/30 transition-all duration-500 min-h-[12rem] ${cropRecommendations.length === 1 ? 'md:col-span-2' : ''}`}
-                              >
-                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-5">
-                                  <div>
-                                    <h4 className="font-black text-xl text-gold-100 tracking-tighter uppercase group-hover:text-gold-400 transition-colors">{rec.cropName}</h4>
-                                    <Badge className="bg-gold-400/10 text-gold-400 border-none text-[9px] uppercase tracking-widest mt-1">
-                                      {rec.season} Protocol
-                                    </Badge>
-                                  </div>
-                                  <div className="p-2 bg-gold-400/5 rounded-full">
-                                    <Sprout size={16} className="text-gold-400/40" />
-                                  </div>
-                                </div>
-                                <p className="text-xs text-gold-100/40 leading-relaxed italic mb-6">"{rec.reason}"</p>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-5 pb-1 border-t border-earth-border/50">
-                                  <div className="min-w-0">
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-gold-100/30 block mb-2">Target Yield</span>
-                                    <p className="text-sm font-black text-gold-400 break-words leading-snug">{rec.expectedYield}</p>
-                                  </div>
-                                  <div>
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-gold-100/30">District Compatibility</span>
-                                    <div className="flex gap-1 mt-1.5">
-                                      {[1, 2, 3, 4, 5].map(i => <div key={i} className={`h-1 flex-1 rounded-full ${i <= 4 ? 'bg-gold-400' : 'bg-gold-400/10'}`} />)}
-                                    </div>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            ))}
-
-                            <div className="md:col-span-2 p-6 bg-gold-400/5 rounded-[2rem] border border-gold-400/10 flex items-center justify-between gap-4 group cursor-pointer hover:bg-gold-400/10 transition-colors" onClick={() => document.getElementById('krishi-mitra-fab')?.click()}>
-                              <div className="flex items-center gap-4">
-                                <div className="p-3 bg-earth-main rounded-2xl border border-gold-400/20 group-hover:border-gold-400/40 transition-colors">
-                                  <Bot className="text-gold-400 h-5 w-5" />
-                                </div>
-                                <div>
-                                  <h5 className="font-black text-gold-100 uppercase tracking-tight text-sm">Krishi Mitra AI</h5>
-                                  <p className="text-[10px] text-gold-100/40 font-bold uppercase tracking-widest">Get personalized advice for your farms</p>
-                                </div>
-                              </div>
-                              <ArrowRight className="text-gold-400 h-5 w-5 opacity-50 group-hover:opacity-100 transition-opacity" />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="h-64 flex items-center justify-center italic text-gold-100/20 text-xs font-bold uppercase tracking-widest">Generating optimal cultivation paths...</div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                </ScrollReveal>
-              )}
-
               {/* Asset Ledger Grid */}
               <ScrollReveal direction="up" delay={0.2}>
                 <div>
@@ -566,6 +473,10 @@ export default function MyFarm() {
                                 >
                                   AI Soil Advisory
                                 </Button>
+                              </div>
+
+                              <div className="pt-6 border-t border-earth-border/50">
+                                <FarmBlog farmId={farm.id} ownerId={farm.user_id} isOwner={true} />
                               </div>
                             </CardContent>
                           </Card>

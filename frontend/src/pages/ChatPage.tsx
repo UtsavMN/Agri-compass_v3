@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -20,11 +20,12 @@ export const ChatPage = () => {
   const { getToken } = useAuth();
   const { user } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [otherUser, setOtherUser] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(location.state?.prefill || "");
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
 
