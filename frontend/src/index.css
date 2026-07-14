@@ -148,38 +148,35 @@
 
 @layer components {
 
-  /* Glassmorphism */
-  .glass-panel {
-    background: rgba(17, 17, 17, 0.6);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  /* Unified Glassmorphism for all cards */
+  .glass-panel,
+  .glass-card,
+  .card-premium,
+  .card-base,
+  .card-gold,
+  .card-surface,
+  .card-elevated {
+    background: rgba(17, 17, 17, 0.65) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
     transition: all var(--transition-normal);
-  }
-  .glass-panel:hover {
-    border-color: rgba(201, 168, 76, 0.3);
-    box-shadow: 0 8px 32px 0 rgba(201, 168, 76, 0.1);
   }
 
-  /* Premium Card */
-  .card-premium {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 14px;
-    box-shadow: var(--shadow-card);
-    transition: all var(--transition-normal);
+  .glass-panel:hover,
+  .glass-card:hover,
+  .card-premium:hover,
+  .card-base:hover {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5) !important;
   }
 
   /* Stat / metric cells inside premium cards — room for labels + values */
   .card-premium .metric-cell {
     padding: 1.25rem 1rem;
     min-height: 4.5rem;
-  }
-
-  .card-premium:hover {
-    border-color: var(--border-medium);
-    box-shadow: var(--shadow-premium);
   }
 
   .card-hover {
@@ -434,13 +431,6 @@
   margin: 48px 0;
 }
 
-/* Card variants */
-.card-base    { background: #1e1e16; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; }
-.card-gold    { background: rgba(196,154,42,0.06); border: 1px solid rgba(196,154,42,0.2); border-radius: 14px; }
-.card-surface { background: #1a1a14; border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; }
-.card-elevated{ background: #242418; border: 1px solid rgba(255,255,255,0.09); border-radius: 14px;
-                box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
-
 /* Hover lift for interactive cards */
 .card-hover {
   transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
@@ -448,7 +438,6 @@
 .card-hover:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  border-color: rgba(196,154,42,0.2);
 }
 
 /* Page hero bands — coloured section backgrounds */

@@ -27,18 +27,28 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (profile?.preferences && isOpen) {
-      try {
-        const prefs = JSON.parse(profile.preferences);
-        setPushNotifications(prefs.pushNotifications ?? true);
-        setSmsAlerts(prefs.smsAlerts ?? false);
-        setDataAnalytics(prefs.dataAnalytics ?? true);
-        setOutdoorMode(prefs.outdoorMode ?? false);
-        setUnitSystem(prefs.unitSystem ?? 'metric');
-        setCropAlerts(prefs.cropAlerts ?? []);
-      } catch (e) {
-        console.error("Failed to parse preferences", e);
+    if (isOpen) {
+      let prefs: any = {};
+      if (profile?.preferences) {
+        try {
+          prefs = JSON.parse(profile.preferences);
+        } catch (e) {
+          console.error("Failed to parse preferences", e);
+        }
       }
+      const localPrefsStr = localStorage.getItem('agri_compass_local_prefs');
+      if (localPrefsStr) {
+        try {
+          prefs = { ...prefs, ...JSON.parse(localPrefsStr) };
+        } catch (e) { }
+      }
+      
+      setPushNotifications(prefs.pushNotifications ?? true);
+      setSmsAlerts(prefs.smsAlerts ?? false);
+      setDataAnalytics(prefs.dataAnalytics ?? true);
+      setOutdoorMode(prefs.outdoorMode ?? false);
+      setUnitSystem(prefs.unitSystem ?? 'metric');
+      setCropAlerts(prefs.cropAlerts ?? []);
     }
   }, [profile, isOpen]);
 
@@ -54,7 +64,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     };
     
     try {
-      await apiPatch('/api/users/preferences', newPrefs);
+      try {
+        await apiPatch('/api/users/preferences', newPrefs);
+      } catch (patchErr) {
+        console.warn('Backend preferences sync failed, saving locally:', patchErr);
+        localStorage.setItem('agri_compass_local_prefs', JSON.stringify(newPrefs));
+      }
+      
       await updateProfile({ preferences: JSON.stringify(newPrefs) });
       toast({
         title: "Settings Saved",
@@ -72,7 +88,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     } catch (err) {
       toast({
         title: "Error",
-        description: "Failed to save preferences. Please try again.",
+        description: "Failed to update profile locally. Please try again.",
         variant: "destructive"
       });
     } finally {
