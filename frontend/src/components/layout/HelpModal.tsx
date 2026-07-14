@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Languages, Send } from 'lucide-react';
+import { Languages, Send, Smartphone } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -52,10 +52,47 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
         </DialogHeader>
 
         <div className="mt-6 space-y-8">
+          {/* Direct Support Section */}
+          <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <a href="tel:18001801551" className="flex items-center p-4 rounded-xl bg-earth-card border border-earth-border/40 hover:border-gold-400/50 transition-colors group">
+              <div className="h-10 w-10 rounded-full bg-gold-400/10 flex items-center justify-center mr-4 group-hover:bg-gold-400/20">
+                <Smartphone className="w-5 h-5 text-gold-400" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-gold-400 uppercase tracking-wider">Kisan Call Center</p>
+                <p className="text-lg font-black text-[#f0ece0]">1800-180-1551</p>
+              </div>
+            </a>
+            
+            <a href="https://wa.me/911234567890" target="_blank" rel="noreferrer" className="flex items-center p-4 rounded-xl bg-earth-card border border-earth-border/40 hover:border-green-400/50 transition-colors group">
+              <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center mr-4 group-hover:bg-green-500/20">
+                <Send className="w-5 h-5 text-green-400" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-green-400 uppercase tracking-wider">WhatsApp Support</p>
+                <p className="text-sm font-medium text-[#f0ece0]">Chat with KrishiMitra</p>
+              </div>
+            </a>
+          </section>
+
+          {/* Interactive Tour Section */}
+          <section className="bg-gradient-to-r from-gold-400/10 to-transparent p-4 rounded-xl border border-gold-400/20 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-[#f0ece0]">Need a refresher?</p>
+              <p className="text-xs text-gold-100/60">Take an interactive tour of the dashboard.</p>
+            </div>
+            <Button variant="outline" size="sm" className="border-gold-400/30 text-gold-400 hover:bg-gold-400/10" onClick={() => {
+              toast({ title: "Tour Starting", description: "Interactive tour initialized..." });
+              onClose();
+            }}>
+              Restart Tour
+            </Button>
+          </section>
+
           {/* FAQ Section */}
           <section>
             <h3 className="text-sm font-bold text-gold-400 uppercase tracking-wider mb-4 border-b border-earth-border/40 pb-2">
-              Frequently Asked Questions
+              Frequently Asked Questions (Video Guides)
             </h3>
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1" className="border-earth-border/40">

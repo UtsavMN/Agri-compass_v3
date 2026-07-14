@@ -30,6 +30,9 @@ public class UserProfile {
 
     private String bio;
 
+    @Column(columnDefinition = "TEXT")
+    private String preferences = "{}";
+
     @Column(nullable = false)
     private String language = "kn";
 
@@ -70,6 +73,9 @@ public class UserProfile {
 
     public String getLanguage() { return language; }
     public void setLanguage(String language) { this.language = language; }
+
+    public String getPreferences() { return preferences; }
+    public void setPreferences(String preferences) { this.preferences = preferences; }
 
     public Integer getOnboardingCompleted() { return onboardingCompleted; }
     public void setOnboardingCompleted(Integer onboardingCompleted) { this.onboardingCompleted = onboardingCompleted; }

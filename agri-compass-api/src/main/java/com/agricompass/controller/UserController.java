@@ -169,4 +169,31 @@ public class UserController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PatchMapping("/preferences")
+    public ResponseEntity<Map<String, Object>> updatePreferences(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt,
+            @RequestBody Map<String, Object> preferencesData) {
+        if (jwt == null) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        String clerkUserId = jwt.getSubject();
+        UserProfile profile = userProfileRepository.findById(clerkUserId).orElse(null);
+        
+        if (profile == null) {
+            return ResponseEntity.status(404).body(Map.of("error", "Profile not found"));
+        }
+        
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            String prefsJson = mapper.writeValueAsString(preferencesData);
+            profile.setPreferences(prefsJson);
+            userProfileRepository.save(profile);
+            return ResponseEntity.ok(Map.of("success", true, "preferences", preferencesData));
+        } catch (Exception e) {
+            log.error("Failed to save preferences", e);
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to save preferences"));
+        }
+    }
 }

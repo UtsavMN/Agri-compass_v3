@@ -39,10 +39,10 @@ const slugify = (text: string) => {
 };
 
 const SEASON_ACCENTS: Record<string, { border: string; bg: string }> = {
-  Kharif: { border: 'rgba(74,154,106,0.3)', bg: 'rgba(74,154,106,0.05)' },
-  Rabi: { border: 'rgba(74,122,196,0.3)', bg: 'rgba(74,122,196,0.05)' },
-  Perennial: { border: 'rgba(196,154,42,0.3)', bg: 'rgba(196,154,42,0.05)' },
-  Summer: { border: 'rgba(196,90,74,0.3)', bg: 'rgba(196,90,74,0.05)' },
+  Kharif: { border: 'rgba(74,154,106,0.3)', bg: 'rgba(74,154,106,0.1)' },
+  Rabi: { border: 'rgba(74,122,196,0.3)', bg: 'rgba(74,122,196,0.1)' },
+  Perennial: { border: 'rgba(196,154,42,0.3)', bg: 'rgba(196,154,42,0.1)' },
+  Summer: { border: 'rgba(196,90,74,0.3)', bg: 'rgba(196,90,74,0.1)' },
 };
 
 export const CropCardPremium = React.memo(function CropCardPremium({ crop }: CropCardPremiumProps) {
@@ -52,12 +52,12 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
   const profitScore = crop.aiScore?.profitabilityScore ?? null;
 
   const seasonKey = crop.season || '';
-  const accent = SEASON_ACCENTS[seasonKey] || { border: 'rgba(255,255,255,0.07)', bg: '#1e1e16' };
+  const accent = SEASON_ACCENTS[seasonKey] || { border: 'rgba(255,255,255,0.07)', bg: 'rgba(30,30,22,0.4)' };
 
   return (
     <Card
       onClick={() => navigate(`/crop/${slugify(crop.name)}`)}
-      className="card-premium group overflow-hidden flex flex-col h-full bg-[#111] hover:bg-[#151515] transition-all cursor-pointer border-earth-border hover:border-gold-400/40 shadow-xl min-h-[380px] lg:min-h-[420px]"
+      className="card-premium group overflow-hidden flex flex-col h-full backdrop-blur-md transition-all cursor-pointer border-earth-border hover:border-gold-400/40 shadow-xl min-h-[380px] lg:min-h-[420px]"
       style={{
         borderColor: accent.border,
         backgroundColor: accent.bg,

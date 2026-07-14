@@ -219,6 +219,7 @@ public class AiController {
         return keys[0].trim();
     }
 
+    @SuppressWarnings("unchecked")
     private String callGeminiWithKey(Map<String, Object> geminiPayload, String apiKey) throws Exception {
         if (apiKey == null || apiKey.trim().isEmpty()) {
             throw new IllegalArgumentException("API key is missing");
@@ -254,6 +255,7 @@ public class AiController {
         throw (lastEx != null ? lastEx : new Exception("Empty candidates list from Gemini"));
     }
 
+    @SuppressWarnings("unchecked")
     @PostMapping("/analyze-crop")
     public ResponseEntity<Map<String, Object>> analyzeCrop(@RequestBody Map<String, Object> body) {
         String[] keys = (geminiApiKeysString == null || geminiApiKeysString.trim().isEmpty()) 

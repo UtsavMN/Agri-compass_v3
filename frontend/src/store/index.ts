@@ -18,6 +18,7 @@ export interface Profile {
   profile_picture_url?: string | null;
   cover_photo_url?: string | null;
   created_at?: string | null;
+  preferences?: string | null;
 }
 
 export const MOCK_USERS: any[] = [];
