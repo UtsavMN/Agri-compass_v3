@@ -22,12 +22,25 @@ const LEAF_IMAGES = [
 
 export function FallingLeaves() {
   const [leaves, setLeaves] = useState<LeafProps[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     // Generate an initial set of leaves
     const generateLeaves = () => {
       const newLeaves: LeafProps[] = [];
-      const numLeaves = 15; // Subtle amount
+      const numLeaves = isMobile ? 6 : 15; // Reduced amount on mobile
       for (let i = 0; i < numLeaves; i++) {
         newLeaves.push(createLeaf(i));
       }
@@ -50,7 +63,7 @@ export function FallingLeaves() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isMobile]);
 
   const createLeaf = (id: number): LeafProps => {
     // Randomize starting x position (favoring edges: 0-20% and 80-100%)

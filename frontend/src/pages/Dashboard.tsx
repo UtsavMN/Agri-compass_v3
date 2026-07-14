@@ -181,7 +181,7 @@ export default function Dashboard() {
 
         {/* ===== MAIN CONTENT GRID ===== */}
         <div className="relative w-full">
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-20">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-20 space-y-8 md:space-y-20">
           {/* Popular crops grid */}
           <AnimatedSection delay={0.15}>
             <div>
@@ -200,9 +200,9 @@ export default function Dashboard() {
                 <CropCardShimmer count={6} />
               ) : crops.length > 0 ? (
                 <StaggerContainer staggerDelay={0.05}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 -mx-4 px-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 md:mx-0 md:px-0">
                     {crops.map((crop) => (
-                      <StaggerItem key={crop.id}>
+                      <StaggerItem key={crop.id} className="snap-center shrink-0 w-[85%] max-w-[320px] md:w-auto h-full">
                         <TiltCard className="h-full">
                           <CropCardPremium crop={crop} />
                         </TiltCard>
@@ -257,7 +257,7 @@ export default function Dashboard() {
               
               <button 
                 onClick={() => navigate('/market-prices')} 
-                className="mt-6 text-[11px] text-[#c49a2a] hover:text-[#d4aa3a] text-left transition-colors uppercase tracking-widest font-bold"
+                className="mt-6 text-[11px] text-[#c49a2a] hover:text-[#d4aa3a] text-left transition-colors uppercase tracking-widest font-bold min-h-[44px] flex items-center"
               >
                 Go to Market Prices →
               </button>
@@ -313,7 +313,7 @@ export default function Dashboard() {
               
               <button 
                 onClick={() => navigate('/community')} 
-                className="mt-6 text-[11px] text-[#c49a2a] hover:text-[#d4aa3a] text-left transition-colors uppercase tracking-widest font-bold"
+                className="mt-6 text-[11px] text-[#c49a2a] hover:text-[#d4aa3a] text-left transition-colors uppercase tracking-widest font-bold min-h-[44px] flex items-center"
               >
                 Open Kisan Feed →
               </button>

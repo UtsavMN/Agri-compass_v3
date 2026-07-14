@@ -168,15 +168,15 @@ export default function Crops() {
         </ScrollReveal>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, i) => (
-               <div key={i} className="h-96 rounded-3xl bg-earth-elevated/20 animate-pulse border border-earth-border" />
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            {[...Array(12)].map((_, i) => (
+               <div key={i} className="h-64 sm:h-96 rounded-3xl bg-earth-elevated/20 animate-pulse border border-earth-border" />
             ))}
           </div>
         ) : crops.length > 0 ? (
-          <div className="space-y-12">
+          <div className="space-y-8 sm:space-y-12">
             <StaggerContainer staggerDelay={0.05}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {crops.map((crop) => (
                   <StaggerItem key={crop.id}>
                     <CropCardPremium crop={crop} />

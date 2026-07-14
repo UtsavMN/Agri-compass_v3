@@ -57,14 +57,14 @@ interface HeroStatCardProps {
 
 const HeroStatCard = ({ icon, label, value, sub, onClick }: HeroStatCardProps) => (
   <TiltCard className="h-full">
-    <div onClick={onClick} className="card-premium bg-[#1a1a14]/90 backdrop-blur-xl border-t-2 border-gold-400/80 p-6 min-h-[5.5rem] flex items-center gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
-      <div className="w-10 h-10 rounded-xl bg-gold-400/20 flex items-center justify-center flex-shrink-0">
-        <span className="text-gold-400">{icon}</span>
+    <div onClick={onClick} className="card-premium bg-[#1a1a14]/90 backdrop-blur-xl border-t-2 border-gold-400/80 p-2 sm:p-3 md:p-6 min-h-[5rem] md:min-h-[5.5rem] flex flex-col md:flex-row items-center md:items-start justify-center md:justify-start text-center md:text-left gap-1.5 md:gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
+      <div className="w-6 h-6 md:w-10 md:h-10 rounded-md md:rounded-xl bg-gold-400/20 flex items-center justify-center flex-shrink-0">
+        <span className="text-gold-400 scale-75 md:scale-100 flex items-center justify-center">{icon}</span>
       </div>
-      <div>
-        <p className="text-[10px] font-black text-gold-100/90 uppercase tracking-widest mb-1">{label}</p>
-        <p className="text-[20px] font-black text-white leading-tight">{value}</p>
-        <p className="text-[11px] text-gold-100/70 mt-0.5 font-bold uppercase tracking-wider">{sub}</p>
+      <div className="w-full overflow-hidden flex flex-col items-center md:items-start">
+        <p className="text-[6px] sm:text-[8px] md:text-[10px] font-black text-gold-100/90 uppercase tracking-[0.1em] md:tracking-widest md:mb-1 truncate w-full">{label}</p>
+        <p className="text-[11px] sm:text-[14px] md:text-[20px] font-black text-white leading-tight truncate w-full">{value}</p>
+        <p className="text-[6px] sm:text-[8px] md:text-[11px] text-gold-100/70 mt-0.5 font-bold uppercase tracking-wider truncate w-full">{sub}</p>
       </div>
     </div>
   </TiltCard>
@@ -162,7 +162,7 @@ export const HeroCarousel = ({
   const hero = heroes[current];
 
   return (
-    <section ref={ref} className="relative w-full pt-16 md:pt-28 pb-20 md:pb-32 overflow-hidden flex flex-col justify-center items-center">
+    <section ref={ref} className="relative w-full pt-16 md:pt-28 pb-32 md:pb-32 overflow-hidden flex flex-col justify-center items-center">
       {/* Background image with smooth crossfade and Parallax */}
       <motion.div style={{ y }} className="absolute inset-0">
         <AnimatePresence mode="popLayout">
@@ -190,9 +190,9 @@ export const HeroCarousel = ({
 
       {/* Hero content - constrained width to match layout */}
       <motion.div style={{ opacity }} className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="grid grid-cols-2 lg:grid-cols-12 gap-4 lg:gap-8 items-center">
           {/* LEFT - cols 7 */}
-          <div className="lg:col-span-7 text-left min-h-[300px] flex flex-col justify-center">
+          <div className="col-span-1 lg:col-span-7 text-left min-h-[150px] lg:min-h-[300px] flex flex-col justify-center">
             <AnimatePresence mode="wait">
               <motion.div
                 key={current}
@@ -201,42 +201,42 @@ export const HeroCarousel = ({
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5 }}
               >
-                <span className="inline-block bg-gold-400/10 border border-gold-400/30 text-gold-400 text-[10px] font-black uppercase tracking-[0.25em] px-3.5 py-1.5 rounded-full mb-8 backdrop-blur-sm">
+                <span className="inline-block bg-gold-400/10 border border-gold-400/30 text-gold-400 text-[8px] lg:text-[10px] font-black uppercase tracking-[0.1em] lg:tracking-[0.25em] px-2 py-1 lg:px-3.5 lg:py-1.5 rounded-full mb-4 lg:mb-8 backdrop-blur-sm line-clamp-1 lg:line-clamp-none">
                   {hero.badge}
                 </span>
 
-                <div className="relative mb-4 max-w-3xl">
+                <div className="relative mb-2 lg:mb-4 max-w-3xl">
 
-                  <h1 className="relative text-3xl md:text-5xl lg:text-6xl font-serif font-black text-[#F5F0E8] tracking-tight leading-none z-10">
+                  <h1 className="relative text-xl sm:text-3xl md:text-5xl lg:text-6xl font-serif font-black text-[#F5F0E8] tracking-tight leading-none z-10">
                     {hero.headline}<br />
                     <span className="text-[#c49a2a]">{hero.headlineGold}</span>
                   </h1>
                 </div>
 
-                <p className="text-sm md:text-base text-[#F5F0E8]/60 max-w-xl mb-8 leading-relaxed font-medium">
+                <p className="text-[10px] lg:text-base text-[#F5F0E8]/60 max-w-xl mb-4 lg:mb-8 leading-snug lg:leading-relaxed font-medium line-clamp-3 lg:line-clamp-none">
                   {hero.subtext}
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+                <div className="flex flex-col lg:flex-row gap-2 lg:gap-4 w-full sm:w-auto">
                   {hero.ctaPrimary.href.startsWith('http') ? (
                     <a href={hero.ctaPrimary.href} target="_blank" rel="noopener noreferrer"
-                      className="w-full sm:w-auto bg-gradient-to-r from-[#C9A84C] to-[#D4B86A] text-[#0A0A0A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(201,168,76,0.4)]">
+                      className="w-full sm:w-auto bg-gradient-to-r from-[#C9A84C] to-[#D4B86A] text-[#0A0A0A] font-bold rounded-xl px-4 lg:px-8 h-8 lg:h-12 flex items-center justify-center text-[10px] lg:text-xs uppercase tracking-widest transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(201,168,76,0.4)]">
                       {hero.ctaPrimary.label}
                     </a>
                   ) : (
                     <Link to={hero.ctaPrimary.href}
-                      className="w-full sm:w-auto bg-gradient-to-r from-[#C9A84C] to-[#D4B86A] text-[#0A0A0A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(201,168,76,0.4)]">
+                      className="w-full sm:w-auto bg-gradient-to-r from-[#C9A84C] to-[#D4B86A] text-[#0A0A0A] font-bold rounded-xl px-4 lg:px-8 h-8 lg:h-12 flex items-center justify-center text-[10px] lg:text-xs uppercase tracking-widest transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(201,168,76,0.4)]">
                       {hero.ctaPrimary.label}
                     </Link>
                   )}
                   {hero.ctaSecondary.href.startsWith('http') ? (
                     <a href={hero.ctaSecondary.href} target="_blank" rel="noopener noreferrer"
-                      className="w-full sm:w-auto bg-transparent border border-[#C9A84C]/40 text-[#C9A84C] hover:text-[#D4B86A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest hover:bg-[#C9A84C]/10 transition-all">
+                      className="w-full sm:w-auto bg-transparent border border-[#C9A84C]/40 text-[#C9A84C] hover:text-[#D4B86A] font-bold rounded-xl px-4 lg:px-8 h-8 lg:h-12 flex items-center justify-center text-[10px] lg:text-xs uppercase tracking-widest hover:bg-[#C9A84C]/10 transition-all">
                       {hero.ctaSecondary.label}
                     </a>
                   ) : (
                     <Link to={hero.ctaSecondary.href}
-                      className="w-full sm:w-auto bg-transparent border border-[#C9A84C]/40 text-[#C9A84C] hover:text-[#D4B86A] font-bold rounded-xl px-8 h-12 flex items-center justify-center text-xs uppercase tracking-widest hover:bg-[#C9A84C]/10 transition-all">
+                      className="w-full sm:w-auto bg-transparent border border-[#C9A84C]/40 text-[#C9A84C] hover:text-[#D4B86A] font-bold rounded-xl px-4 lg:px-8 h-8 lg:h-12 flex items-center justify-center text-[10px] lg:text-xs uppercase tracking-widest hover:bg-[#C9A84C]/10 transition-all">
                       {hero.ctaSecondary.label}
                     </Link>
                   )}
@@ -246,8 +246,8 @@ export const HeroCarousel = ({
           </div>
 
           {/* RIGHT — Karnataka map - cols 5 */}
-          <div className="lg:col-span-5 w-full flex justify-center lg:justify-end">
-            <div className="w-full max-w-[450px]">
+          <div className="col-span-1 lg:col-span-5 w-full flex justify-center lg:justify-end h-full items-center">
+            <div className="w-full max-w-[150px] lg:max-w-[450px]">
               <KarnatakaMap />
             </div>
           </div>
@@ -269,8 +269,8 @@ export const HeroCarousel = ({
         </div>
 
         {/* Bottom stat cards - floating overlay pattern */}
-        <div className="-mb-24 mt-8 relative z-20 w-full">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="-mb-24 mt-8 relative z-20 w-full px-1 sm:px-0">
+          <div className="grid grid-cols-3 gap-2 md:gap-6">
             <HeroStatCard icon={<Cloud size={18} />} label="Current Weather" value={`${temp}°C`} sub={condition} />
             <HeroStatCard icon={<Users size={18} />} label="Active Users" value={String(userCount)} sub="Farmers connected" />
             <HeroStatCard 
