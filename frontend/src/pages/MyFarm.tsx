@@ -418,7 +418,7 @@ export default function MyFarm() {
                     <SeasonAdvisoryCard district={selectedDistrict} />
 
                     {/* Cultivation Optimization */}
-                    <Card className="card-premium lg:col-span-2 overflow-hidden border-none shadow-premium bg-earth-elevated/40">
+                    <Card className="card-premium lg:col-span-2 overflow-hidden border-none shadow-premium">
                       <CardHeader className="bg-gold-400/5 p-6 border-b border-gold-400/10">
                         <CardTitle className="text-gold-100 font-black tracking-tight flex items-center text-lg">
                           <Shield className="h-5 w-5 mr-3 text-gold-400" />
@@ -500,7 +500,7 @@ export default function MyFarm() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                       {farms.map((farm) => (
                         <StaggerItem key={farm.id}>
-                          <Card className="card-premium group hover:scale-[1.02] transition-all duration-500 border-earth-border/50 bg-earth-elevated/30">
+                          <Card className="card-premium group hover:scale-[1.02] transition-all duration-500 border-earth-border/50">
                             <CardHeader className="pb-4">
                               <div className="flex justify-between items-start">
                                 <div className="flex-1">

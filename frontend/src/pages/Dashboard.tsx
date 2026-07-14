@@ -56,7 +56,7 @@ interface HeroStatCardProps {
 
 const _HeroStatCard = ({ icon, label, value, sub, onClick }: HeroStatCardProps) => (
   <TiltCard className="h-full animate-fade-in" onClick={onClick}>
-    <div className="card-premium bg-[#12120e]/85 backdrop-blur-md border-t-2 border-gold-400/80 p-6 min-h-[5.5rem] flex items-center gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
+    <div className="card-premium border-t-2 border-gold-400/80 p-6 min-h-[5.5rem] flex items-center gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
       <div className="w-10 h-10 rounded-xl bg-gold-400/10 flex items-center justify-center flex-shrink-0">
         <span className="text-gold-400">{icon}</span>
       </div>

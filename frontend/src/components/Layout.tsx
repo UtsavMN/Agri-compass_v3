@@ -105,18 +105,29 @@ export default function Layout({
     };
   }, [user]);
 
+  // Listen to profile preferences for outdoor mode
   useEffect(() => {
+    let prefs: any = {};
     if (profile?.preferences) {
       try {
-        const prefs = JSON.parse(profile.preferences);
-        if (prefs.outdoorMode) {
-          document.body.classList.add('outdoor-mode-active');
-        } else {
-          document.body.classList.remove('outdoor-mode-active');
-        }
+        prefs = JSON.parse(profile.preferences);
       } catch (e) {
         // ignore
       }
+    }
+    
+    // Check localStorage fallback
+    const localPrefsStr = localStorage.getItem('agri_compass_local_prefs');
+    if (localPrefsStr) {
+      try {
+        prefs = { ...prefs, ...JSON.parse(localPrefsStr) };
+      } catch (e) {}
+    }
+
+    if (prefs.outdoorMode) {
+      document.body.classList.add('outdoor-mode-active');
+    } else {
+      document.body.classList.remove('outdoor-mode-active');
     }
   }, [profile?.preferences]);
 

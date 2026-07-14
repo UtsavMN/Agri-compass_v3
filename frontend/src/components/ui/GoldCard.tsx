@@ -14,8 +14,8 @@ export const GoldCard = ({ children, className, onClick }: GoldCardProps) => (
     whileHover="hover"
     onClick={onClick}
     className={`
-      bg-[#111111] border border-[#1E1E1E] rounded-xl p-5
-      hover:border-[#C9A84C]/30 transition-colors duration-300
+      glass-card p-5
+      transition-colors duration-300
       cursor-pointer ${className}
     `}
   >

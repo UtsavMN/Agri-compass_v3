@@ -20,7 +20,7 @@ export const SeasonAdvisoryCard = ({ district }: { district: string }) => {
   }
 
   return (
-    <div className="relative p-6 h-full border border-earth-border/60 bg-[#0f0f0b]/80 backdrop-blur-xl rounded-2xl overflow-hidden shadow-premium group hover:border-gold-400/30 transition-colors">
+    <div className="relative p-6 h-full border border-earth-border/60 glass-card rounded-2xl overflow-hidden shadow-premium group hover:border-gold-400/30 transition-colors">
       {/* Decorative gradient orb */}
       <div className="absolute top-0 right-0 w-48 h-48 bg-gold-400/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none group-hover:bg-gold-400/10 transition-colors duration-700" />
 
