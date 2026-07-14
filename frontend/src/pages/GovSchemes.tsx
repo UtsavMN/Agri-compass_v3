@@ -233,9 +233,26 @@ export default function GovSchemes() {
         scheme.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         scheme.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
         scheme.benefit.toLowerCase().includes(searchTerm.toLowerCase());
-      return isLevelMatch && isSearchMatch;
+        
+      const schemeText = `${scheme.category} ${scheme.benefit} ${scheme.eligibility}`.toLowerCase();
+      
+      const isBenefitMatch = filters.benefit === 'all' || 
+          (filters.benefit === 'financial' && (schemeText.includes('cash') || schemeText.includes('financial') || schemeText.includes('₹') || schemeText.includes('rs'))) ||
+          (filters.benefit === 'subsidy' && (schemeText.includes('subsidy') || scheme.subsidyPercent != null)) ||
+          (filters.benefit === 'insurance' && schemeText.includes('insurance')) ||
+          (filters.benefit === 'training' && schemeText.includes('training')) ||
+          (filters.benefit === 'infrastructure' && schemeText.includes('infrastructure'));
+
+      const isCasteMatch = filters.caste === 'all' || schemeText.includes(filters.caste) || (!schemeText.includes('sc') && !schemeText.includes('st') && !schemeText.includes('minority'));
+
+      const isLandMatch = filters.landSize === 'all' || 
+          (filters.landSize === 'marginal' && (schemeText.includes('marginal') || schemeText.includes('hectare'))) ||
+          (filters.landSize === 'small' && (schemeText.includes('small') || schemeText.includes('acres') || schemeText.includes('hectare'))) ||
+          filters.landSize === 'large';
+
+      return isLevelMatch && isSearchMatch && isBenefitMatch && isCasteMatch && isLandMatch;
     });
-  }, [activeTab, searchTerm]);
+  }, [activeTab, searchTerm, filters]);
 
   const personalizedSchemes = useMemo(() => {
     return GOVERNMENT_SCHEMES

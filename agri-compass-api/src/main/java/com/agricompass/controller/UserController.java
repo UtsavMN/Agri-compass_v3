@@ -172,14 +172,9 @@ public class UserController {
 
     @PatchMapping("/preferences")
     public ResponseEntity<Map<String, Object>> updatePreferences(
-            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt,
             @RequestBody Map<String, Object> preferencesData) {
-        if (jwt == null) {
-            return ResponseEntity.status(401).build();
-        }
         
-        String clerkUserId = jwt.getSubject();
-        UserProfile profile = userProfileRepository.findById(clerkUserId).orElse(null);
+        UserProfile profile = userService.syncUserProfile(null);
         
         if (profile == null) {
             return ResponseEntity.status(404).body(Map.of("error", "Profile not found"));

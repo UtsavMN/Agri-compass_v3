@@ -53,7 +53,8 @@ function WeatherIcon({ condition, size = 24, className, ...props }: { condition:
 export default function Weather() {
   const { profile } = useUser();
   const { toast } = useToast();
-  const { selectedDistrict, setSelectedDistrict } = useDistrict();
+  const { selectedDistrict: globalDistrict } = useDistrict();
+  const [localDistrict, setLocalDistrict] = useState<string>('');
   const [districts, setDistricts] = useState<string[]>([]);
   const [weatherInfo, setWeatherInfo] = useState<{ weather: WeatherData; advisory: WeatherAdvice } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -63,21 +64,23 @@ export default function Weather() {
   }, []);
 
   useEffect(() => {
-    if (!selectedDistrict) {
-      if (profile?.location) {
-        setSelectedDistrict(profile.location);
+    if (!localDistrict) {
+      if (globalDistrict) {
+        setLocalDistrict(globalDistrict);
+      } else if (profile?.location) {
+        setLocalDistrict(profile.location);
       } else if (districts.length > 0) {
-        setSelectedDistrict('Bengaluru Urban');
+        setLocalDistrict('Bengaluru Urban');
       }
     }
-  }, [profile?.location, selectedDistrict, setSelectedDistrict, districts]);
+  }, [profile?.location, globalDistrict, localDistrict, districts]);
 
   useEffect(() => {
-    if (selectedDistrict) {
+    if (localDistrict) {
       loadWeatherData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }
-  }, [selectedDistrict]);
+  }, [localDistrict]);
 
   const loadDistricts = async () => {
     try {
@@ -100,10 +103,10 @@ export default function Weather() {
   };
 
   const loadWeatherData = async () => {
-    if (!selectedDistrict) return;
+    if (!localDistrict) return;
     setLoading(true);
     try {
-      const result = await WeatherAPI.getWeatherForDistrict(selectedDistrict);
+      const result = await WeatherAPI.getWeatherForDistrict(localDistrict);
       if (result) {
         setWeatherInfo({
           weather: result.weather,
@@ -162,7 +165,7 @@ export default function Weather() {
             {/* Location Selector */}
             <div className="relative w-full md:w-64">
               <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gold-400" />
-              <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
+              <Select value={localDistrict} onValueChange={setLocalDistrict}>
                 <SelectTrigger className="pl-12 bg-earth-elevated/40 border-earth-border text-gold-100 focus:border-gold-400 h-12 rounded-xl text-xs">
                   <SelectValue placeholder="Select your district..." />
                 </SelectTrigger>
@@ -220,7 +223,7 @@ export default function Weather() {
 
                 <div className="relative z-10">
                   <p className="text-[11px] text-[#a09880] uppercase tracking-widest mb-2 font-semibold">
-                    Current Meteorology · {selectedDistrict}, Karnataka
+                    Current Meteorology · {localDistrict}, Karnataka
                   </p>
                   <div className="text-[72px] font-bold text-[#f0ece0] leading-none mb-1 tracking-tighter">
                     {weatherInfo.weather.temperature}°C
@@ -305,7 +308,7 @@ export default function Weather() {
                     <CardTitle className="text-sm text-gold-400 font-black uppercase tracking-widest flex items-center gap-2">
                       <Info className="h-4 w-4 animate-bounce-gentle" /> Localized Agronomic Advisory
                     </CardTitle>
-                    <CardDescription className="text-gold-100/40">Farming directives compiled specifically for {selectedDistrict}</CardDescription>
+                    <CardDescription className="text-gold-100/40">Farming directives compiled specifically for {localDistrict}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-2">
                     <div className="bg-earth-main/40 border border-earth-border/40 p-5 rounded-2xl mb-6">

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useUser } from "@/store";
+import { useUser, useDistrict } from "@/store";
 import { DISTRICTS } from "@/data/masterData";
 import { apiPut } from "@/lib/httpClient";
 
 export function EditProfileModal({ onClose }: { onClose: () => void }) {
   const { profile, updateProfile } = useUser();
+  const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: profile?.full_name || "",
@@ -25,7 +26,10 @@ export function EditProfileModal({ onClose }: { onClose: () => void }) {
     setLoading(true);
     try {
       const updated = await apiPut('/api/profiles', formData);
-      updateProfile(updated);
+      await updateProfile(updated);
+      if (updated.district && updated.district !== selectedDistrict) {
+        setSelectedDistrict(updated.district);
+      }
       onClose();
     } catch (e) {
       console.error("Failed to update profile", e);
