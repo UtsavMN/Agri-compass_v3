@@ -128,9 +128,8 @@ export default function Layout({
           backgroundImage: "url('/plant-background-mh4y9mexexlv960o.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-          opacity: 0.12,
-          filter: 'brightness(0.5) sepia(0.8) hue-rotate(10deg) saturate(1.5)'
+          opacity: 0.25,
+          filter: 'brightness(0.8) sepia(0.6) hue-rotate(10deg) saturate(1.2)'
         }}
       />
       {/* ===== FLOATING GLASS NAVBAR ===== */}
@@ -175,7 +174,7 @@ export default function Layout({
               variant="ghost"
               size="sm"
               onClick={toggleLanguage}
-              className="h-8 px-2 rounded-full border border-earth-border/40 text-gold-100/60 hover:text-gold-200 flex items-center gap-1.5 bg-[#1a1a14]/60 hover:bg-[#1a1a14]/90 transition-colors"
+              className="hidden sm:flex h-8 px-2 rounded-full border border-earth-border/40 text-gold-100/60 hover:text-gold-200 items-center gap-1.5 bg-[#1a1a14]/60 hover:bg-[#1a1a14]/90 transition-colors"
               title="Toggle Language / ಭಾಷೆಯನ್ನು ಬದಲಾಯಿಸಿ"
             >
               <Languages className="h-3.5 w-3.5 text-gold-400" />
@@ -187,7 +186,7 @@ export default function Layout({
               variant="ghost"
               size="sm"
               onClick={() => setIsVoiceOpen(true)}
-              className="h-8 px-2.5 rounded-full border border-earth-border/40 text-gold-100/60 hover:text-gold-200 flex items-center gap-1.5 bg-[#1a1a14]/60 hover:bg-[#1a1a14]/90 transition-colors animate-pulse"
+              className="hidden sm:flex h-8 px-2.5 rounded-full border border-earth-border/40 text-gold-100/60 hover:text-gold-200 items-center gap-1.5 bg-[#1a1a14]/60 hover:bg-[#1a1a14]/90 transition-colors animate-pulse"
               title="Voice Commands / ಧ್ವನಿ ಆಜ್ಞೆಗಳು"
             >
               <Mic className="h-3.5 w-3.5 text-gold-400" />
@@ -202,7 +201,7 @@ export default function Layout({
             {user && (
               <button
                 onClick={() => navigate('/messages')}
-                className="relative p-2 rounded-lg hover:bg-[#C9A84C]/5 transition-colors"
+                className="relative p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center rounded-lg hover:bg-[#C9A84C]/5 transition-colors"
                 aria-label="Messages">
                 <MessageSquare className="h-5 w-5 text-[#F5F0E8]" />
                 {unreadCount > 0 && (
@@ -217,16 +216,16 @@ export default function Layout({
             {user && (
               <button
                 onClick={() => navigate('/profile')}
-                className="h-8 w-8 rounded-full overflow-hidden border border-earth-border/60 hover:border-gold-400/50 transition-colors focus:outline-none"
+                className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:h-8 sm:w-8 flex items-center justify-center rounded-full overflow-hidden border border-earth-border/60 hover:border-gold-400/50 transition-colors focus:outline-none"
               >
-                <img src={user.imageUrl} alt="Profile" className="h-full w-full object-cover" />
+                <img src={user.imageUrl} alt="Profile" className="h-8 w-8 rounded-full object-cover" />
               </button>
             )}
 
             {/* Options Menu (Kebab) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="h-8 w-8 rounded-full border border-earth-border/40 hover:border-gold-400/50 text-gold-100/60 hover:text-gold-200 bg-[#1a1a14]/60 hover:bg-[#1a1a14]/90 transition-colors flex items-center justify-center focus:outline-none">
+                <button className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:h-8 sm:w-8 rounded-full border border-earth-border/40 hover:border-gold-400/50 text-gold-100/60 hover:text-gold-200 bg-[#1a1a14]/60 hover:bg-[#1a1a14]/90 transition-colors flex items-center justify-center focus:outline-none">
                   <MoreVertical className="h-4 w-4" />
                 </button>
               </DropdownMenuTrigger>
@@ -279,34 +278,15 @@ export default function Layout({
                 </div>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1 rounded-lg text-gold-100/60 hover:text-gold-200"
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-gold-100/60 hover:text-gold-200"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              {/* Navigation links */}
-              <div className="flex-1 overflow-y-auto space-y-1 py-2">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        "w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold tracking-widest uppercase transition-all duration-200",
-                        isActive
-                          ? "bg-gold-400/10 text-gold-400 border border-gold-400/20"
-                          : "text-gold-100/60 hover:text-gold-200 hover:bg-earth-elevated/20"
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
+              {/* Navigation links removed from drawer (now in bottom nav) */}
+              <div className="flex-1 overflow-y-auto py-2">
+                {/* Reserved for future drawer items */}
               </div>
 
               {/* Bottom Info / Action Drawer Area */}
@@ -321,7 +301,7 @@ export default function Layout({
                       toggleLanguage();
                       setMobileMenuOpen(false);
                     }}
-                    className="border-gold-400/30 text-gold-400 hover:bg-gold-400/10 text-[10px] font-bold uppercase rounded-lg"
+                    className="min-h-[44px] border-gold-400/30 text-gold-400 hover:bg-gold-400/10 text-[10px] font-bold uppercase rounded-lg"
                   >
                     {language === 'en' ? 'English (ಕನ್ನಡ)' : 'ಕನ್ನಡ (English)'}
                   </Button>
@@ -337,7 +317,7 @@ export default function Layout({
                       setIsVoiceOpen(true);
                       setMobileMenuOpen(false);
                     }}
-                    className="border-gold-400/30 text-gold-400 hover:bg-gold-400/10 text-[10px] font-bold uppercase rounded-lg flex items-center gap-1.5"
+                    className="min-h-[44px] border-gold-400/30 text-gold-400 hover:bg-gold-400/10 text-[10px] font-bold uppercase rounded-lg flex items-center gap-1.5"
                   >
                     <Mic className="h-3.5 w-3.5 text-gold-400" />
                     ಮಾತನಾಡಿ / Speak
@@ -353,7 +333,7 @@ export default function Layout({
                       navigate('/profile');
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full bg-[#1a1a14] border border-earth-border/60 hover:bg-earth-card text-gold-100 text-xs font-black uppercase tracking-widest py-3 rounded-xl"
+                    className="min-h-[44px] w-full bg-[#1a1a14] border border-earth-border/60 hover:bg-earth-card text-gold-100 text-xs font-black uppercase tracking-widest py-3 rounded-xl"
                   >
                     Profile Settings
                   </Button>
@@ -362,13 +342,13 @@ export default function Layout({
                       openUserProfile();
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full bg-[#1a1a14] border border-earth-border/60 hover:bg-earth-card text-gold-100 text-xs font-black uppercase tracking-widest py-3 rounded-xl"
+                    className="min-h-[44px] w-full bg-[#1a1a14] border border-earth-border/60 hover:bg-earth-card text-gold-100 text-xs font-black uppercase tracking-widest py-3 rounded-xl"
                   >
                     Manage Account (Clerk)
                   </Button>
                   <Button
                     onClick={handleSignOut}
-                    className="w-full bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 text-xs font-black uppercase tracking-widest py-3 rounded-xl"
+                    className="min-h-[44px] w-full bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 text-xs font-black uppercase tracking-widest py-3 rounded-xl"
                   >
                     Sign Out
                   </Button>
@@ -386,8 +366,8 @@ export default function Layout({
 
       {/* ===== MOBILE BOTTOM NAVIGATION BAR ===== */}
       {!hideHeader && (
-        <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl border-t border-earth-border/40 pb-2 pt-2 px-2 flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-          {navItems.slice(0, 4).map((item) => {
+        <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl border-t border-earth-border/40 pb-2 pt-2 px-2 flex items-center justify-start sm:justify-around overflow-x-auto snap-x shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+          {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
@@ -395,7 +375,7 @@ export default function Layout({
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex flex-col items-center justify-center p-2 rounded-xl transition-all",
+                  "snap-center shrink-0 min-h-[48px] min-w-[64px] flex flex-col items-center justify-center p-2 rounded-xl transition-all",
                   isActive ? "text-gold-400" : "text-gold-100/50 hover:text-gold-100"
                 )}
               >
@@ -406,7 +386,7 @@ export default function Layout({
           })}
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="flex flex-col items-center justify-center p-2 rounded-xl text-gold-100/50 hover:text-gold-100 transition-all"
+            className="snap-center shrink-0 min-h-[48px] min-w-[64px] flex flex-col items-center justify-center p-2 rounded-xl text-gold-100/50 hover:text-gold-100 transition-all ml-auto"
           >
             <Menu className="h-5 w-5 mb-1" />
             <span className="text-[9px] font-bold uppercase tracking-wider">Menu</span>
