@@ -77,7 +77,7 @@ export default function Layout({
     if (!user) return;
     let timeoutId: number;
     let isMounted = true;
-    
+
     const fetchUnread = () => {
       if (!isMounted) return;
       apiGet('/api/conversations/unread-count', null)
@@ -96,15 +96,15 @@ export default function Layout({
           }
         });
     };
-    
+
     fetchUnread();
-    
+
     return () => {
       isMounted = false;
       if (timeoutId) window.clearTimeout(timeoutId);
     };
   }, [user]);
-  
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
@@ -120,7 +120,19 @@ export default function Layout({
   ];
 
   return (
-    <div className="min-h-screen bg-earth-main flex flex-col text-[#e2dcd0]">
+    <div className="min-h-screen bg-earth-main flex flex-col text-[#e2dcd0] relative overflow-hidden">
+      {/* Global Background */}
+      <div
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: "url('/plant-background-mh4y9mexexlv960o.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          opacity: 0.12,
+          filter: 'brightness(0.5) sepia(0.8) hue-rotate(10deg) saturate(1.5)'
+        }}
+      />
       {/* ===== FLOATING GLASS NAVBAR ===== */}
       {!hideHeader && (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-earth-main/80 backdrop-blur-xl border-b border-earth-border/40 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between transition-all duration-300">
@@ -145,8 +157,8 @@ export default function Layout({
                   to={item.path}
                   className={cn(
                     "transition-all pb-1 uppercase font-black border-b-2",
-                    isActive 
-                      ? "text-gold-400 border-gold-400" 
+                    isActive
+                      ? "text-gold-400 border-gold-400"
                       : "text-gold-100/50 border-transparent hover:text-gold-200 hover:border-gold-400/20"
                   )}
                 >
@@ -203,7 +215,7 @@ export default function Layout({
 
             {/* Profile Avatar Button */}
             {user && (
-              <button 
+              <button
                 onClick={() => navigate('/profile')}
                 className="h-8 w-8 rounded-full overflow-hidden border border-earth-border/60 hover:border-gold-400/50 transition-colors focus:outline-none"
               >
@@ -265,7 +277,7 @@ export default function Layout({
                   <Sprout className="h-5 w-5 text-gold-400" />
                   <span className="font-bold text-gradient-gold text-sm tracking-widest font-sans">AGRI COMPASS</span>
                 </div>
-                <button 
+                <button
                   onClick={() => setMobileMenuOpen(false)}
                   className="p-1 rounded-lg text-gold-100/60 hover:text-gold-200"
                 >
@@ -285,8 +297,8 @@ export default function Layout({
                       onClick={() => setMobileMenuOpen(false)}
                       className={cn(
                         "w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold tracking-widest uppercase transition-all duration-200",
-                        isActive 
-                          ? "bg-gold-400/10 text-gold-400 border border-gold-400/20" 
+                        isActive
+                          ? "bg-gold-400/10 text-gold-400 border border-gold-400/20"
                           : "text-gold-100/60 hover:text-gold-200 hover:bg-earth-elevated/20"
                       )}
                     >
@@ -392,7 +404,7 @@ export default function Layout({
               </Link>
             );
           })}
-          <button 
+          <button
             onClick={() => setMobileMenuOpen(true)}
             className="flex flex-col items-center justify-center p-2 rounded-xl text-gold-100/50 hover:text-gold-100 transition-all"
           >
@@ -407,13 +419,13 @@ export default function Layout({
 
       {/* Voice Command Dialog Overlay */}
       <VoiceCommandModal isOpen={isVoiceOpen} onClose={() => setIsVoiceOpen(false)} />
-      
+
       {/* Help Modal Overlay */}
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-      
+
       {/* Settings Modal Overlay */}
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-      
+
       {/* Global Ambient Animation */}
       <FallingLeaves />
     </div>
