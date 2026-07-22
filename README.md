@@ -16,12 +16,17 @@ Agri-Compass is a comprehensive platform built to empower farmers with real-time
 ### Backend
 - **Framework:** Spring Boot 3 (Java 17)
 - **Build Tool:** Maven
-- **Database:** SQLite (local) / Turso (production)
+- **Database:** PostgreSQL (production / Neon)
 - **Authentication:** Clerk (OAuth2 Resource Server)
+- **Real-Time Communication:** Spring WebSockets + STOMP
 - **External Services:** Gmail SMTP (email notifications)
 
 ## ✨ Features
-- **AI Chatbot Advisory:** Powered by Gemini AI for contextual farming advice.
+- **Dvani Voice Command:** Fully hands-free app navigation and agricultural querying.
+- **AI Krishi Mitra Chatbot:** Powered by Gemini AI for contextual farming advice.
+- **Smart Fertilizer Recommendation:** Analyze soil NPK values for precise nutrient remediation.
+- **Crop Recommendation Engine:** AI-scored suitability based on local climate and soil health.
+- **Community & Messaging:** Real-time peer-to-peer chat via WebSockets and an interactive social feed.
 - **Market & Mandi Prices:** Live integrations with Data.gov.in.
 - **Real-Time Weather:** Hyper-local forecasts powered by OpenWeather.
 - **Auth & Security:** Secure JWT-based authentication via Clerk.
