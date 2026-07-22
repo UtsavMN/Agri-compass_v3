@@ -3,6 +3,10 @@ export interface WeatherData {
   humidity: number;
   windSpeed: number;
   description: string;
+  uv?: number;
+  precipitation?: number;
+  visibility?: number;
+  pressure?: number;
   forecast: Array<{
     date: string;
     temp_max: number;
@@ -20,8 +24,8 @@ export interface WeatherAdvice {
 }
 
 export class WeatherAdvisor {
-  private readonly OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
-  private readonly OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
+  private readonly WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY || '9445b4364af44639b9875034262207';
+  private readonly WEATHER_BASE_URL = 'https://api.weatherapi.com/v1';
 
   async getWeatherData(district: string): Promise<WeatherData | null> {
     try {
@@ -29,35 +33,32 @@ export class WeatherAdvisor {
       const coords = this.getDistrictCoordinates(district);
       if (!coords) return null;
 
-      // Current weather
-      const currentResponse = await fetch(
-        `${this.OPENWEATHER_BASE_URL}/weather?lat=${coords.lat}&lon=${coords.lon}&appid=${this.OPENWEATHER_API_KEY}&units=metric`
+      // Current and forecast weather in one call via WeatherAPI
+      const response = await fetch(
+        `${this.WEATHER_BASE_URL}/forecast.json?key=${this.WEATHER_API_KEY}&q=${coords.lat},${coords.lon}&days=5`
       );
 
-      if (!currentResponse.ok) {
-        throw new Error(`Weather API error: ${currentResponse.status}`);
+      if (!response.ok) {
+        throw new Error(`Weather API error: ${response.status}`);
       }
 
-      const currentData = await currentResponse.json();
-
-      // 5-day forecast
-      const forecastResponse = await fetch(
-        `${this.OPENWEATHER_BASE_URL}/forecast?lat=${coords.lat}&lon=${coords.lon}&appid=${this.OPENWEATHER_API_KEY}&units=metric`
-      );
-
-      const forecastData = await forecastResponse.json();
+      const data = await response.json();
 
       return {
-        temperature: Math.round(currentData.main.temp),
-        humidity: currentData.main.humidity,
-        windSpeed: currentData.wind.speed,
-        description: currentData.weather[0].description,
-        forecast: forecastData.list.slice(0, 5).map((item: Record<string, unknown>) => ({
-          date: new Date((item.dt as number) * 1000).toISOString().split('T')[0],
-          temp_max: Math.round((item.main as Record<string, unknown>).temp_max as number),
-          temp_min: Math.round((item.main as Record<string, unknown>).temp_min as number),
-          description: ((item.weather as unknown[])[0] as Record<string, unknown>).description as string,
-          precipitation: ((item.pop as number) * 100) // Probability of precipitation
+        temperature: Math.round(data.current.temp_c),
+        humidity: data.current.humidity,
+        windSpeed: data.current.wind_kph,
+        description: data.current.condition.text,
+        uv: data.current.uv,
+        precipitation: data.current.precip_mm,
+        visibility: data.current.vis_km,
+        pressure: data.current.pressure_mb,
+        forecast: data.forecast.forecastday.map((item: any) => ({
+          date: item.date,
+          temp_max: Math.round(item.day.maxtemp_c),
+          temp_min: Math.round(item.day.mintemp_c),
+          description: item.day.condition.text,
+          precipitation: item.day.totalprecip_mm
         }))
       };
     } catch (error) {

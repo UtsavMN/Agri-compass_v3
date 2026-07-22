@@ -85,64 +85,58 @@ public class WeatherController {
         try {
             // Check if openWeatherApiKey is configured
             if (openWeatherApiKey == null || openWeatherApiKey.trim().isEmpty() || openWeatherApiKey.contains("your-") || openWeatherApiKey.contains("api_key")) {
-                throw new RuntimeException("OpenWeather API key is not configured");
+                throw new RuntimeException("Weather API key is not configured");
             }
 
-            String currentUrl = String.format(
-                "https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&appid=%s&units=metric",
-                targetCoords[0], targetCoords[1], openWeatherApiKey
-            );
-            @SuppressWarnings("unchecked")
-            Map<String, Object> current = restTemplate.getForObject(currentUrl, Map.class);
-
             String forecastUrl = String.format(
-                "https://api.openweathermap.org/data/2.5/forecast?lat=%s&lon=%s&appid=%s&units=metric&cnt=40",
-                targetCoords[0], targetCoords[1], openWeatherApiKey
+                "https://api.weatherapi.com/v1/forecast.json?key=%s&q=%s,%s&days=5",
+                openWeatherApiKey, targetCoords[0], targetCoords[1]
             );
+            
             @SuppressWarnings("unchecked")
-            Map<String, Object> forecastRaw = restTemplate.getForObject(forecastUrl, Map.class);
+            Map<String, Object> responseMap = restTemplate.getForObject(forecastUrl, Map.class);
 
-            if (current == null || forecastRaw == null) {
+            if (responseMap == null) {
                 throw new RuntimeException("API returned null");
             }
 
             @SuppressWarnings("unchecked")
-            Map<String, Object> mainData = (Map<String, Object>) current.get("main");
+            Map<String, Object> current = (Map<String, Object>) responseMap.get("current");
             @SuppressWarnings("unchecked")
-            Map<String, Object> windData = (Map<String, Object>) current.get("wind");
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> weatherList = (List<Map<String, Object>>) current.get("weather");
+            Map<String, Object> condition = (Map<String, Object>) current.get("condition");
             
-            String description = (weatherList == null || weatherList.isEmpty()) 
-                ? "Clear" : (String) weatherList.get(0).get("description");
+            String description = condition != null && condition.get("text") != null ? (String) condition.get("text") : "Clear";
 
-            double temperature = mainData != null && mainData.get("temp") != null ? ((Number) mainData.get("temp")).doubleValue() : 25.0;
-            int humidity = mainData != null && mainData.get("humidity") != null ? ((Number) mainData.get("humidity")).intValue() : 50;
-            double windSpeed = windData != null && windData.get("speed") != null ? ((Number) windData.get("speed")).doubleValue() * 3.6 : 10.0;
+            double temperature = current.get("temp_c") != null ? ((Number) current.get("temp_c")).doubleValue() : 25.0;
+            int humidity = current.get("humidity") != null ? ((Number) current.get("humidity")).intValue() : 50;
+            double windSpeed = current.get("wind_kph") != null ? ((Number) current.get("wind_kph")).doubleValue() : 10.0;
+            double uv = current.get("uv") != null ? ((Number) current.get("uv")).doubleValue() : 0.0;
+            double precipMm = current.get("precip_mm") != null ? ((Number) current.get("precip_mm")).doubleValue() : 0.0;
+            double visKm = current.get("vis_km") != null ? ((Number) current.get("vis_km")).doubleValue() : 10.0;
+            double pressureMb = current.get("pressure_mb") != null ? ((Number) current.get("pressure_mb")).doubleValue() : 1013.0;
 
             @SuppressWarnings("unchecked")
-            List<Map<String, Object>> forecastItems = (List<Map<String, Object>>) forecastRaw.get("list");
+            Map<String, Object> forecastObj = (Map<String, Object>) responseMap.get("forecast");
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> forecastday = forecastObj != null ? (List<Map<String, Object>>) forecastObj.get("forecastday") : new ArrayList<>();
             List<Map<String, Object>> forecast = new ArrayList<>();
-            Set<String> seenDates = new HashSet<>();
 
-            if (forecastItems != null) {
-                for (Map<String, Object> item : forecastItems) {
-                    String dtTxt = (String) item.get("dt_txt");
-                    if (dtTxt == null) continue;
-                    String dateOnly = dtTxt.split(" ")[0];
-                    if (seenDates.contains(dateOnly)) continue;
-                    seenDates.add(dateOnly);
-
+            if (forecastday != null) {
+                for (Map<String, Object> dayItem : forecastday) {
+                    String dateStr = (String) dayItem.get("date");
                     @SuppressWarnings("unchecked")
-                    Map<String, Object> fMain = (Map<String, Object>) item.get("main");
-                    @SuppressWarnings("unchecked")
-                    List<Map<String, Object>> fWeather = (List<Map<String, Object>>) item.get("weather");
+                    Map<String, Object> dayInfo = (Map<String, Object>) dayItem.get("day");
+                    if (dayInfo == null) continue;
                     
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> dayCondition = (Map<String, Object>) dayInfo.get("condition");
+
                     Map<String, Object> dayForecast = new HashMap<>();
-                    dayForecast.put("date", dateOnly);
-                    dayForecast.put("temp_max", fMain != null && fMain.get("temp_max") != null ? Math.round(((Number) fMain.get("temp_max")).doubleValue()) : 30.0);
-                    dayForecast.put("temp_min", fMain != null && fMain.get("temp_min") != null ? Math.round(((Number) fMain.get("temp_min")).doubleValue()) : 20.0);
-                    dayForecast.put("description", (fWeather == null || fWeather.isEmpty()) ? "Clear" : fWeather.get(0).get("description"));
+                    dayForecast.put("date", dateStr);
+                    dayForecast.put("temp_max", dayInfo.get("maxtemp_c") != null ? Math.round(((Number) dayInfo.get("maxtemp_c")).doubleValue()) : 30.0);
+                    dayForecast.put("temp_min", dayInfo.get("mintemp_c") != null ? Math.round(((Number) dayInfo.get("mintemp_c")).doubleValue()) : 20.0);
+                    dayForecast.put("description", dayCondition != null && dayCondition.get("text") != null ? dayCondition.get("text") : "Clear");
+                    dayForecast.put("precipitation", dayInfo.get("totalprecip_mm") != null ? ((Number) dayInfo.get("totalprecip_mm")).doubleValue() : 0.0);
                     
                     forecast.add(dayForecast);
                     if (forecast.size() >= 5) break;
@@ -157,6 +151,10 @@ public class WeatherController {
             weather.put("humidity", humidity);
             weather.put("windSpeed", Math.round(windSpeed));
             weather.put("description", description);
+            weather.put("uv", uv);
+            weather.put("precipitation", precipMm);
+            weather.put("visibility", visKm);
+            weather.put("pressure", pressureMb);
             weather.put("forecast", forecast);
             
             weatherResponse.put("weather", weather);

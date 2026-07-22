@@ -234,7 +234,7 @@ export default function Weather() {
                 </div>
 
                 {/* Core Metrics Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-earth-border/20 relative z-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-8 pt-6 border-t border-earth-border/20 relative z-10">
                   <div className="flex items-center space-x-3 p-3 bg-earth-main/50 rounded-2xl border border-earth-border/20 backdrop-blur-sm">
                     <div className="p-2.5 bg-blue-500/10 rounded-xl"><Droplets className="h-5 w-5 text-blue-400" /></div>
                     <div>
@@ -252,10 +252,18 @@ export default function Weather() {
                   </div>
 
                   <div className="flex items-center space-x-3 p-3 bg-earth-main/50 rounded-2xl border border-earth-border/20 backdrop-blur-sm">
+                    <div className="p-2.5 bg-cyan-500/10 rounded-xl"><CloudRain className="h-5 w-5 text-cyan-400" /></div>
+                    <div>
+                      <div className="text-[10px] text-gold-100/30 font-black uppercase">Precip</div>
+                      <div className="text-sm font-black text-gold-100">{weatherInfo.weather.precipitation ?? 0} mm</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 bg-earth-main/50 rounded-2xl border border-earth-border/20 backdrop-blur-sm">
                     <div className="p-2.5 bg-green-500/10 rounded-xl"><Eye className="h-5 w-5 text-green-400" /></div>
                     <div>
                       <div className="text-[10px] text-gold-100/30 font-black uppercase">Visibility</div>
-                      <div className="text-sm font-black text-gold-100">10 km</div>
+                      <div className="text-sm font-black text-gold-100">{weatherInfo.weather.visibility ?? 10} km</div>
                     </div>
                   </div>
 
@@ -263,7 +271,15 @@ export default function Weather() {
                     <div className="p-2.5 bg-sky-500/10 rounded-xl"><Gauge className="h-5 w-5 text-sky-400" /></div>
                     <div>
                       <div className="text-[10px] text-gold-100/30 font-black uppercase">Pressure</div>
-                      <div className="text-sm font-black text-gold-100">1013 mb</div>
+                      <div className="text-sm font-black text-gold-100">{weatherInfo.weather.pressure ?? 1013} mb</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 bg-earth-main/50 rounded-2xl border border-earth-border/20 backdrop-blur-sm">
+                    <div className="p-2.5 bg-orange-500/10 rounded-xl"><Sun className="h-5 w-5 text-orange-400" /></div>
+                    <div>
+                      <div className="text-[10px] text-gold-100/30 font-black uppercase">UV Index</div>
+                      <div className="text-sm font-black text-gold-100">{weatherInfo.weather.uv ?? 0}</div>
                     </div>
                   </div>
                 </div>
