@@ -3,7 +3,7 @@ import { ReactNode, useState, useEffect } from 'react';
 import { KrishiMitraFloat } from '@/components/ai/KrishiMitraFloat';
 import { VoiceCommandModal } from '@/components/ai/VoiceCommandModal';
 import { HelpModal } from '@/components/layout/HelpModal';
-import { SettingsModal } from '@/components/layout/SettingsModal';
+import { WeatherAlertModal } from '@/components/layout/WeatherAlertModal';
 import { FallingLeaves } from '@/components/ui/animations/FallingLeaves';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useClerk } from '@clerk/clerk-react';
@@ -42,6 +42,7 @@ import {
   Info,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { NotificationDropdown } from '@/components/ui/NotificationDropdown';
 
 
 interface LayoutProps {
@@ -69,7 +70,16 @@ export default function Layout({
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  
+  const searchParams = new URLSearchParams(location.search);
+  const alertId = searchParams.get('alertId');
+  const isAlertModalOpen = !!alertId;
+
+  const closeAlertModal = () => {
+    searchParams.delete('alertId');
+    const newSearch = searchParams.toString();
+    navigate(`${location.pathname}${newSearch ? `?${newSearch}` : ''}`, { replace: true });
+  };
 
   useOnboardingGate();
 
@@ -238,6 +248,9 @@ export default function Layout({
               </button>
             )}
 
+            {/* Notifications Button */}
+            {user && <NotificationDropdown />}
+
             {/* Profile Avatar Button */}
             {user && (
               <button
@@ -258,7 +271,7 @@ export default function Layout({
               <DropdownMenuContent align="end" className="w-48 bg-[#12120e] border border-earth-border/40 text-gold-100">
                 <DropdownMenuLabel className="text-gold-400">Options</DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-earth-border/40" />
-                <DropdownMenuItem className="hover:bg-earth-elevated/20 cursor-pointer focus:bg-earth-elevated/20" onSelect={() => setIsSettingsOpen(true)}>
+                <DropdownMenuItem className="hover:bg-earth-elevated/20 cursor-pointer focus:bg-earth-elevated/20" onSelect={() => navigate('/settings')}>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
@@ -346,7 +359,7 @@ export default function Layout({
                     className="min-h-[44px] border-gold-400/30 text-gold-400 hover:bg-gold-400/10 text-[10px] font-bold uppercase rounded-lg flex items-center gap-1.5"
                   >
                     <Mic className="h-3.5 w-3.5 text-gold-400" />
-                    ಮಾತನಾಡಿ / Speak
+                    மாತನಾಡಿ / Speak
                   </Button>
                 </div>
 
@@ -429,8 +442,8 @@ export default function Layout({
       {/* Help Modal Overlay */}
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
 
-      {/* Settings Modal Overlay */}
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      {/* Weather Alert Modal Overlay */}
+      <WeatherAlertModal isOpen={isAlertModalOpen} onClose={closeAlertModal} alertId={alertId} />
 
       {/* Global Ambient Animation */}
       <FallingLeaves />
