@@ -26,6 +26,7 @@ const ResetPassword = React.lazy(() => import('@/pages/ResetPassword'));
 const Home = React.lazy(() => import('@/pages/Home'));
 const PostDetail = React.lazy(() => import('./pages/PostDetail'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
+const Settings = React.lazy(() => import('@/pages/Settings'));
 const Crops = React.lazy(() => import('@/pages/Crops'));
 const SoilAnalysis = React.lazy(() => import('@/pages/SoilAnalysis'));
 const Onboarding = React.lazy(() => import('@/pages/Onboarding'));
@@ -114,6 +115,7 @@ function App() {
                   <Route path="/profile/:userId" element={<PublicProfile />} />
                   <Route path="/profile/:userId/followers" element={<FollowersPage />} />
                   <Route path="/profile/:userId/following" element={<FollowingPage />} />
+                  <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
                 </Routes>

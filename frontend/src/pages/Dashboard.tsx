@@ -23,6 +23,7 @@ import { useScroll, useTransform } from 'framer-motion';
 import { MarketTrendCard } from '@/components/dashboard/MarketTrendCard';
 
 import { HeroCarousel } from '@/components/dashboard/HeroCarousel';
+import { WeatherAlertBanner } from '@/components/dashboard/WeatherAlertBanner';
 
 
 interface CropRecommendation {
@@ -178,6 +179,8 @@ export default function Dashboard() {
           userCount={userCount} 
           newsItems={newsItems} 
         />
+
+        <WeatherAlertBanner />
 
         {/* ===== MAIN CONTENT GRID ===== */}
         <div className="relative w-full">

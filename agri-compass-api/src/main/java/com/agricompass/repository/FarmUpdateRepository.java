@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface FarmUpdateRepository extends JpaRepository<FarmUpdate, String> {
     List<FarmUpdate> findByFarmIdOrderByCreatedAtDesc(String farmId);
+    List<FarmUpdate> findByClerkUserIdInOrderByCreatedAtDesc(List<String> clerkUserIds);
 }

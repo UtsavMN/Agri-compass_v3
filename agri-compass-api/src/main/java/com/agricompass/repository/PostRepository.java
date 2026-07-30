@@ -13,6 +13,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface PostRepository extends JpaRepository<Post, String> {
     List<Post> findByClerkUserId(String clerkUserId);
+    List<Post> findByClerkUserIdInOrderByCreatedAtDesc(List<String> clerkUserIds);
 
     @Query("SELECT p FROM Post p WHERE " +
            "(:q = '' OR LOWER(p.content) LIKE LOWER('%' || :q || '%')) AND " +
