@@ -97,7 +97,8 @@ export function getCropImage(cropName: string): string {
  * Resolves a crop name or its database image URLs to a valid, viewable image.
  * Bypasses broken S3 URLs and empty placeholders.
  */
-export function resolveCropImage(crop: { name: string; imageUrl?: string; image_url?: string }): string {
+export function resolveCropImage(crop: { name?: string; nameEnglish?: string; imageUrl?: string; image_url?: string }): string {
   // Always use our curated dictionary to bypass incorrect backend/API images
-  return getCropImage(crop.name);
+  const cropName = crop.nameEnglish || crop.name || '';
+  return getCropImage(cropName);
 }

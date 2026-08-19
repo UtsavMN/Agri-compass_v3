@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { apiGet } from '@/lib/httpClient';
 import { DISTRICTS } from '@/data/masterData';
 import { CropCardPremium } from '@/components/ui/crop-card-premium';
+import { useCropList } from '@/hooks/useCropGuides';
 
 import { ScrollReveal, StaggerContainer, StaggerItem } from '@/components/ui/animations';
 
@@ -12,62 +12,22 @@ import { Button } from '@/components/ui/button';
 
 
 export default function Crops() {
-  const [crops, setCrops] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [seasonFilter, setSeasonFilter] = useState('all');
-  const [districtFilter, setDistrictFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('name');
+  const [seasonFilter, setSeasonFilter] = useState('');
+  const [districtFilter, setDistrictFilter] = useState('');
+  const [sortBy, setSortBy] = useState('alphabetical');
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    loadCrops();
-  }, [page, seasonFilter, districtFilter, sortBy]);
-
-  const loadCrops = async () => {
-    try {
-      setLoading(true);
-      
-      let cropList: any[] = [];
-      let calculatedTotalPages = 1;
-      
-      if (searchTerm) {
-        cropList = await apiGet(`/api/crops/search?query=${encodeURIComponent(searchTerm)}`);
-        calculatedTotalPages = 1;
-      } else if (districtFilter !== 'all') {
-        cropList = await apiGet(`/api/crops/district/${encodeURIComponent(districtFilter)}`);
-        calculatedTotalPages = 1;
-      } else if (seasonFilter !== 'all') {
-        cropList = await apiGet(`/api/crops/season/${encodeURIComponent(seasonFilter)}`);
-        calculatedTotalPages = 1;
-      } else {
-        const data = await apiGet(`/api/crops?page=${page}&size=12&sortBy=${sortBy}`);
-        cropList = data.content || [];
-        calculatedTotalPages = data.totalPages ?? data.total_pages ?? 1;
-      }
-
-      // Apply client-side intersection filters if both are active
-      let filtered = [...cropList];
-      if (districtFilter !== 'all' && seasonFilter !== 'all') {
-        filtered = filtered.filter(crop => 
-          crop.season && crop.season.toLowerCase().includes(seasonFilter.toLowerCase())
-        );
-      }
-      
-      setCrops(filtered);
-      setTotalPages(calculatedTotalPages);
-    } catch (error) {
-      console.error('Error loading crops:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { crops, totalPages, loading, error } = useCropList({
+    search: searchTerm || undefined,
+    season: seasonFilter && seasonFilter !== 'all' ? seasonFilter : undefined,
+    district: districtFilter && districtFilter !== 'all' ? districtFilter : undefined,
+    sort: sortBy,
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    loadCrops();
+    // Search is handled automatically by the hook dependency array
   };
 
   const seasons = ['Kharif', 'Rabi', 'Zaid', 'Summer', 'Pre-Monsoon', 'Year-round'];
@@ -167,13 +127,22 @@ export default function Crops() {
           </div>
         </ScrollReveal>
 
+        {error && (
+          <div className="text-center py-16">
+            <p className="text-red-400 text-sm font-mono mb-3">{error}</p>
+            <Button onClick={() => window.location.reload()} variant="outline" className="border-gold-400/30 text-gold-400">
+              Retry
+            </Button>
+          </div>
+        )}
+
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {[...Array(12)].map((_, i) => (
                <div key={i} className="h-64 sm:h-96 rounded-3xl bg-earth-elevated/20 animate-pulse border border-earth-border" />
             ))}
           </div>
-        ) : crops.length > 0 ? (
+        ) : !error && crops.length > 0 ? (
           <div className="space-y-8 sm:space-y-12">
             <StaggerContainer staggerDelay={0.05}>
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">

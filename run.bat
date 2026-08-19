@@ -6,8 +6,8 @@ echo 🌱 Agri-Compass Quick Run (v3.1)
 echo ==========================================
 
 :: Clear common ports if they are in use
-echo 🧹 Clearing ports 8080 and 5173...
-call npx kill-port 8080 5173 >nul 2>&1
+echo 🧹 Clearing ports 8080, 5173, and 5000...
+call npx kill-port 8080 5173 5000 >nul 2>&1
 
 :: Detect JAVA_HOME if not valid
 echo 🔍 Detecting Java 17+...
@@ -50,6 +50,15 @@ pushd agri-compass-api
 start "Agri-Compass Backend" cmd /k "set "JAVA_HOME=%JAVA_HOME%"&&set "PATH=%JAVA_HOME%\bin;%PATH%"&&mvnw.cmd spring-boot:run"
 popd
 
+echo 🌪️ Starting Weather Alert Service (separate window — keep it open)...
+pushd weather-alert-service
+if not exist "node_modules\" (
+    echo 📦 Installing weather-alert-service dependencies...
+    call npm install
+)
+start "Weather Alert Service" cmd /k "npm start"
+popd
+
 echo ⏳ Waiting for backend on http://localhost:8080 (first run may take 1-2 min)...
 set /a RETRIES=0
 :wait_backend
@@ -60,7 +69,7 @@ if !RETRIES! geq 90 (
     echo    Then refresh the app once you see "Started AgriCompassApiApplication".
     goto start_frontend
 )
-timeout /t 2 /nobreak >nul
+ping 127.0.0.1 -n 3 >nul
 goto wait_backend
 
 :backend_ready

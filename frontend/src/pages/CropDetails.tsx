@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import {
   ArrowLeft, DollarSign, Droplets, MapPin, _ListChecks, Sprout, AlertTriangle,
   Beaker, _Zap, Calendar, Wind, Shield, BarChart3, TrendingUp, History, Info,
-  Leaf, Settings, ExternalLink, Activity, Printer
+  Leaf, Settings, ExternalLink, Activity, Printer, Brain
 } from 'lucide-react';
 import { apiGet } from '@/lib/httpClient';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,9 @@ import { Progress } from "@/components/ui/progress";
 import { resolveCropImage, getCropImage } from '@/lib/cropImages';
 import { formatCurrency } from '@/data/masterData';
 import { CropDetailsShimmer } from '@/components/ui/loading-shimmer';
+import { useCropDetail } from '@/hooks/useCropGuides';
+import { PdfDownloadButton } from '@/components/ui/PdfDownloadButton';
+import type { CropDetail } from '@/types/cropGuide';
 
 const slugify = (text: string) => {
   return text
@@ -103,49 +106,10 @@ const getSeasonCalendar = (seasonStr: string, cropName: string = '') => {
 export default function CropDetails() {
   const { cropName } = useParams<{ cropName: string }>();
   const navigate = useNavigate();
-  const [crop, setCrop] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { crop, loading, error } = useCropDetail(cropName ?? "");
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const fetchCropDetails = async () => {
-      try {
-        setLoading(true);
-        const decodedParam = decodeURIComponent(cropName || '').toLowerCase().trim();
-
-        // Fetch all crops to find an exact or fuzzy match
-        const allData = await apiGet('/api/crops?page=0&size=100&sortBy=name');
-        const allCrops = allData?.content || [];
-
-        const found = allCrops.find((c: any) => {
-          const name = c.name.toLowerCase().trim();
-          const slugName = slugify(c.name);
-          return name === decodedParam ||
-            slugName === decodedParam ||
-            name.includes(decodedParam) ||
-            decodedParam.includes(name) ||
-            slugName.includes(decodedParam) ||
-            decodedParam.includes(slugName);
-        });
-
-        if (found) {
-          const fullDetails = await apiGet(`/api/crops/${found.id}`);
-          setCrop(fullDetails);
-        } else {
-          // Fallback: search endpoint
-          const results = await apiGet(`/api/crops/search?query=${encodeURIComponent(cropName || '')}`);
-          if (results && results.length > 0) {
-            const fullDetails = await apiGet(`/api/crops/${results[0].id}`);
-            setCrop(fullDetails);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch crop details:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCropDetails();
   }, [cropName]);
 
   if (loading) {
@@ -156,7 +120,7 @@ export default function CropDetails() {
     );
   }
 
-  if (!crop) {
+  if (error || !crop) {
     return (
       <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
         <div className="text-center py-24 bg-earth-card rounded-2xl border border-earth-border shadow-2xl">
@@ -282,31 +246,49 @@ export default function CropDetails() {
                   {crop.difficultyLevel && (
                     <Badge
                       variant="outline"
-                      className={`font-black px-4 py-1.5 text-[10px] uppercase tracking-widest bg-earth-main/60 backdrop-blur-md print:border-black print:text-black ${crop.difficultyLevel.toLowerCase() === 'easy'
+                      className={`font-black px-4 py-1.5 text-[10px] uppercase tracking-widest bg-earth-main/60 backdrop-blur-md print:border-black print:text-black ${crop.difficulty?.toLowerCase() === 'easy'
                           ? 'border-green-500/30 text-green-400'
-                          : crop.difficultyLevel.toLowerCase() === 'hard'
+                          : crop.difficulty?.toLowerCase() === 'hard'
                             ? 'border-red-500/30 text-red-400'
                             : 'border-gold-400/30 text-gold-300'
                         }`}
                     >
-                      {crop.difficultyLevel} DIFFICULTY
+                      {crop.difficulty} DIFFICULTY
                     </Badge>
                   )}
                 </div>
-                <h1 className="text-4xl md:text-6xl font-black text-gold-100 tracking-tighter leading-none mb-2 drop-shadow-2xl print:text-black print:text-4xl">{crop.name}</h1>
-                {crop.scientificName && crop.scientificName.toLowerCase() !== 'unknown' && (
-                  <p className="text-xl italic text-gold-300/80 mb-3 font-medium drop-shadow-2xl print:text-black print:text-lg">{crop.scientificName}</p>
+                <h1 className="text-4xl md:text-6xl font-black text-gold-100 tracking-tighter leading-none mb-2 drop-shadow-2xl print:text-black print:text-4xl">{crop.nameEnglish}</h1>
+                {crop.nameScientific && crop.nameScientific.toLowerCase() !== 'unknown' && (
+                  <p className="text-xl italic text-gold-300/80 mb-3 font-medium drop-shadow-2xl print:text-black print:text-lg">{crop.nameScientific}</p>
                 )}
-                <p className="text-gold-400 font-bold flex items-center tracking-widest text-xs uppercase bg-earth-main/30 backdrop-blur-sm w-fit px-3 py-1 rounded-full border border-gold-400/20 print:text-black print:border-none">
-                  <MapPin className="h-3 w-3 mr-1.5" /> High Compatibility: {crop.recommendedDistricts?.slice(0, 3).join(', ') || 'Global'}
+                <p className="text-gold-400 font-bold flex items-center tracking-widest text-xs uppercase bg-earth-main/30 backdrop-blur-sm w-fit px-3 py-1 rounded-full border border-gold-400/20 print:text-black print:border-none mb-4">
+                  <MapPin className="h-3 w-3 mr-1.5" /> High Compatibility: {JSON.parse(crop.districts || '[]').slice(0, 3).join(', ') || 'Global'}
                 </p>
-              </div>
-              <div className="bg-earth-main/60 backdrop-blur-xl p-6 rounded-3xl border border-gold-400/20 shadow-2xl min-w-[200px] print:hidden">
-                <div className="text-[10px] text-gold-100/40 uppercase tracking-widest font-black mb-1">Climate Suitability</div>
-                <div className="text-4xl font-black text-gold-100 flex items-end gap-1">
-                  {crop.aiScore?.climateSuitabilityScore || 85}<span className="text-gold-400 text-xl">%</span>
+                {/* PDF Download — only show if PDF is available */}
+                {crop.pdfCloudinaryUrl ? (
+                  <PdfDownloadButton
+                    slug={crop.slug}
+                    cropName={crop.nameEnglish}
+                    className="mt-4"
+                  />
+                ) : (
+                  <div className="mt-4 flex items-center gap-2 text-[#F5F0E8]/25 text-xs font-mono">
+                    <span>📄</span>
+                    <span>Cultivation guide PDF coming soon</span>
+                  </div>
+                )}
+                {/* AI Scores */}
+                <div className="pt-2 flex items-center justify-between no-print">
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-gold-400" />
+                    <span className="text-xs uppercase tracking-widest font-bold text-gold-100">AI Viability Score</span>
+                  </div>
+                  <div className="text-4xl font-black text-gold-100 flex items-end gap-1">
+                    {crop.aiScore || 85}
+                    <span className="text-gold-400 text-xl">%</span>
+                  </div>
                 </div>
-                <Progress value={crop.aiScore?.climateSuitabilityScore || 85} className="h-1.5 bg-earth-border mt-3" indicatorClassName="bg-gold-400" />
+                <Progress value={crop.aiScore || 85} className="h-1.5 bg-earth-border mt-3" indicatorClassName="bg-gold-400" />
               </div>
             </div>
           </div>
@@ -314,56 +296,35 @@ export default function CropDetails() {
 
         <div className="space-y-8">
 
-          {/* Calendar and Core Requirements Row */}
+          {/* Calendar Row */}
           <ScrollReveal direction="up" delay={0.35}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="md:col-span-3">
-                <Card className="card-premium h-full">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-xs text-gold-400 font-black uppercase tracking-widest flex items-center">
-                      <Calendar className="mr-2 h-4 w-4" /> Sowing & Harvesting Calendar
-                    </CardTitle>
-                    <CardDescription className="text-gold-100/40">Optimal months for the {crop.season || 'Annual'} cropping cycle in Karnataka</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-2">
-                    <div className="grid grid-cols-12 gap-1 text-center">
-                      {getSeasonCalendar(crop.season, crop.name).map((month, idx) => (
-                        <div key={idx} className="flex flex-col items-center">
-                          <span className="text-[10px] font-black text-gold-100/40 mb-2 uppercase">{month.name}</span>
-                          <div
-                            className={`w-full h-8 rounded-md flex items-center justify-center text-[10px] font-black transition-all ${month.isSowing
-                                ? 'bg-gold-400 text-earth-main shadow-[0_0_8px_rgba(186,117,23,0.4)] font-bold'
-                                : month.isHarvest
-                                  ? 'bg-green-500 text-earth-main shadow-[0_0_8px_rgba(34,197,94,0.4)] font-bold'
-                                  : 'bg-earth-elevated/40 text-gold-100/20 border border-earth-border/40'
-                              }`}
-                          >
-                            {month.isSowing ? 'SOW' : month.isHarvest ? 'HARV' : '-'}
-                          </div>
-                        </div>
-                      ))}
+            <div className="bg-[#111008] border border-[#2A2720] rounded-xl p-6">
+              <p className="text-[#C9A84C] text-xs font-mono uppercase tracking-wider mb-5">
+                📅 Cultivation Calendar
+              </p>
+              <div className="space-y-4">
+                {crop.calendar?.weeks?.length > 0 ? crop.calendar.weeks.map((week: any, i: number) => (
+                  <div key={i} className="flex flex-col md:flex-row gap-4 p-4 rounded-xl border border-[#2A2720] bg-[#191610] transition-colors hover:bg-[#1f1b13]">
+                    <div className="flex-shrink-0 w-full md:w-48 md:border-r border-[#2A2720] md:pr-4">
+                      <div className="text-sm font-bold text-[#C9A84C] leading-snug">{week.period}</div>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-4 mt-4 justify-between items-start sm:items-center text-[10px] font-black tracking-widest uppercase">
-                      <div className="flex gap-4">
-                        {!(crop.season || '').toLowerCase().includes('perennial') && !(crop.season || '').toLowerCase().includes('year-round') && (
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded bg-gold-400" />
-                            <span className="text-gold-100/60">Sowing Window</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-3 h-3 rounded bg-green-500" />
-                          <span className="text-gold-100/60">Harvesting Window</span>
-                        </div>
-                      </div>
-                      {((crop.season || '').toLowerCase().includes('perennial') || (crop.season || '').toLowerCase().includes('year-round')) && (
-                        <span className="text-gold-400/80 font-bold normal-case text-[10px] italic">
-                          * Perennial crop: One-time planting/sowing, recurring harvests.
-                        </span>
-                      )}
+                    <div className="flex-1">
+                      <h4 className="font-bold text-[#F5F0E8] text-xs uppercase tracking-widest mb-3 opacity-60">{week.health_check}</h4>
+                      <ul className="text-sm text-[#F5F0E8]/80 space-y-2">
+                        {week.tasks.map((task: string, j: number) => (
+                          <li key={j} className="flex items-start gap-2 leading-relaxed">
+                            <span className="text-[#C9A84C] mt-0.5">•</span>
+                            <span>{task}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                )) : (
+                  <div className="p-4 rounded-xl border border-[#2A2720] bg-[#191610]">
+                    <p className="text-sm text-gold-100/60">Cultivation calendar data is not available for this crop.</p>
+                  </div>
+                )}
               </div>
             </div>
           </ScrollReveal>
@@ -386,80 +347,73 @@ export default function CropDetails() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="agronomics" className="space-y-8 mt-0 outline-none print:mt-8">
-                <h2 className="hidden print:block text-2xl font-black uppercase tracking-widest border-b-2 border-black pb-2 mb-6">Agronomics</h2>
+              <TabsContent value="agronomics" className="space-y-8 mt-0 outline-none">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <Card className="card-premium h-full">
-                    <CardHeader className="border-b border-earth-border/30">
-                      <CardTitle className="text-sm text-gold-400 font-black uppercase tracking-widest flex items-center">
-                        <Wind className="mr-2 h-4 w-4" /> Environmental
+                  <Card className="card-premium h-full bg-[#111008] border-[#2A2720]">
+                    <CardHeader className="border-b border-[#2A2720]">
+                      <CardTitle className="text-sm text-[#C9A84C] font-mono uppercase tracking-widest flex items-center gap-2">
+                        <span>🌍</span> Environmental
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6 space-y-6">
                       <div>
-                        <span className="text-[10px] font-black text-gold-100/30 uppercase tracking-widest block mb-2">Soil Type</span>
-                        <p className="text-gold-100 text-lg font-bold">{crop.soilType}</p>
+                        <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-2">Soil Type</span>
+                        <p className="text-[#F5F0E8] text-lg font-semibold">{crop.soilType}</p>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="p-3 bg-earth-elevated rounded-xl border border-earth-border">
-                          <span className="text-[10px] font-black text-gold-100/30 uppercase tracking-widest block mb-1">pH Range</span>
-                          <span className="text-sm font-bold text-gold-400">{crop.soilRequirement?.phRange || '6.0-7.5'}</span>
+                        <div className="p-3 bg-[#191610] rounded-xl border border-[#2A2720]">
+                          <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-1">pH Range</span>
+                          <span className="text-sm font-mono text-[#C9A84C]">{crop.soil?.ph_min} - {crop.soil?.ph_max}</span>
                         </div>
-                        <div className="p-3 bg-earth-elevated rounded-xl border border-earth-border">
-                          <span className="text-[10px] font-black text-gold-100/30 uppercase tracking-widest block mb-1">Organic C</span>
-                          <span className="text-sm font-bold text-gold-400">{crop.soilRequirement?.organicCarbon || 'Medium'}</span>
+                        <div className="p-3 bg-[#191610] rounded-xl border border-[#2A2720]">
+                          <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-1">Temperature</span>
+                          <span className="text-sm font-mono text-[#C9A84C]">{crop.temperatureRange || "N/A"}</span>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="card-premium h-full">
-                    <CardHeader className="border-b border-earth-border/30">
-                      <CardTitle className="text-sm text-gold-400 font-black uppercase tracking-widest flex items-center">
-                        <Droplets className="mr-2 h-4 w-4" /> Hydration
+                  <Card className="card-premium h-full bg-[#111008] border-[#2A2720]">
+                    <CardHeader className="border-b border-[#2A2720]">
+                      <CardTitle className="text-sm text-[#C9A84C] font-mono uppercase tracking-widest flex items-center gap-2">
+                        <span>💧</span> Hydration
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6 space-y-6">
                       <div>
-                        <span className="text-[10px] font-black text-gold-100/30 uppercase tracking-widest block mb-2">Annual Rainfall</span>
-                        <p className="text-gold-100 text-lg font-bold">{crop.rainfallMm} mm</p>
+                        <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-2">Annual Rainfall</span>
+                        <p className="text-[#F5F0E8] text-lg font-mono">{crop.rainfallMm || crop.irrigation?.annual_rainfall_mm || "N/A"}</p>
                       </div>
                       <div>
-                        <span className="text-[10px] font-black text-gold-100/30 uppercase tracking-widest block mb-2">Recommended Methods</span>
-                        <div className="flex flex-wrap gap-2">
-                          {crop.irrigations?.map((method: string, i: number) => (
-                            <Badge key={i} className="bg-earth-elevated text-gold-100/60 border-earth-border px-3 py-1 text-[10px] uppercase font-black">
-                              {method}
-                            </Badge>
-                          )) || <Badge className="bg-earth-elevated text-gold-100/60 border-earth-border px-3 py-1 text-[10px] uppercase font-black">Standard</Badge>}
-                        </div>
+                        <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-2">Water Req.</span>
+                        <p className="text-[#F5F0E8] text-sm">{crop.waterRequirement || crop.irrigation?.water_requirement || "N/A"}</p>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="card-premium h-full">
-                    <CardHeader className="border-b border-earth-border/30">
-                      <CardTitle className="text-sm text-gold-400 font-black uppercase tracking-widest flex items-center">
-                        <Beaker className="mr-2 h-4 w-4" /> Nutrients
+                  <Card className="card-premium h-full bg-[#111008] border-[#2A2720]">
+                    <CardHeader className="border-b border-[#2A2720]">
+                      <CardTitle className="text-sm text-[#C9A84C] font-mono uppercase tracking-widest flex items-center gap-2">
+                        <span>🧪</span> Nutrients (NPK)
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-gold-100/40">Nitrogen (N)</span>
-                          <span className="text-sm font-black text-gold-100">{crop.nutrient?.nitrogenKg || 0} kg/acre</span>
+                        <div className="flex items-center justify-between p-2 rounded bg-[#191610]">
+                          <span className="text-xs font-bold text-[#F5F0E8]/60">Nitrogen (N)</span>
+                          <span className="text-sm font-mono text-[#C9A84C]">{crop.nKgAcre || 0} kg/ac</span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-gold-100/40">Phosphorus (P)</span>
-                          <span className="text-sm font-black text-gold-100">{crop.nutrient?.phosphorusKg || 0} kg/acre</span>
+                        <div className="flex items-center justify-between p-2 rounded bg-[#191610]">
+                          <span className="text-xs font-bold text-[#F5F0E8]/60">Phosphorus (P)</span>
+                          <span className="text-sm font-mono text-[#C9A84C]">{crop.pKgAcre || 0} kg/ac</span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-gold-100/40">Potassium (K)</span>
-                          <span className="text-sm font-black text-gold-100">{crop.nutrient?.potassiumKg || 0} kg/acre</span>
+                        <div className="flex items-center justify-between p-2 rounded bg-[#191610]">
+                          <span className="text-xs font-bold text-[#F5F0E8]/60">Potassium (K)</span>
+                          <span className="text-sm font-mono text-[#C9A84C]">{crop.kKgAcre || 0} kg/ac</span>
                         </div>
-                        <div className="pt-4 border-t border-earth-border/30">
-                          <span className="text-[10px] font-black text-gold-100/30 uppercase tracking-widest block mb-2">Crop Rotation</span>
-                          <p className="text-xs text-gold-100/70 italic">"{crop.soilRequirement?.cropRotation || 'Standard seasonal rotation recommended.'}"</p>
+                        <div className="pt-4 border-t border-[#2A2720]">
+                          <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-2">Spacing</span>
+                          <p className="text-xs text-[#F5F0E8]/70 italic">{crop.seed?.row_spacing_cm ? `${crop.seed.row_spacing_cm} x ${crop.seed.plant_spacing_cm} cm` : "Not specified"}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -467,258 +421,98 @@ export default function CropDetails() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="intelligence" className="mt-0 outline-none print:mt-8">
-                <h2 className="hidden print:block text-2xl font-black uppercase tracking-widest border-b-2 border-black pb-2 mb-6 mt-8">AI Intelligence</h2>
+              <TabsContent value="intelligence" className="mt-0 outline-none">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <Card className="card-premium h-full">
+                  <Card className="card-premium h-full bg-[#111008] border-[#2A2720]">
                     <CardHeader>
-                      <CardTitle className="text-lg text-gold-100 font-black tracking-tight flex items-center">
-                        <Activity className="mr-2 h-5 w-5 text-gold-400" /> AI Compatibility Scores
+                      <CardTitle className="text-lg text-[#F5F0E8] font-bold tracking-tight flex items-center gap-2">
+                        <span>🧠</span> AI Compatibility Scores
                       </CardTitle>
-                      <CardDescription className="text-gold-100/40">Neural network analysis based on regional variables</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-8">
                       <div className="space-y-3">
-                        <div className="flex justify-between text-xs font-black uppercase tracking-widest">
-                          <span className="text-gold-100/60">Profitability</span>
-                          <span className="text-gold-400">{crop.aiScore?.profitabilityScore || 0}%</span>
+                        <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
+                          <span className="text-[#F5F0E8]/60">Overall AI Score</span>
+                          <span className="text-[#C9A84C]">{crop.aiScore}%</span>
                         </div>
-                        <Progress value={crop.aiScore?.profitabilityScore || 0} className="h-2 bg-earth-border" indicatorClassName="bg-gold-400 shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
+                        <Progress value={crop.aiScore} className="h-2 bg-[#2A2720]" indicatorClassName="bg-[#C9A84C]" />
                       </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-xs font-black uppercase tracking-widest">
-                          <span className="text-gold-100/60">Soil Suitability</span>
-                          <span className="text-gold-400">{crop.aiScore?.soilSuitabilityScore || 0}%</span>
+                      <div className="space-y-4">
+                        <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-2">Supported Features</span>
+                        <div className="flex flex-wrap gap-2">
+                          {crop.aiFeatures?.map((feature: string, i: number) => (
+                            <Badge key={i} className="bg-[#191610] text-[#C9A84C] border border-[#2A2720] hover:bg-[#2A2720]">
+                              {feature.replace(/_/g, ' ')}
+                            </Badge>
+                          ))}
                         </div>
-                        <Progress value={crop.aiScore?.soilSuitabilityScore || 0} className="h-2 bg-earth-border" indicatorClassName="bg-gold-400" />
                       </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-xs font-black uppercase tracking-widest">
-                          <span className="text-gold-100/60">Water Efficiency</span>
-                          <span className="text-gold-400">{crop.aiScore?.waterEfficiencyScore || 0}%</span>
+                      <div className="space-y-4 pt-4 border-t border-[#2A2720]">
+                        <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-2">IoT Sensor Parameters</span>
+                        <div className="flex flex-wrap gap-2">
+                          {crop.iotParameters?.map((param: string, i: number) => (
+                            <Badge key={i} variant="outline" className="border-[#C9A84C]/30 text-[#F5F0E8]/70">
+                              {param.replace(/_/g, ' ')}
+                            </Badge>
+                          ))}
                         </div>
-                        <Progress value={crop.aiScore?.waterEfficiencyScore || 0} className="h-2 bg-earth-border" indicatorClassName="bg-gold-400" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="card-premium h-full">
-                    <CardHeader>
-                      <CardTitle className="text-lg text-gold-100 font-black tracking-tight flex items-center">
-                        <Leaf className="mr-2 h-5 w-5 text-gold-400" /> Environmental Impact
-                      </CardTitle>
-                      <CardDescription className="text-gold-100/40">Sustainability and ecological footprint analysis</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="flex items-center justify-between p-4 bg-earth-elevated rounded-2xl border border-earth-border">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-green-500/10 rounded-lg"><Wind className="h-4 w-4 text-green-500" /></div>
-                          <span className="text-xs font-bold text-gold-100/70">Carbon Footprint</span>
-                        </div>
-                        <span className="text-sm font-black text-gold-100 uppercase tracking-widest">LOW</span>
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-earth-elevated rounded-2xl border border-earth-border">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-blue-500/10 rounded-lg"><Droplets className="h-4 w-4 text-blue-500" /></div>
-                          <span className="text-xs font-bold text-gold-100/70">Water Consumption</span>
-                        </div>
-                        <span className="text-sm font-black text-gold-100 uppercase tracking-widest">MODERATE</span>
-                      </div>
-                      <div className="flex flex-col items-center justify-center p-8 bg-earth-main/50 rounded-2xl border border-gold-400/20 mt-4">
-                        <div className="text-[10px] text-gold-400 uppercase tracking-[0.2em] font-black mb-2">Sustainability Rating</div>
-                        <div className="text-5xl font-black text-gold-100">{crop.aiScore?.sustainabilityRating || 8.5}<span className="text-gold-400 text-xl">/10</span></div>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
               </TabsContent>
 
-              <TabsContent value="management" className="mt-0 outline-none print:mt-8">
-                <h2 className="hidden print:block text-2xl font-black uppercase tracking-widest border-b-2 border-black pb-2 mb-6 mt-8">Management & Operations</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2 space-y-8">
-                    {crop.growingSteps && crop.growingSteps.length > 0 && (
-                      <Card className="card-premium">
-                        <CardHeader className="border-b border-earth-border/30">
-                          <CardTitle className="text-lg text-gold-100 font-black tracking-tight">Cultivation Architecture</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                          <div className="divide-y divide-earth-border">
-                            {crop.growingSteps.map((step: any, idx: number) => (
-                              <div key={idx} className="flex gap-6 p-6 hover:bg-earth-elevated/20 transition-colors group">
-                                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-earth-elevated text-gold-400 border border-earth-border flex items-center justify-center font-black shadow-lg group-hover:bg-gold-400 group-hover:text-earth-main transition-all">
-                                  {step.stepNumber}
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="font-bold text-gold-100 uppercase tracking-tight text-sm">{step.title}</h4>
-                                  <p className="text-gold-100/50 mt-1 text-xs leading-relaxed">{step.details}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
-
+              <TabsContent value="management" className="mt-0 outline-none">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <div className="space-y-8">
-                    {crop.diseases && crop.diseases.length > 0 && (
-                      <Card className="card-premium border-red-500/10">
+                    {crop.pestDisease?.pests_diseases && crop.pestDisease.pests_diseases.length > 0 && (
+                      <Card className="card-premium border-red-500/10 bg-[#111008]">
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-xs text-red-400 font-black uppercase tracking-widest flex items-center">
-                            <AlertTriangle className="mr-2 h-4 w-4" /> Pathogen Alerts
+                          <CardTitle className="text-xs text-red-400 font-mono uppercase tracking-widest flex items-center gap-2">
+                            <span>⚠️</span> Pathogen Alerts
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          {crop.diseases.map((disease: any, i: number) => (
+                          {crop.pestDisease.pests_diseases.map((disease: any, i: number) => (
                             <div key={i} className="p-4 bg-red-500/5 rounded-2xl border border-red-500/10">
                               <h5 className="text-sm font-bold text-red-400 uppercase tracking-tight mb-1">{disease.name}</h5>
-                              <p className="text-[10px] text-gold-100/40 mb-2 italic">"{disease.symptoms}"</p>
-                              <div className="text-[10px] font-black text-gold-100/60 leading-relaxed bg-earth-main/50 p-2 rounded-lg">
-                                <span className="text-red-400">MANAGEMENT:</span> {disease.management}
+                              <p className="text-[10px] text-[#F5F0E8]/40 mb-2 italic">"{disease.visual_symptoms}"</p>
+                              <div className="text-[10px] font-mono text-[#F5F0E8]/60 leading-relaxed bg-[#0A0900]/50 p-2 rounded-lg">
+                                <span className="text-red-400">TREATMENT:</span> {disease.organic_control || disease.chemical_name || "Consult local expert"}
                               </div>
                             </div>
                           ))}
                         </CardContent>
                       </Card>
                     )}
-
-                    {crop.postHarvest && (
-                      <Card className="card-premium">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-xs text-gold-400 font-black uppercase tracking-widest flex items-center">
-                            <History className="mr-2 h-4 w-4" /> Post-Harvest
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-gold-100/40">Storage Mode</span>
-                            <span className="font-bold text-gold-100">{crop.postHarvest.storageMethod || 'Dry'}</span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-gold-100/40">Duration</span>
-                            <span className="font-bold text-gold-100">{crop.postHarvest.storageDurationMonths || 6} Months</span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-gold-100/40">Processing</span>
-                            <span className="font-bold text-gold-400">{crop.postHarvest.processingRequired ? 'Required' : 'None'}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
                   </div>
                 </div>
               </TabsContent>
 
-              <TabsContent value="economics" className="mt-0 outline-none print:mt-8">
-                <h2 className="hidden print:block text-2xl font-black uppercase tracking-widest border-b-2 border-black pb-2 mb-6 mt-8">Financial Projections</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <Card className="card-premium h-full">
+              <TabsContent value="economics" className="mt-0 outline-none">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <Card className="card-premium h-full bg-[#111008] border-[#2A2720]">
                     <CardHeader>
-                      <CardTitle className="text-lg text-gold-100 font-black tracking-tight flex items-center">
-                        <DollarSign className="mr-2 h-5 w-5 text-gold-400" /> Yield Projections
+                      <CardTitle className="text-lg text-[#F5F0E8] font-bold tracking-tight flex items-center gap-2">
+                        <span>💰</span> Financial Projections
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                        <div className="p-5 bg-earth-elevated rounded-2xl border border-earth-border text-center">
-                          <div className="text-[10px] text-gold-100/30 uppercase tracking-widest font-black mb-1">Minimum</div>
-                          <div className="text-3xl font-black text-gold-100">{Math.round(crop.yieldInfo?.minimumQuintals || 0)}</div>
-                          <div className="text-[10px] text-gold-400 font-bold">Quintals</div>
-                        </div>
-                        <div className="p-5 bg-gold-400/5 rounded-2xl border border-gold-400/20 text-center">
-                          <div className="text-[10px] text-gold-400 uppercase tracking-widest font-black mb-1">Average</div>
-                          <div className="text-3xl font-black text-gold-100">{Math.round(crop.yieldInfo?.averageQuintals || 0)}</div>
-                          <div className="text-[10px] text-gold-400 font-bold">Quintals</div>
-                        </div>
-                        <div className="p-5 bg-earth-elevated rounded-2xl border border-earth-border text-center">
-                          <div className="text-[10px] text-gold-100/30 uppercase tracking-widest font-black mb-1">Best Practice</div>
-                          <div className="text-3xl font-black text-gold-100">{Math.round(crop.yieldInfo?.bestPracticeQuintals || 0)}</div>
-                          <div className="text-[10px] text-gold-400 font-bold">Quintals</div>
-                        </div>
-                      </div>
-                      <div className="mt-8 p-6 bg-earth-main/50 rounded-2xl border border-earth-border">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="p-2 bg-gold-400/10 rounded-lg"><TrendingUp className="h-4 w-4 text-gold-400" /></div>
-                          <h4 className="text-xs font-black uppercase tracking-widest text-gold-100">Economic Breakdown</h4>
-                        </div>
+                      <div className="mt-2 p-6 bg-[#191610] rounded-2xl border border-[#2A2720]">
                         <div className="space-y-4">
                           <div className="flex justify-between text-sm">
-                            <span className="text-gold-100/40">Production Cost</span>
-                            <span className="font-bold text-gold-100">{formatCurrency(crop.investmentPerAcre || 0)}</span>
+                            <span className="text-[#F5F0E8]/40">Est. Capital / Acre</span>
+                            <span className="font-bold text-[#F5F0E8]">₹{crop.capitalMin?.toLocaleString()} - ₹{crop.capitalMax?.toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between text-sm">
-                            <span className="text-gold-100/40">Market Potential</span>
-                            <span className="font-bold text-gold-100">{formatCurrency(crop.expectedReturns || 0)}</span>
+                            <span className="text-[#F5F0E8]/40">Est. Returns / Acre</span>
+                            <span className="font-bold text-[#F5F0E8]">₹{crop.returnsMin?.toLocaleString()} - ₹{crop.returnsMax?.toLocaleString()}</span>
                           </div>
-                          <div className="pt-4 border-t border-earth-border flex justify-between text-lg">
-                            <span className="font-black text-gold-100 tracking-tight">NET PROFIT</span>
-                            <span className="font-black text-gold-400 tracking-tight">{formatCurrency((crop.expectedReturns || 0) - (crop.investmentPerAcre || 0))}</span>
+                          <div className="pt-4 border-t border-[#2A2720] flex justify-between text-lg">
+                            <span className="font-black text-[#F5F0E8] tracking-tight">PROFIT MARGIN</span>
+                            <span className="font-black text-[#C9A84C] tracking-tight">{Math.round(((crop.returnsMax - crop.capitalMax) / (crop.capitalMax || 1)) * 100)}%</span>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="card-premium h-full overflow-hidden relative">
-                    <div className="absolute top-0 right-0 p-8 opacity-5">
-                      <DollarSign className="h-64 w-64" />
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="text-lg text-gold-100 font-black tracking-tight">Strategic Guidance</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <p className="text-gold-100/70 text-sm leading-relaxed italic">
-                        "{crop.guidelines}"
-                      </p>
-                      <div className="space-y-4 pt-4">
-                        <div className="flex items-center gap-3 text-xs font-bold text-gold-400">
-                          <Info className="h-4 w-4" /> Export Potential: {crop.marketInfo?.exportPotential}
-                        </div>
-                        <div className="flex items-center gap-3 text-xs font-bold text-gold-100/60">
-                          <Calendar className="h-4 w-4" /> Sowing Window: {crop.recommendedDistricts?.length > 0 ? 'Localized Optimal' : 'Seasonal Standard'}
-                        </div>
-                        <Button 
-                          className="w-full btn-gold py-6 rounded-2xl group mt-4"
-                          onClick={() => {
-                            const blob = new Blob([`Agri-Compass Precision Guide\nCrop: ${crop.name}\nSeason: ${crop.season}\n\nThis is an autogenerated agricultural advisory document.`], { type: 'text/plain' });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `${slugify(crop.name)}-precision-guide.txt`;
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            URL.revokeObjectURL(url);
-                          }}
-                        >
-                          Download Precision Guide <ExternalLink className="ml-2 h-4 w-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-gradient-to-br from-gold-400 to-gold-600 text-earth-main border-none shadow-gold-glow h-full flex flex-col group hover:scale-[1.02] transition-transform duration-500 rounded-3xl overflow-hidden">
-                    <CardHeader className="pb-4">
-                      <CardTitle className="text-earth-main font-black flex items-center uppercase tracking-tighter text-xl">
-                        <TrendingUp className="mr-2 h-6 w-6" /> Market Intel
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6 flex-1 flex flex-col justify-center">
-                      <div className="bg-earth-main/10 p-5 rounded-2xl border border-earth-main/5 backdrop-blur-sm">
-                        <div className="text-[10px] text-earth-main/60 uppercase tracking-widest font-black mb-1">Average MSP</div>
-                        <div className="text-4xl font-black tracking-tighter">{formatCurrency(crop.marketInfo?.averageMsp || 0)}</div>
-                      </div>
-                      <div className="bg-earth-main/10 p-5 rounded-2xl border border-earth-main/5 backdrop-blur-sm">
-                        <div className="text-[10px] text-earth-main/60 uppercase tracking-widest font-black mb-1">Projected Returns</div>
-                        <div className="text-4xl font-black tracking-tighter">{formatCurrency(crop.expectedReturns || 0)}</div>
-                      </div>
-                      <div className="flex items-center justify-between px-2 pt-2">
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4" />
-                          <span className="text-xs font-bold uppercase tracking-tight">Demand: {crop.marketInfo?.marketDemand || 'High'}</span>
-                        </div>
-                        <div className="h-2 w-2 rounded-full bg-earth-main animate-pulse" />
                       </div>
                     </CardContent>
                   </Card>
