@@ -23,6 +23,7 @@ public class CropDTO {
     private String imageUrl;
     private String scientificName;
     private String difficultyLevel;
+    private String rawJson;
     
     private SoilRequirementDTO soilRequirement;
     private NutrientDTO nutrient;
@@ -151,4 +152,6 @@ public class CropDTO {
     public void setScientificName(String scientificName) { this.scientificName = scientificName; }
     public String getDifficultyLevel() { return difficultyLevel; }
     public void setDifficultyLevel(String difficultyLevel) { this.difficultyLevel = difficultyLevel; }
+    public String getRawJson() { return rawJson; }
+    public void setRawJson(String rawJson) { this.rawJson = rawJson; }
 }

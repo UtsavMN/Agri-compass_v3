@@ -196,6 +196,7 @@ public class CropService {
             }).collect(Collectors.toList()));
         }
 
+        dto.setRawJson(crop.getRawJson());
         return dto;
     }
 }

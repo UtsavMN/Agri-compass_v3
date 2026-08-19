@@ -135,6 +135,12 @@ public class DataSeederService {
         crop.setImageUrl((String) data.get("image_url"));
         crop.setScientificName((String) data.get("scientific_name"));
         crop.setDifficultyLevel((String) data.get("difficulty_level"));
+        
+        try {
+            crop.setRawJson(objectMapper.writeValueAsString(data));
+        } catch (Exception e) {
+            log.error("Failed to serialize rawJson", e);
+        }
     }
 
     private void seedEconomics(Crop crop, Map<String, Object> data) {

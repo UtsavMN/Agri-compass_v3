@@ -6,6 +6,7 @@ import { useDistrict } from '@/store';
 import { loadDistrictDataFromCSV } from '@/lib/csvLoader';
 import { apiGet } from '@/lib/httpClient';
 import { cropRecommender } from '@/lib/ai/cropRecommender';
+import { useCropList } from '@/hooks/useCropGuides';
 
 import { Card, CardContent,  CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -75,9 +76,14 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { scrollY } = useScroll();
   const _yBg = useTransform(scrollY, [0, 600], [0, 180]);
-  const [crops, setCrops] = useState<Crop[]>([]);
   const [loading, setLoading] = useState(true);
   const { selectedDistrict, _setSelectedDistrict } = useDistrict();
+  
+  const { crops, loading: cropsLoading } = useCropList({
+    district: selectedDistrict || undefined,
+    sort: 'ai_score'
+  });
+
   const [_districts, setDistricts] = useState<string[]>([]);
   const [districtData, setDistrictData] = useState<any[]>([]);
   const [cropRecommendations, setCropRecommendations] = useState<CropRecommendation[]>([]);
@@ -122,9 +128,6 @@ export default function Dashboard() {
       ]);
 
       if (summaryData) {
-        if (!selectedDistrict) {
-          setCrops(summaryData.crops || []);
-        }
         setCommunityPosts(summaryData.posts || []);
         setUserCount(summaryData.userCount || 0);
       }
@@ -147,18 +150,8 @@ export default function Dashboard() {
       setLoading(true);
       
       const recommendationsPromise = cropRecommender.getRecommendations(selectedDistrict).catch(() => []);
-      const dataPromise = apiGet(`/api/crops/recommendations/${encodeURIComponent(selectedDistrict)}`).catch(() => []);
-      
-      const [recommendations, data] = await Promise.all([recommendationsPromise, dataPromise]);
+      const [recommendations] = await Promise.all([recommendationsPromise]);
       setCropRecommendations(recommendations);
-
-      // Fallback to all crops if no recommendations found for this district
-      if (!data || data.length === 0) {
-        const fallback = await apiGet('/api/crops?page=0&size=6&sortBy=name').catch(() => ({ content: [] }));
-        setCrops(fallback?.content || []);
-      } else {
-        setCrops(data || []);
-      }
     } catch (error) {
       console.error('Error loading district data:', error);
     } finally {
@@ -199,12 +192,12 @@ export default function Dashboard() {
                 </Button>
               </div>
 
-              {loading ? (
+              {cropsLoading ? (
                 <CropCardShimmer count={6} />
-              ) : crops.length > 0 ? (
+              ) : crops && crops.length > 0 ? (
                 <StaggerContainer staggerDelay={0.05}>
                   <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 -mx-4 px-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 md:mx-0 md:px-0">
-                    {crops.map((crop) => (
+                    {crops.slice(0, 6).map((crop) => (
                       <StaggerItem key={crop.id} className="snap-center shrink-0 w-[85%] max-w-[320px] md:w-auto h-full">
                         <TiltCard className="h-full">
                           <CropCardPremium crop={crop} />

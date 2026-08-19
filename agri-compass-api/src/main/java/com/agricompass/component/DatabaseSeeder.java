@@ -60,10 +60,10 @@ public class DatabaseSeeder implements CommandLineRunner {
     @SuppressWarnings("unchecked")
     @Override
     public void run(String... args) throws Exception {
-        if (cropRepo.count() > 0) {
-            System.out.println("✅ Database already seeded. Skipping DatabaseSeeder to speed up startup.");
-            return;
-        }
+        // if (cropRepo.count() > 0) {
+        //     System.out.println("✅ Database already seeded. Skipping DatabaseSeeder to speed up startup.");
+        //     return;
+        // }
 
         ObjectMapper mapper = new ObjectMapper();
         TypeReference<List<Map<String, Object>>> typeRef = new TypeReference<>() {};
@@ -79,6 +79,12 @@ public class DatabaseSeeder implements CommandLineRunner {
                 Crop crop = optCrop.orElseGet(Crop::new);
                 
                 crop.setName(name);
+
+                try {
+                    crop.setRawJson(mapper.writeValueAsString(data));
+                } catch (Exception e) {
+                    System.err.println("Failed to serialize rawJson for " + name);
+                }
                 
                 List<String> districtsList = (List<String>) data.get("recommended_districts_karnataka");
                 if (crop.getDistrict() == null) {

@@ -68,6 +68,9 @@ public class Crop {
     @Column(name = "difficulty_level")
     private String difficultyLevel;
 
+    @Column(columnDefinition = "TEXT")
+    private String rawJson;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "soil_requirement_id")
     private CropSoilRequirement soilRequirement;
@@ -176,6 +179,9 @@ public class Crop {
 
     public String getDifficultyLevel() { return difficultyLevel; }
     public void setDifficultyLevel(String difficultyLevel) { this.difficultyLevel = difficultyLevel; }
+
+    public String getRawJson() { return rawJson; }
+    public void setRawJson(String rawJson) { this.rawJson = rawJson; }
 
     public CropSoilRequirement getSoilRequirement() { return soilRequirement; }
     public void setSoilRequirement(CropSoilRequirement soilRequirement) { this.soilRequirement = soilRequirement; }
