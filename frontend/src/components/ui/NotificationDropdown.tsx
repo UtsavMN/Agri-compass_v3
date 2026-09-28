@@ -37,23 +37,16 @@ export const NotificationDropdown: React.FC = () => {
         const backendRes = await apiGet('/api/notifications').catch(() => ({ notifications: [] }));
         let backendNotifs = backendRes?.notifications || [];
 
-        // Fetch from Node Weather Service (safely handle missing env var in prod)
-        const weatherApiUrl = import.meta.env.VITE_WEATHER_ALERT_URL || 'http://localhost:5000';
-        const weatherRes = await fetch(`${weatherApiUrl}/api/weather-alerts?lat=19.0760&lon=72.8777`)
-          .then(res => res.json())
-          .catch(() => ({ alerts: [] }));
+        // Fetch real alerts from Spring Boot WeatherController
+        const weatherRes = await apiGet('/api/weather/Bengaluru').catch(() => ({ alerts: [] }));
         
-        const weatherNotifs: Notification[] = (weatherRes.alerts || [])
-          .filter((alert: any) => {
-            const currentTime = Math.floor(Date.now() / 1000);
-            return currentTime >= alert.start && currentTime <= alert.end;
-          })
-          .map((alert: any) => ({
-          id: alert.alert_id,
+        const weatherNotifs: Notification[] = (weatherRes?.alerts || [])
+          .map((alert: any, index: number) => ({
+          id: `weather-alert-${index}-${Date.now()}`,
           type: 'WEATHER_ALERT',
-          message: `Severe Weather: ${alert.event_type} - ${alert.description}`,
-          timestamp: new Date(alert.start * 1000).toISOString(),
-          link: `?alertId=${alert.alert_id}`,
+          message: `Severe Weather: ${alert.event || alert.headline || 'Alert'} - ${alert.desc || alert.description || 'Check local weather advisory'}`,
+          timestamp: new Date(alert.effective || Date.now()).toISOString(),
+          link: `/weather`,
           authorName: 'Weather Advisor',
           alertData: JSON.stringify(alert)
         }));

@@ -89,7 +89,7 @@ public class WeatherController {
             }
 
             String forecastUrl = String.format(
-                "https://api.weatherapi.com/v1/forecast.json?key=%s&q=%s,%s&days=5",
+                "https://api.weatherapi.com/v1/forecast.json?key=%s&q=%s,%s&days=5&alerts=yes",
                 openWeatherApiKey, targetCoords[0], targetCoords[1]
             );
             
@@ -99,6 +99,12 @@ public class WeatherController {
             if (responseMap == null) {
                 throw new RuntimeException("API returned null");
             }
+
+            // Extract alerts
+            @SuppressWarnings("unchecked")
+            Map<String, Object> alertsObj = (Map<String, Object>) responseMap.get("alerts");
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> alertList = alertsObj != null ? (List<Map<String, Object>>) alertsObj.get("alert") : new ArrayList<>();
 
             @SuppressWarnings("unchecked")
             Map<String, Object> current = (Map<String, Object>) responseMap.get("current");
@@ -159,6 +165,7 @@ public class WeatherController {
             
             weatherResponse.put("weather", weather);
             weatherResponse.put("advisory", generateAdvisory(temperature, humidity, description));
+            weatherResponse.put("alerts", alertList);
             weatherResponse.put("timestamp", new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
 
             return ResponseEntity.ok(weatherResponse);
@@ -202,6 +209,7 @@ public class WeatherController {
                 "forecast", mockForecast
             ));
             fallbackResponse.put("advisory", fallbackAdvisory);
+            fallbackResponse.put("alerts", new ArrayList<>());
             fallbackResponse.put("timestamp", new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
             fallbackResponse.put("fallback", true);
             return ResponseEntity.ok(fallbackResponse);
