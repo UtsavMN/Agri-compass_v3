@@ -1,0 +1,1 @@
+const axios = require('axios'); axios.get('https://api.openweathermap.org/data/3.0/onecall?lat=12.9716&lon=77.5946&appid=9445b4364af44639b9875034262207').then(res => console.log('SUCCESS')).catch(err => console.log('ERROR:', err.response ? err.response.status : err.message));
