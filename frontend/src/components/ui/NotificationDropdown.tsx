@@ -37,8 +37,9 @@ export const NotificationDropdown: React.FC = () => {
         const backendRes = await apiGet('/api/notifications').catch(() => ({ notifications: [] }));
         let backendNotifs = backendRes?.notifications || [];
 
-        // Fetch from Node Weather Service
-        const weatherRes = await fetch('http://localhost:5000/api/weather-alerts?lat=19.0760&lon=72.8777')
+        // Fetch from Node Weather Service (safely handle missing env var in prod)
+        const weatherApiUrl = import.meta.env.VITE_WEATHER_ALERT_URL || 'http://localhost:5000';
+        const weatherRes = await fetch(`${weatherApiUrl}/api/weather-alerts?lat=19.0760&lon=72.8777`)
           .then(res => res.json())
           .catch(() => ({ alerts: [] }));
         
