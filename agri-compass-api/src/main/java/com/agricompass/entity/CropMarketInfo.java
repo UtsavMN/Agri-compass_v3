@@ -12,6 +12,7 @@ public class CropMarketInfo {
 
     @OneToOne
     @JoinColumn(name = "crop_id", referencedColumnName = "id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Crop crop;
 
     @Column(name = "average_msp")
@@ -46,3 +47,5 @@ public class CropMarketInfo {
     public String getPriceVolatility() { return priceVolatility; }
     public void setPriceVolatility(String priceVolatility) { this.priceVolatility = priceVolatility; }
 }
+
+

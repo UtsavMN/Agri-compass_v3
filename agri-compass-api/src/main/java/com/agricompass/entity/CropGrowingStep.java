@@ -12,6 +12,7 @@ public class CropGrowingStep {
 
     @ManyToOne
     @JoinColumn(name = "crop_id", referencedColumnName = "id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Crop crop;
 
     @Column(name = "step_number")
@@ -40,3 +41,5 @@ public class CropGrowingStep {
     public String getDetails() { return details; }
     public void setDetails(String details) { this.details = details; }
 }
+
+

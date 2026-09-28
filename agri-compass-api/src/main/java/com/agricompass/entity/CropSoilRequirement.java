@@ -12,6 +12,7 @@ public class CropSoilRequirement {
 
     @OneToOne
     @JoinColumn(name = "crop_id", referencedColumnName = "id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Crop crop;
 
     @Column(name = "ph_range")
@@ -52,3 +53,5 @@ public class CropSoilRequirement {
     public Boolean getMulching() { return mulching; }
     public void setMulching(Boolean mulching) { this.mulching = mulching; }
 }
+
+

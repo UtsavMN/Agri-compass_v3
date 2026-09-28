@@ -20,6 +20,7 @@ public class CropRecommendation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "crop_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Crop crop;
 
     public CropRecommendation() {}
@@ -59,3 +60,5 @@ public class CropRecommendation {
         }
     }
 }
+
+

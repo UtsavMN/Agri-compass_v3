@@ -12,6 +12,7 @@ public class CropPostHarvest {
 
     @OneToOne
     @JoinColumn(name = "crop_id", referencedColumnName = "id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Crop crop;
 
     @Column(name = "storage_method")
@@ -40,3 +41,5 @@ public class CropPostHarvest {
     public Boolean getProcessingRequired() { return processingRequired; }
     public void setProcessingRequired(Boolean processingRequired) { this.processingRequired = processingRequired; }
 }
+
+

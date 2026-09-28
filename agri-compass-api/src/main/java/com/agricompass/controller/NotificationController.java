@@ -84,6 +84,8 @@ public class NotificationController {
         notifications.sort((a, b) -> {
             String timeA = (String) a.get("timestamp");
             String timeB = (String) b.get("timestamp");
+            timeA = timeA == null ? "" : timeA;
+            timeB = timeB == null ? "" : timeB;
             return timeB.compareTo(timeA);
         });
 

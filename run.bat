@@ -27,7 +27,7 @@ if not exist "%JAVA_HOME%\bin\java.exe" (
 )
 
 :: Load variables from root .env and frontend\.env if they exist
-set "ENV_FILES=.env frontend\.env"
+set "ENV_FILES=.env frontend\.env agri-compass-api\.env"
 for %%F in (%ENV_FILES%) do (
     if exist "%%F" (
         echo 📝 Loading environment variables from %%F...
@@ -39,15 +39,13 @@ for %%F in (%ENV_FILES%) do (
     )
 )
 
-:: Default fallbacks
-if "!PORT!"=="" set PORT=8080
 if "!DB_URL!"=="" set DB_URL=jdbc:sqlite:agri.db
 
 echo.
 echo 🚀 Starting Spring Boot Backend (separate window — keep it open)...
 pushd agri-compass-api
 :: /k keeps the window open if the server exits, so errors are visible
-start "Agri-Compass Backend" cmd /k "set "JAVA_HOME=%JAVA_HOME%"&&set "PATH=%JAVA_HOME%\bin;%PATH%"&&mvnw.cmd spring-boot:run"
+start "Agri-Compass Backend" cmd /k "set "JAVA_HOME=%JAVA_HOME%"&&set "PATH=%JAVA_HOME%\bin;%PATH%"&&mvnw.cmd spring-boot:run > ..\backend.log 2>&1"
 popd
 
 echo 🌪️ Starting Weather Alert Service (separate window — keep it open)...
@@ -62,7 +60,7 @@ popd
 echo ⏳ Waiting for backend on http://localhost:8080 (first run may take 1-2 min)...
 set /a RETRIES=0
 :wait_backend
-curl.exe -s -o nul -w "%%{http_code}" http://localhost:8080/api/economics/all 2>nul | findstr /b "200" >nul && goto backend_ready
+curl.exe -s -o nul -w "%%{http_code}" http://localhost:8080/api/health 2>nul | findstr /b "200" >nul && goto backend_ready
 set /a RETRIES+=1
 if !RETRIES! geq 90 (
     echo ⚠️  Backend not responding yet. Check the "Agri-Compass Backend" window for errors.

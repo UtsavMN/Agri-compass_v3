@@ -229,9 +229,9 @@ export default function Dashboard() {
                 </h3>
                 
                 <div className="space-y-4">
-                  {newsItems.map((news, _index) => (
+                  {newsItems.map((news, index) => (
                     <div 
-                      key={typeof news === 'string' ? news : news.title} 
+                      key={(typeof news === 'string' ? news : news.title) + '-' + index} 
                       className="flex items-start gap-4 p-4 rounded-lg bg-[#12120e] border border-[rgba(255,255,255,0.03)] hover:border-gold-400/20 transition-all cursor-pointer group"
                       onClick={() => news.url && news.url !== '#' ? window.open(news.url, '_blank') : navigate('/market-prices')}
                     >

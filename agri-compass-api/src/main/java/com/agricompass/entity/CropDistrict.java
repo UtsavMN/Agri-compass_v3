@@ -12,6 +12,7 @@ public class CropDistrict {
 
     @ManyToOne
     @JoinColumn(name = "crop_id", referencedColumnName = "id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Crop crop;
 
     @Column(name = "district_name", nullable = false)
@@ -28,3 +29,5 @@ public class CropDistrict {
     public String getDistrictName() { return districtName; }
     public void setDistrictName(String districtName) { this.districtName = districtName; }
 }
+
+

@@ -12,6 +12,7 @@ public class CropYieldInfo {
 
     @OneToOne
     @JoinColumn(name = "crop_id", referencedColumnName = "id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Crop crop;
 
     @Column(name = "minimum_quintals")
@@ -40,3 +41,5 @@ public class CropYieldInfo {
     public Double getBestPracticeQuintals() { return bestPracticeQuintals; }
     public void setBestPracticeQuintals(Double bestPracticeQuintals) { this.bestPracticeQuintals = bestPracticeQuintals; }
 }
+
+

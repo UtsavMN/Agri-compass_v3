@@ -12,6 +12,7 @@ public class CropIrrigation {
 
     @ManyToOne
     @JoinColumn(name = "crop_id", referencedColumnName = "id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Crop crop;
 
     @Column(nullable = false)
@@ -28,3 +29,5 @@ public class CropIrrigation {
     public String getMethod() { return method; }
     public void setMethod(String method) { this.method = method; }
 }
+
+

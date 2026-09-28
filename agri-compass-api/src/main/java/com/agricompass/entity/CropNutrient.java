@@ -12,6 +12,7 @@ public class CropNutrient {
 
     @OneToOne
     @JoinColumn(name = "crop_id", referencedColumnName = "id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Crop crop;
 
     @Column(name = "nitrogen_kg")
@@ -40,3 +41,5 @@ public class CropNutrient {
     public Integer getPotassiumKg() { return potassiumKg; }
     public void setPotassiumKg(Integer potassiumKg) { this.potassiumKg = potassiumKg; }
 }
+
+

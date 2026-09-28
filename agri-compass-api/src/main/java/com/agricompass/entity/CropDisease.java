@@ -12,6 +12,7 @@ public class CropDisease {
 
     @ManyToOne
     @JoinColumn(name = "crop_id", referencedColumnName = "id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Crop crop;
 
     @Column(nullable = false)
@@ -40,3 +41,5 @@ public class CropDisease {
     public String getManagement() { return management; }
     public void setManagement(String management) { this.management = management; }
 }
+
+

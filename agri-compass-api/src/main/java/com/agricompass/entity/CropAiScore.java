@@ -12,6 +12,7 @@ public class CropAiScore {
 
     @OneToOne
     @JoinColumn(name = "crop_id", referencedColumnName = "id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Crop crop;
 
     @Column(name = "climate_suitability_score")
@@ -52,3 +53,5 @@ public class CropAiScore {
     public Double getSustainabilityRating() { return sustainabilityRating; }
     public void setSustainabilityRating(Double sustainabilityRating) { this.sustainabilityRating = sustainabilityRating; }
 }
+
+

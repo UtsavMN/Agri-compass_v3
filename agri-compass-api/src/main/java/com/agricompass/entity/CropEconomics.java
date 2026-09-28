@@ -12,6 +12,7 @@ public class CropEconomics {
 
     @OneToOne
     @JoinColumn(name = "crop_id", referencedColumnName = "id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Crop crop;
 
     @Column(name = "investment_per_acre")
@@ -90,3 +91,5 @@ public class CropEconomics {
         }
     }
 }
+
+
