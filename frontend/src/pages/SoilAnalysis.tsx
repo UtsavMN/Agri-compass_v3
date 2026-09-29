@@ -283,18 +283,17 @@ export function SoilAnalysisContent() {
                             </button>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-sm text-[var(--text-primary)]">
-                            <div><span className="text-[var(--text-muted)]">Size:</span> {farms.find(f => f.id === selectedFarmId)?.area_acres || '} ac</div>
-                            <div><span className="text-[var(--text-muted)]">Crop:</span> {farms.find(f => f.id === selectedFarmId)?.current_crop || '}</div>
-                            <div><span className="text-[var(--text-muted)]">Soil:</span> {farms.find(f => f.id === selectedFarmId)?.soil_type || '}</div>
-                            <div><span className="text-[var(--text-muted)]">Water:</span> {farms.find(f => f.id === selectedFarmId)?.irrigation_type || '}</div>
+                            <div><span className="text-[var(--text-muted)]">Size:</span> {farms.find(f => f.id === selectedFarmId)?.area_acres || ''} ac</div>
+                            <div><span className="text-[var(--text-muted)]">Crop:</span> {farms.find(f => f.id === selectedFarmId)?.current_crop || ''}</div>
+                            <div><span className="text-[var(--text-muted)]">Soil:</span> {farms.find(f => f.id === selectedFarmId)?.soil_type || ''}</div>
+                            <div><span className="text-[var(--text-muted)]">Water:</span> {farms.find(f => f.id === selectedFarmId)?.irrigation_type || ''}</div>
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
-                </div>
 
-                <div className="pt-6">
+                  <div className="pt-6">
                   <Button
                     onClick={runAnalysis}
                     className="w-full btn-gold h-12 flex items-center justify-center gap-2 font-bold text-sm tracking-wide shadow-md"
@@ -916,6 +915,8 @@ export default function SoilAnalysis() {
     </div>
   );
 }
+
+
 
 
 
