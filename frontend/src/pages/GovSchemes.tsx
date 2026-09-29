@@ -231,7 +231,7 @@ export default function GovSchemes() {
          setFarms(farmsData || []);
          setUserProfile(profileData);
          if (savedData && Array.isArray(savedData)) {
-           setSavedSchemeIds(new Set(savedData.map((s: any) => s.schemeId)));
+           setSavedSchemeIds(new Set(savedData.map((s: any) => (s.schemeId || s.scheme_id))));
          }
        }).finally(() => setLoading(false));
     }
@@ -491,6 +491,7 @@ export default function GovSchemes() {
     </div>
   );
 }
+
 
 
 

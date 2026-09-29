@@ -259,7 +259,7 @@ export default function Profile() {
             {activeTab === "schemes" && (
               <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {savedSchemes.length > 0 ? savedSchemes.map((s, i) => {
-                  const scheme = GOVERNMENT_SCHEMES.find(g => g.id === s.schemeId);
+                  const scheme = GOVERNMENT_SCHEMES.find(g => g.id === (s.schemeId || s.scheme_id));
                   if (!scheme) return null;
                   return (
                     <motion.div key={i} variants={fadeUpVariants} custom={i}>
@@ -284,5 +284,6 @@ export default function Profile() {
     </div>
   );
 }
+
 
 
