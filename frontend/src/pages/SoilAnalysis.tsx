@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import { apiPost } from '@/lib/httpClient';
+import { useState, useEffect } from 'react';
+import { apiGet, apiPost } from '@/lib/httpClient';
 import { Button } from '@/components/ui/button';
-import {
-  Sparkles,
+import { History, Sparkles,
   Sprout,
   Thermometer,
   Droplets,
@@ -66,12 +65,33 @@ const getSoilColor = (value: number, ideal: [number, number]) => {
 };
 
 export function SoilAnalysisContent() {
-  const [farmerName, setFarmerName] = useState('');
-  const [location, setLocation] = useState('');
-  const [fieldSize, setFieldSize] = useState('1');
-  const [waterSource, setWaterSource] = useState('Rainfed');
-  const [season, setSeason] = useState('Kharif');
-  const [preferredCrop, setPreferredCrop] = useState('');
+  const [farms, setFarms] = useState<any[]>([]);
+  const [selectedFarmId, setSelectedFarmId] = useState<string>('');
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+  
+  useEffect(() => {
+    const fetchFarms = async () => {
+      try {
+        const res = await apiGet('/api/farms');
+        setFarms(res || []);
+        if (res && res.length > 0) setSelectedFarmId(res[0].id);
+      } catch (err) {
+        console.error('Failed to load farms', err);
+      }
+    };
+    fetchFarms();
+  }, []);
+
+  useEffect(() => {
+    if (selectedFarmId) {
+      const selected = farms.find(f => f.id === selectedFarmId);
+      if (selected) {
+        if (selected.soil_type && selected.soil_type.toLowerCase().includes('red')) setSoil(prev => ({...prev, pH: 5.8}));
+        if (selected.soil_type && selected.soil_type.toLowerCase().includes('black')) setSoil(prev => ({...prev, pH: 7.2}));
+      }
+    }
+  }, [selectedFarmId, farms]);
 
   const [soil, setSoil] = useState<SoilData>({
     nitrogen: 65,
@@ -117,9 +137,11 @@ export function SoilAnalysisContent() {
     }, 50);
 
     try {
+      const selected = farms.find(f => f.id === selectedFarmId);
+      
       const payload = {
-        farmer_name: farmerName || 'Farmer Partner',
-        location: location || 'Karnataka Region',
+        farmer_name: selected?.name || 'Farmer Partner',
+        location: selected?.location || 'Karnataka Region',
         date: new Date().toISOString().split('T')[0],
         soil_data: {
           nitrogen: soil.nitrogen,
@@ -130,16 +152,31 @@ export function SoilAnalysisContent() {
           temperature_C: soil.temperature_C,
           humidity_percent: soil.humidity_percent,
         },
-        preferred_crop: preferredCrop || undefined,
-        field_size_acres: parseFloat(fieldSize) || 1,
-        water_source: waterSource,
-        season: season,
+        preferred_crop: selected?.current_crop || undefined,
+        field_size_acres: selected?.area_acres || 1,
+        water_source: selected?.irrigation_type || 'Unknown',
+        season: 'Current',
       };
 
       const data = (await apiPost('/api/ai/soil-recommendation', payload)) as RecommendationResponse;
       setResults(data);
       if (data.recommended_crops && data.recommended_crops.length > 0) {
         setExpandedCrop(data.recommended_crops[0].crop_name);
+      }
+      
+      if (selectedFarmId) {
+        // Save to Farm Diagnostics history
+        await apiPost(`/api/farms/${selectedFarmId}/diagnostics`, {
+          nitrogen: soil.nitrogen,
+          phosphorus: soil.phosphorus,
+          potassium: soil.potassium,
+          ph: soil.pH,
+          moisture: soil.moisture,
+          temperature: soil.temperature_C,
+          humidity: soil.humidity_percent,
+          healthStatus: data.soil_health_report.status,
+          aiReport: JSON.stringify(data)
+        });
       }
     } catch (error) {
       console.error('Soil recommendation error:', error);
@@ -219,78 +256,40 @@ export function SoilAnalysisContent() {
                     Farm Settings
                   </h3>
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Farmer Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Ramesh Gowda"
-                        value={farmerName}
-                        onChange={(e) => setFarmerName(e.target.value)}
-                        className="w-full input-dark"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Location / Taluk</label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="e.g. Mandya, Karnataka"
-                          value={location}
-                          onChange={(e) => setLocation(e.target.value)}
-                          className="w-full input-dark pl-9"
-                        />
-                        <MapPin className="absolute left-3 top-3.5 h-4 w-4" style={{ color: 'var(--text-muted)' }} />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Field Size (Acres)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder="1.0"
-                          value={fieldSize}
-                          onChange={(e) => setFieldSize(e.target.value)}
-                          className="w-full input-dark"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Season</label>
+                        <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Select Target Farm</label>
                         <select
-                          value={season}
-                          onChange={(e) => setSeason(e.target.value)}
-                          className="w-full input-dark cursor-pointer"
-                          style={{ backgroundColor: 'var(--bg-main)', border: '1px solid rgba(255,255,255,0.08)' }}
+                          value={selectedFarmId}
+                          onChange={(e) => setSelectedFarmId(e.target.value)}
+                          className="w-full input-dark"
                         >
-                          <option value="Kharif">Kharif</option>
-                          <option value="Rabi">Rabi</option>
-                          <option value="Summer">Summer</option>
+                          <option value="" disabled>Select a farm...</option>
+                          {farms.map(f => (
+                            <option key={f.id} value={f.id}>{f.name} ({f.location})</option>
+                          ))}
                         </select>
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Water Irrigation Source</label>
-                      <select
-                        value={waterSource}
-                        onChange={(e) => setWaterSource(e.target.value)}
-                        className="w-full input-dark cursor-pointer"
-                        style={{ backgroundColor: 'var(--bg-main)', border: '1px solid rgba(255,255,255,0.08)' }}
-                      >
-                        <option value="Rainfed">Rainfed (Monsoon Dependent)</option>
-                        <option value="Canal">Canal System</option>
-                        <option value="Well">Well / Tube Well</option>
-                        <option value="Drip">Micro Drip / Sprinkler</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Preferred Crop Target (Optional)</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Rice, Cotton, Ragi"
-                        value={preferredCrop}
-                        onChange={(e) => setPreferredCrop(e.target.value)}
-                        className="w-full input-dark"
-                      />
+                      
+                      {selectedFarmId && (
+                        <div className="p-4 rounded-xl mt-4 border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)]">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-[var(--text-secondary)] uppercase font-semibold tracking-wider">Farm Snapshot</span>
+                            <button onClick={async () => {
+                              const data = await apiGet(`/api/farms/${selectedFarmId}/diagnostics`);
+                              setHistory(data || []);
+                              setShowHistory(true);
+                            }} className="text-xs text-[var(--accent)] hover:underline flex items-center gap-1">
+                              <History size={12} /> History
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm text-[var(--text-primary)]">
+                            <div><span className="text-[var(--text-muted)]">Size:</span> {farms.find(f => f.id === selectedFarmId)?.area_acres || '} ac</div>
+                            <div><span className="text-[var(--text-muted)]">Crop:</span> {farms.find(f => f.id === selectedFarmId)?.current_crop || '}</div>
+                            <div><span className="text-[var(--text-muted)]">Soil:</span> {farms.find(f => f.id === selectedFarmId)?.soil_type || '}</div>
+                            <div><span className="text-[var(--text-muted)]">Water:</span> {farms.find(f => f.id === selectedFarmId)?.irrigation_type || '}</div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -874,9 +873,41 @@ export function SoilAnalysisContent() {
           </div>
         </div>
       )}
-    </>
-  );
-}
+            {showHistory && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-[#1a1a1a] border border-[#333] rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto p-6 shadow-2xl">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-[#f0ece0] flex items-center gap-2">
+                  <History className="text-[#c49a2a]" /> Soil Diagnostics History
+                </h2>
+                <button onClick={() => setShowHistory(false)} className="text-[#a09880] hover:text-white">?</button>
+              </div>
+              <div className="space-y-4">
+                {history.length === 0 ? (
+                  <p className="text-center text-[#a09880] py-8">No past diagnostics found for this farm.</p>
+                ) : (
+                  history.map((h, i) => (
+                    <div key={i} className="bg-[#12120e] p-4 rounded-xl border border-[rgba(255,255,255,0.05)]">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-bold text-[#c49a2a]">{new Date(h.createdAt || Date.now()).toLocaleDateString()}</span>
+                        <span className="text-xs px-2 py-1 rounded bg-[#222] font-semibold">{h.healthStatus || "Unknown"}</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2 text-xs text-[#a09880] mb-3">
+                        <div>N: {h.nitrogen}</div><div>P: {h.phosphorus}</div><div>K: {h.potassium}</div><div>pH: {h.ph}</div>
+                      </div>
+                      <p className="text-xs text-[#f0ece0] line-clamp-3 bg-black/20 p-2 rounded italic">
+                        {h.aiReport ? JSON.parse(h.aiReport).soil_health_report?.soil_amendment_recommendations : "No detailed report."}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
 
 export default function SoilAnalysis() {
   return (
@@ -885,3 +916,7 @@ export default function SoilAnalysis() {
     </div>
   );
 }
+
+
+
+

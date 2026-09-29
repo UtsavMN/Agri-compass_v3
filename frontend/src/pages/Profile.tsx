@@ -226,10 +226,12 @@ export default function Profile() {
                 {farms.length > 0 ? farms.map((farm, i) => (
                   <motion.div key={i} variants={fadeUpVariants} custom={i}>
                     <FarmIntelligenceCard
+                      farmId={farm.id}
                       farmName={farm.name}
-                      acres={farm.areaAcres}
+                      acres={farm.area_acres || farm.areaAcres}
                       district={farm.location}
-                      crop={farm.cropFocus}
+                      crop={farm.current_crop || farm.cropFocus}
+                      latestSoilHealth={farm.latest_soil_health}
                     />
                   </motion.div>
                 )) : (

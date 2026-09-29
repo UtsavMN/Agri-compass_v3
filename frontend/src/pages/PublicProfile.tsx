@@ -254,10 +254,12 @@ export const PublicProfile = () => {
                 {farms.length > 0 ? farms.map((farm, i) => (
                   <motion.div key={i} variants={fadeUpVariants} custom={i}>
                     <FarmIntelligenceCard
+                      farmId={farm.id}
                       farmName={farm.name}
-                      acres={farm.areaAcres}
+                      acres={farm.area_acres || farm.areaAcres}
                       district={farm.location}
-                      crop={farm.cropFocus || farm.currentCrop}
+                      crop={farm.current_crop || farm.cropFocus || farm.currentCrop}
+                      latestSoilHealth={farm.latest_soil_health}
                     />
                   </motion.div>
                 )) : (
