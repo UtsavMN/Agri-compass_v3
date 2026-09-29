@@ -16,6 +16,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { useClerk } from "@clerk/clerk-react";
+import { SchemeCard } from "@/pages/GovSchemes";
+import { GOVERNMENT_SCHEMES } from "@/data/schemesData";
 
 type Tab = "posts" | "farms" | "schemes";
 
@@ -28,11 +30,13 @@ export default function Profile() {
 
   const [posts, setPosts] = useState<any[]>([]);
   const [farms, setFarms] = useState<any[]>([]);
+  const [savedSchemes, setSavedSchemes] = useState<any[]>([]);
 
   useEffect(() => {
     if (authUser?.id) {
       loadUserPosts();
       loadUserFarms();
+      loadSavedSchemes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }
   }, [authUser?.id]);
@@ -43,6 +47,15 @@ export default function Profile() {
       setFarms(data || []);
     } catch (error) {
       console.error("Failed to load farms", error);
+    }
+  };
+
+  const loadSavedSchemes = async () => {
+    try {
+      const data = await apiGet('/api/schemes/saved');
+      setSavedSchemes(data || []);
+    } catch (e) {
+      console.error('Failed to load saved schemes', e);
     }
   };
 
@@ -244,9 +257,21 @@ export default function Profile() {
             )}
 
             {activeTab === "schemes" && (
-              <div className="col-span-full text-center py-16 text-[#F5F0E8]/40 border border-[#1E1E1E] border-dashed rounded-2xl">
-                <p>Saved schemes will appear here.</p>
-              </div>
+              <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {savedSchemes.length > 0 ? savedSchemes.map((s, i) => {
+                  const scheme = GOVERNMENT_SCHEMES.find(g => g.id === s.schemeId);
+                  if (!scheme) return null;
+                  return (
+                    <motion.div key={i} variants={fadeUpVariants} custom={i}>
+                      <SchemeCard scheme={scheme} initiallySaved={true} />
+                    </motion.div>
+                  );
+                }) : (
+                  <div className="col-span-full text-center py-16 text-[#F5F0E8]/40 border border-[#1E1E1E] border-dashed rounded-2xl">
+                    <p>No saved schemes yet.</p>
+                  </div>
+                )}
+              </motion.div>
             )}
           </motion.div>
         </AnimatePresence>
@@ -259,3 +284,5 @@ export default function Profile() {
     </div>
   );
 }
+
+

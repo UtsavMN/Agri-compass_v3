@@ -49,8 +49,31 @@ const SchemeAccordion = ({ label, icon, children }: { label: string; icon: React
   );
 };
 
-export const SchemeCard = ({ scheme }: { scheme: typeof GOVERNMENT_SCHEMES[0] }) => {
-  const [bookmarked, setBookmarked] = useState(false);
+import { apiPost, apiDelete } from '@/lib/httpClient';
+
+export const SchemeCard = ({ scheme, initiallySaved = false, onToggle }: { scheme: typeof GOVERNMENT_SCHEMES[0], initiallySaved?: boolean, onToggle?: (s: boolean) => void }) => {
+  const [bookmarked, setBookmarked] = useState(initiallySaved);
+
+  useEffect(() => {
+    setBookmarked(initiallySaved);
+  }, [initiallySaved]);
+
+  const toggleBookmark = async () => {
+    const newState = !bookmarked;
+    setBookmarked(newState);
+    if (onToggle) onToggle(newState);
+    try {
+      if (newState) {
+        await apiPost('/api/schemes/save', { schemeId: scheme.id });
+      } else {
+        await apiDelete('/api/schemes/save/' + scheme.id);
+      }
+    } catch (e) {
+      console.error('Failed to toggle bookmark', e);
+      setBookmarked(!newState);
+      if (onToggle) onToggle(!newState);
+    }
+  };
   return (
     <div className="card-base card-hover p-6 group flex flex-col justify-between h-full transition-all">
       <div>
@@ -110,7 +133,7 @@ export const SchemeCard = ({ scheme }: { scheme: typeof GOVERNMENT_SCHEMES[0] })
           <ExternalLink size={13} />
         </a>
         <button 
-          onClick={() => setBookmarked(!bookmarked)}
+          onClick={toggleBookmark}
           className={`border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] px-4 py-2.5 rounded-lg text-[13px] transition-colors ${bookmarked ? 'bg-[#c49a2a]/20 text-[#c49a2a] border-[#c49a2a]/30' : 'text-[#a09880] hover:text-[#f0ece0]'}`}
         >
           <Bookmark size={14} className={bookmarked ? 'fill-[#c49a2a]' : ''} />
@@ -194,16 +217,22 @@ export default function GovSchemes() {
   const [filters, setFilters] = useState<SchemeFilters>({
     category: 'all', benefit: 'all', caste: 'all', landSize: 'all'
   });
+  
+  const [savedSchemeIds, setSavedSchemeIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user?.id) {
        setLoading(true);
        Promise.all([
          apiGet('/api/farms').catch(() => []),
-         apiGet('/api/profile/me').catch(() => null)
-       ]).then(([farmsData, profileData]) => {
+         apiGet('/api/profile/me').catch(() => null),
+         apiGet('/api/schemes/saved').catch(() => [])
+       ]).then(([farmsData, profileData, savedData]) => {
          setFarms(farmsData || []);
          setUserProfile(profileData);
+         if (savedData && Array.isArray(savedData)) {
+           setSavedSchemeIds(new Set(savedData.map((s: any) => s.schemeId)));
+         }
        }).finally(() => setLoading(false));
     }
   }, [user?.id]);
@@ -410,7 +439,7 @@ export default function GovSchemes() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredGovSchemes.map(scheme => (
                     <StaggerItem key={scheme.id}>
-                      <SchemeCard scheme={scheme} />
+                      <SchemeCard scheme={scheme} initiallySaved={savedSchemeIds.has(scheme.id)} />
                     </StaggerItem>
                   ))}
                 </div>
@@ -424,7 +453,7 @@ export default function GovSchemes() {
                           <div className="absolute -top-3 -right-3 bg-[#c49a2a] text-[#0f0f0b] font-black text-[10px] px-3 py-1 rounded-full z-10 shadow-lg border-2 border-[#1E1E1E]">
                              {scheme.score}% Match
                           </div>
-                          <SchemeCard scheme={scheme} />
+                          <SchemeCard scheme={scheme} initiallySaved={savedSchemeIds.has(scheme.id)} />
                        </div>
                      </StaggerItem>
                    ))}
@@ -462,3 +491,6 @@ export default function GovSchemes() {
     </div>
   );
 }
+
+
+
