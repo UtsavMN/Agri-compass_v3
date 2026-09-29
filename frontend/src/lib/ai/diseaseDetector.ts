@@ -20,7 +20,7 @@ export class DiseaseDetector {
       // const result = await this.callHuggingFaceAPI(imageFile);
       // return this.parseHuggingFaceResponse(result);
 
-      return mockResult;
+      throw new Error('Missing Gemini/HuggingFace API Key');
     } catch (error) {
       console.error('Disease detection error:', error);
       return {
@@ -141,3 +141,4 @@ export class DiseaseDetector {
 }
 
 export const diseaseDetector = new DiseaseDetector();
+

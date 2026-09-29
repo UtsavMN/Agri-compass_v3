@@ -263,7 +263,7 @@ public class AiController {
             : geminiApiKeysString.split(",");
             
         if (keys.length == 0) {
-            return ResponseEntity.ok(getMockAnalyzeCropResponse());
+            return ResponseEntity.status(503).body(Map.of("error", "Missing Gemini API Key. Please configure it in Render to use AI features."));
         }
 
         try {
@@ -300,16 +300,7 @@ public class AiController {
             log.error("Failed to analyze crop using Gemini API", e);
         }
         
-        return ResponseEntity.ok(getMockAnalyzeCropResponse());
-    }
-
-    private Map<String, Object> getMockAnalyzeCropResponse() {
-        return Map.of(
-            "status", "healthy",
-            "confidence", 0.85,
-            "issues", List.of(),
-            "recommendations", List.of("Ensure adequate watering", "Monitor for pests")
-        );
+        return ResponseEntity.status(503).body(Map.of("error", "Missing Gemini API Key. Please configure it in Render to use AI features."));
     }
 
     @SuppressWarnings("unchecked")
@@ -404,33 +395,7 @@ public class AiController {
         
         // 3. Fallback mock response if everything fails
         log.warn("All AI providers failed or not configured, returning mock soil recommendation data");
-        return ResponseEntity.ok(getMockSoilRecommendation());
-    }
-
-    private Map<String, Object> getMockSoilRecommendation() {
-        return Map.of(
-            "confidence_level", 0.6,
-            "warnings", List.of("This is a mock recommendation because AI services are currently unavailable or unconfigured."),
-            "soil_health_report", Map.of(
-                "status", "Suboptimal",
-                "limiting_factors", List.of("Low Nitrogen", "Slightly Acidic pH"),
-                "soil_amendment_recommendations", "Add organic compost and lime to neutralize pH."
-            ),
-            "recommended_crops", List.of(
-                Map.of(
-                    "crop_name", "Maize (Mock Data)",
-                    "suitability_score", 85,
-                    "expected_yield_per_acre_tons", 2.5,
-                    "growing_guide", Map.of(
-                        "sowing_details", "Sow seeds 2 inches deep in rows 30 inches apart.",
-                        "fertilizer_npk_schedule_per_acre", "Apply 40kg N, 20kg P, 20kg K at planting.",
-                        "irrigation_plan", "Water immediately after sowing, then every 7-10 days depending on rain.",
-                        "pest_disease_management", "Monitor for fall armyworm; use neem oil extracts preventatively.",
-                        "harvesting_tips", "Harvest when silks turn brown and kernels exude milky fluid when punctured."
-                    )
-                )
-            )
-        );
+        return ResponseEntity.status(503).body(Map.of("error", "Missing Gemini API Key. Please configure it in Render to use AI features."));
     }
 
     private String stripMarkdownFences(String text) {
@@ -488,4 +453,6 @@ public class AiController {
         return "I understand your interest in improving crop yield. To give you the best advice, could you share your district, soil type, preferred crop, or any specific symptoms of crop damage you are seeing? You can also use our 'Soil Analysis' tool to get an AI-powered custom recommendation based on your soil test values.";
     }
 }
+
+
 
