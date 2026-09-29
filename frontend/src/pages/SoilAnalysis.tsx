@@ -500,16 +500,16 @@ export function SoilAnalysisContent() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="card-premium p-4 flex flex-col justify-center">
                 <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Farmer & Farm Area</span>
-                <span className="text-md font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{farmerName || 'Farmer Partner'}</span>
-                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{fieldSize} Acres</span>
+                <span className="text-md font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{farms.find(f => f.id === selectedFarmId)?.name || 'Farmer Partner'}</span>
+                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{farms.find(f => f.id === selectedFarmId)?.area_acres || 1} Acres</span>
               </div>
               <div className="card-premium p-4 flex flex-col justify-center">
                 <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Diagnostic Location</span>
                 <span className="text-md font-bold mt-1 flex items-center gap-1" style={{ color: 'var(--text-primary)' }}>
                   <MapPin className="h-4 w-4" style={{ color: 'var(--accent)' }} />
-                  {location || 'Karnataka Region'}
+                  {farms.find(f => f.id === selectedFarmId)?.location || 'Karnataka Region'}
                 </span>
-                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Season: {season}</span>
+                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Season: Current</span>
               </div>
               <div className="card-premium p-4 flex flex-col justify-center">
                 <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Soil Status</span>
@@ -521,7 +521,7 @@ export function SoilAnalysisContent() {
               </div>
               <div className="card-premium p-4 flex flex-col justify-center">
                 <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Water Source</span>
-                <span className="text-md font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{waterSource}</span>
+                <span className="text-md font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{farms.find(f => f.id === selectedFarmId)?.irrigation_type || 'Unknown'}</span>
                 <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Chemistry Balance: Stable</span>
               </div>
             </div>
@@ -800,13 +800,13 @@ export function SoilAnalysisContent() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-b border-black pb-4">
             <div>
-              <p><strong>Farmer Name:</strong> {farmerName || 'Ramesh Gowda'}</p>
-              <p><strong>Location/Taluk:</strong> {location || 'Mandya, Karnataka'}</p>
-              <p><strong>Acreage Size:</strong> {fieldSize} Acres</p>
+              <p><strong>Farmer Name:</strong> {farms.find(f => f.id === selectedFarmId)?.name || 'Farmer Partner'}</p>
+              <p><strong>Location:</strong> {farms.find(f => f.id === selectedFarmId)?.location || 'Karnataka'}</p>
+              <p><strong>Acreage Size:</strong> {farms.find(f => f.id === selectedFarmId)?.area_acres || 1} Acres</p>
             </div>
             <div>
-              <p><strong>Water Irrigation:</strong> {waterSource}</p>
-              <p><strong>Season Term:</strong> {season}</p>
+              <p><strong>Water Irrigation:</strong> {farms.find(f => f.id === selectedFarmId)?.irrigation_type || 'Unknown'}</p>
+              <p><strong>Season Term:</strong> Current</p>
               <p><strong>AI Diagnostics:</strong> Status {results.soil_health_report.status} ({results.confidence_level}% Confidence)</p>
             </div>
           </div>
@@ -915,6 +915,7 @@ export default function SoilAnalysis() {
     </div>
   );
 }
+
 
 
 
