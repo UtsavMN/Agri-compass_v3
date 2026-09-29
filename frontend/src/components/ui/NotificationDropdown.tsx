@@ -29,9 +29,11 @@ export const NotificationDropdown: React.FC = () => {
     const fetchNotifications = async () => {
       try {
         setLoading(true);
-        // Load local history
+        // Load local history and filter out any old mock alerts from previous versions
         const localHistoryStr = localStorage.getItem('agri_compass_notification_history');
-        const localHistory: Notification[] = localHistoryStr ? JSON.parse(localHistoryStr) : [];
+        const localHistory: Notification[] = localHistoryStr 
+          ? JSON.parse(localHistoryStr).filter((n: any) => !n.id.includes('mock') && !n.message.includes('mock')) 
+          : [];
 
         // Fetch from Java Backend
         const backendRes = await apiGet('/api/notifications').catch(() => ({ notifications: [] }));
