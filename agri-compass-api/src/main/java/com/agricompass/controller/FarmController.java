@@ -24,13 +24,15 @@ public class FarmController {
     private final FarmImageRepository farmImageRepository;
     private final UserService userService;
     private final com.agricompass.repository.PostRepository postRepository;
+    private final com.agricompass.repository.FarmDiagnosticRepository farmDiagnosticRepository;
 
-    public FarmController(FarmRepository farmRepository, WeatherLogRepository weatherLogRepository, FarmImageRepository farmImageRepository, UserService userService, com.agricompass.repository.PostRepository postRepository) {
+    public FarmController(FarmRepository farmRepository, WeatherLogRepository weatherLogRepository, FarmImageRepository farmImageRepository, UserService userService, com.agricompass.repository.PostRepository postRepository, com.agricompass.repository.FarmDiagnosticRepository farmDiagnosticRepository) {
         this.farmRepository = farmRepository;
         this.weatherLogRepository = weatherLogRepository;
         this.farmImageRepository = farmImageRepository;
         this.userService = userService;
         this.postRepository = postRepository;
+        this.farmDiagnosticRepository = farmDiagnosticRepository;
     }
 
     @GetMapping
@@ -251,6 +253,52 @@ public class FarmController {
         return ResponseEntity.ok(post);
     }
 
+    @GetMapping("/{id}/diagnostics")
+    public ResponseEntity<List<com.agricompass.entity.FarmDiagnostic>> getFarmDiagnostics(@PathVariable String id) {
+        Farm farm = farmRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Farm not found"));
+        if (!farm.getUserId().equals(userService.syncUser(null).getId())) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(farmDiagnosticRepository.findByFarmIdOrderByCreatedAtDesc(id));
+    }
+
+    @PostMapping("/{id}/diagnostics")
+    public ResponseEntity<com.agricompass.entity.FarmDiagnostic> createFarmDiagnostic(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        String userId = userService.syncUser(null).getId();
+        Farm farm = farmRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Farm not found"));
+        
+        if (!farm.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        com.agricompass.entity.FarmDiagnostic diag = new com.agricompass.entity.FarmDiagnostic();
+        diag.setFarmId(farm.getId());
+        diag.setClerkUserId(userId);
+        
+        if (body.containsKey("nitrogen") && body.get("nitrogen") != null) diag.setNitrogen(Double.parseDouble(body.get("nitrogen").toString()));
+        if (body.containsKey("phosphorus") && body.get("phosphorus") != null) diag.setPhosphorus(Double.parseDouble(body.get("phosphorus").toString()));
+        if (body.containsKey("potassium") && body.get("potassium") != null) diag.setPotassium(Double.parseDouble(body.get("potassium").toString()));
+        if (body.containsKey("ph") && body.get("ph") != null) diag.setPh(Double.parseDouble(body.get("ph").toString()));
+        if (body.containsKey("moisture") && body.get("moisture") != null) diag.setMoisture(Double.parseDouble(body.get("moisture").toString()));
+        if (body.containsKey("temperature") && body.get("temperature") != null) diag.setTemperature(Double.parseDouble(body.get("temperature").toString()));
+        if (body.containsKey("humidity") && body.get("humidity") != null) diag.setHumidity(Double.parseDouble(body.get("humidity").toString()));
+        
+        if (body.containsKey("healthStatus")) diag.setHealthStatus((String) body.get("healthStatus"));
+        if (body.containsKey("aiReport")) diag.setAiReport((String) body.get("aiReport"));
+
+        com.agricompass.entity.FarmDiagnostic saved = farmDiagnosticRepository.save(diag);
+        
+        // Update the Farm's latest soil health
+        if (diag.getHealthStatus() != null) {
+            farm.setLatestSoilHealth(diag.getHealthStatus());
+            farmRepository.save(farm);
+        }
+
+        return ResponseEntity.ok(saved);
+    }
+
     private Map<String, Object> farmDto(Farm farm) {
         return farmDto(farm, 
             weatherLogRepository.findByFarmIdOrderByCreatedAtDesc(farm.getId()),
@@ -267,6 +315,7 @@ public class FarmController {
         dto.put("soil_type", farm.getSoilType());
         dto.put("irrigation_type", farm.getIrrigationType());
         dto.put("current_crop", farm.getCurrentCrop());
+        dto.put("latest_soil_health", farm.getLatestSoilHealth());
         dto.put("created_at", farm.getCreatedAt() != null ? farm.getCreatedAt().toString() : null);
         List<Map<String, Object>> logs = weatherLogList.stream().map(log -> {
             Map<String, Object> m = new HashMap<>();

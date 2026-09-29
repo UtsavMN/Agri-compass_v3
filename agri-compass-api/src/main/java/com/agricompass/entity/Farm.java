@@ -38,6 +38,9 @@ public class Farm {
     @Column(name = "npk_k")
     private Double npkK;
 
+    @Column(name = "latest_soil_health")
+    private String latestSoilHealth;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private String createdAt;
 
@@ -49,6 +52,9 @@ public class Farm {
             this.id = java.util.UUID.randomUUID().toString();
         }
     }
+
+    public String getLatestSoilHealth() { return latestSoilHealth; }
+    public void setLatestSoilHealth(String latestSoilHealth) { this.latestSoilHealth = latestSoilHealth; }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
