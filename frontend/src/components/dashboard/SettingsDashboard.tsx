@@ -40,10 +40,10 @@ export function SettingsDashboard() {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const res = await fetch('http://localhost:5000/api/settings');
-      if (!res.ok) throw new Error('Failed to fetch settings');
-      const data = await res.json();
-      setSettings(data);
+      const { apiGet } = await import('@/lib/httpClient');
+      const res = await apiGet('/api/profile/me');
+      const data = res.preferences ? JSON.parse(res.preferences) : null;
+      if (data) setSettings(data);
     } catch (err) {
       console.error(err);
       toast({ title: 'Error', description: 'Failed to load settings', variant: 'destructive' });
@@ -56,12 +56,8 @@ export function SettingsDashboard() {
     if (!settings) return;
     try {
       setSaving(true);
-      const res = await fetch('http://localhost:5000/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
-      if (!res.ok) throw new Error('Failed to save settings');
+      const { apiPut } = await import('@/lib/httpClient');
+      await apiPut('/api/profile/me', { preferences: JSON.stringify(settings) });
       
       toast({
         title: "Settings Saved",

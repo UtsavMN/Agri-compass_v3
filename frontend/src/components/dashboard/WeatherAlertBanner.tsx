@@ -26,21 +26,23 @@ export const WeatherAlertBanner: React.FC<WeatherAlertBannerProps> = ({ lat = 19
     const fetchAlerts = async () => {
       try {
         setLoading(true);
-        // Using explicit localhost port 5000 for the new Node.js microservice
-        const response = await fetch(`http://localhost:5000/api/weather-alerts?lat=${lat}&lon=${lon}`);
-        if (!response.ok) throw new Error('Failed to fetch');
-        const data = await response.json();
+        // Fetch real alerts from Spring Boot WeatherController
+        const { apiGet } = await import('@/lib/httpClient');
+        const data = await apiGet('/api/weather/Bengaluru');
         
         if (data.alerts && data.alerts.length > 0) {
-          // Find the first alert that hasn't ended
-          const currentTime = Math.floor(Date.now() / 1000);
-          const validAlert = data.alerts.find((a: Alert) => {
-            const isHappening = currentTime >= a.start && currentTime <= a.end;
-            return isHappening;
-          });
+          // Find the first alert
+          const firstAlert = data.alerts[0];
           
-          if (validAlert) {
-            setAlert(validAlert);
+          if (firstAlert) {
+            setAlert({
+              alert_id: 'weather-alert-' + Date.now(),
+              event_type: firstAlert.event || firstAlert.headline || 'Severe Weather',
+              description: firstAlert.desc || firstAlert.description || 'Check local advisory',
+              start: new Date(firstAlert.effective || Date.now()).getTime() / 1000,
+              end: new Date(firstAlert.expires || Date.now() + 86400000).getTime() / 1000,
+              is_active: true
+            });
           }
         }
       } catch (err) {
