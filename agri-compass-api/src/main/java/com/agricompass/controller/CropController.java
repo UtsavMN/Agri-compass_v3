@@ -59,7 +59,6 @@ public class CropController {
     }
 
     @GetMapping("/district/{district}")
-    @org.springframework.cache.annotation.Cacheable("crops_district")
     public ResponseEntity<List<CropDTO>> getCropsByDistrict(@PathVariable String district) {
         return ResponseEntity.ok(cropService.getCropsByDistrict(district));
     }

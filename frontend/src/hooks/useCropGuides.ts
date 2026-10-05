@@ -281,6 +281,8 @@ export const useCropList = (params?: {
          dtos.sort((a:any, b:any) => ((b.expectedReturns||0)-(b.investmentPerAcre||0)) - ((a.expectedReturns||0)-(a.investmentPerAcre||0)));
       } else if (params?.sort === 'water_low_high') {
          dtos.sort((a:any, b:any) => (a.rainfallMm || '').localeCompare(b.rainfallMm || ''));
+      } else if (params?.sort === 'ai_score') {
+         dtos.sort((a:any, b:any) => (b.aiScore?.profitabilityScore || 0) - (a.aiScore?.profitabilityScore || 0));
       }
 
       setCrops(dtos.map(mapToCropCard));

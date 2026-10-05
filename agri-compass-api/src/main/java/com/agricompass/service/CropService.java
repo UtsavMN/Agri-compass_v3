@@ -68,6 +68,14 @@ public class CropService {
     }
 
     public List<CropDTO> getCropsByDistrict(String district) {
+        List<CropDistrict> districtCrops = districtRepository.findByDistrictNameIgnoreCase(district);
+        if (!districtCrops.isEmpty()) {
+            return districtCrops.stream()
+                    .map(CropDistrict::getCrop)
+                    .distinct()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+        }
         return cropRepository.findByDistrict(district).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
