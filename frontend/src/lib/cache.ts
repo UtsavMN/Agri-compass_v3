@@ -228,7 +228,7 @@ export function useCache<T>(
  * Weather-specific caching utilities
  */
 export class WeatherCache {
-  private static readonly WEATHER_TTL = 30 * 60 * 1000; // 30 minutes
+  private static readonly WEATHER_TTL = 10 * 60 * 1000; // 10 minutes
   private static readonly FORECAST_TTL = 2 * 60 * 60 * 1000; // 2 hours
 
   static setWeather(district: string, data: any): void {

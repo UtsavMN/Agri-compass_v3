@@ -62,7 +62,6 @@ public class WeatherController {
     }
 
     @GetMapping("/{district}")
-    @Cacheable(value = "weather", key = "#district != null ? #district.toLowerCase() : 'bengaluru'")
     public ResponseEntity<?> getWeather(@PathVariable String district) {
         // Normalize district to official Title Case names in Karnataka
         String officialDistrictName = "Bengaluru Urban";
