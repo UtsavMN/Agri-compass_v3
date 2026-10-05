@@ -109,7 +109,7 @@ export const HeroCarousel = ({
     const showcase = prices[0];
     const trendIcon = showcase.trend === 'up' ? '↑' : showcase.trend === 'down' ? '↓' : '-';
     trendLabel = `${showcase.commodity}`;
-    trendValue = `₹${showcase.modal_price || showcase.modalPrice || 0}/q ${trendIcon}`;
+    trendValue = `₹${(showcase as any).modal_price || showcase.modalPrice || 0}/q ${trendIcon}`;
     trendSub = `${showcase.market} Mandi`;
   }
 

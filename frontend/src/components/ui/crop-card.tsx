@@ -42,12 +42,12 @@ export const CropCard = React.memo(function CropCard({ crop, onViewDetails }: Cr
 
         <CardContent className="pt-0">
           <div className="space-y-3">
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="flex items-center text-sm text-gold-100/70">
               <MapPin className="h-4 w-4 mr-1" />
               <span className="line-clamp-1">{crop.major_districts}</span>
             </div>
 
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="flex items-center text-sm text-gold-100/70">
               <DollarSign className="h-4 w-4 mr-1" />
               <span className="line-clamp-1">{crop.economic_importance}</span>
             </div>
@@ -146,7 +146,7 @@ export const CropCard = React.memo(function CropCard({ crop, onViewDetails }: Cr
                       <Youtube className="h-5 w-5 text-red-600 flex-shrink-0" />
                       <div className="flex-1">
                         <p className="text-sm font-medium">YouTube Tutorial {index + 1}</p>
-                        <p className="text-xs text-gray-600 truncate">{link}</p>
+                        <p className="text-xs text-gold-100/70 truncate">{link}</p>
                       </div>
                       <Button
                         variant="outline"
@@ -164,7 +164,7 @@ export const CropCard = React.memo(function CropCard({ crop, onViewDetails }: Cr
                       <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
                       <div className="flex-1">
                         <p className="text-sm font-medium">Article {index + 1}</p>
-                        <p className="text-xs text-gray-600 truncate">{link}</p>
+                        <p className="text-xs text-gold-100/70 truncate">{link}</p>
                       </div>
                       <Button
                         variant="outline"

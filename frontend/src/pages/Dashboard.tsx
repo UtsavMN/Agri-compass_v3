@@ -77,7 +77,7 @@ export default function Dashboard() {
   const { scrollY } = useScroll();
   const _yBg = useTransform(scrollY, [0, 600], [0, 180]);
   const [loading, setLoading] = useState(true);
-  const { selectedDistrict, _setSelectedDistrict } = useDistrict();
+  const { selectedDistrict, setSelectedDistrict } = useDistrict();
   
   const { crops, loading: cropsLoading } = useCropList({
     district: selectedDistrict || undefined,

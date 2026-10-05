@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Beaker, 
-  _Droplets, 
+  Droplets, 
   Zap, 
   AlertTriangle, 
-  _Sprout, 
+  Sprout, 
   CheckCircle2, 
   ArrowRight,
   Info,
-  _ChevronDown,
+  ChevronDown,
   Activity,
   History as HistoryIcon,
-  _Leaf,
+  Leaf,
   Plus,
   Database
 } from 'lucide-react';
@@ -61,7 +61,7 @@ interface AnalysisResult {
 export default function FertilizerAnalysisModule({ 
   farmId, 
   initialCrop, 
-  _initialSoilType,
+  initialSoilType,
   onSaveSuccess
 }: { 
   farmId?: string; 

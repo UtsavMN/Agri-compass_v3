@@ -154,18 +154,18 @@ export default function FarmCard({ farm, onDelete, onUpdate }: FarmCardProps) {
                 <span className="font-medium">{farm.area_acres} acres</span>
               </div>
               {farm.soil_type && (
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-gold-100/70">
                   <Sprout className="h-4 w-4 mr-2 text-green-600" />
                   <span>{farm.soil_type} soil</span>
                 </div>
               )}
               {farm.irrigation_type && (
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-gold-100/70">
                   <Droplet className="h-4 w-4 mr-2 text-blue-600" />
                   <span>{farm.irrigation_type}</span>
                 </div>
               )}
-              <div className="flex items-center text-sm text-gray-600">
+              <div className="flex items-center text-sm text-gold-100/70">
                 <Camera className="h-4 w-4 mr-2 text-purple-600" />
                 <span>{farm.images?.length || 0} photos</span>
               </div>
@@ -173,13 +173,13 @@ export default function FarmCard({ farm, onDelete, onUpdate }: FarmCardProps) {
 
             {/* Next Steps */}
             <div className="border-t pt-4">
-              <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center">
+              <h4 className="text-sm font-medium text-gold-100 mb-2 flex items-center">
                 <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
                 Next Steps for {new Date().toLocaleString('default', { month: 'long' })}
               </h4>
               <ul className="space-y-1">
                 {nextSteps.slice(0, 3).map((step, index) => (
-                  <li key={index} className="text-sm text-gray-600 flex items-start">
+                  <li key={index} className="text-sm text-gold-100/70 flex items-start">
                     <span className="text-green-600 mr-2">•</span>
                     {step}
                   </li>

@@ -87,10 +87,10 @@ export function CropAutocomplete({ value, onChange }: CropAutocompleteProps) {
             <div
               key={crop.id}
               className="px-4 py-3 cursor-pointer hover:bg-gold-400/10 text-gold-100 transition-colors flex flex-col"
-              onClick={() => handleSelect(crop.name)}
+              onClick={() => handleSelect(crop.nameEnglish)}
             >
-              <span className="font-bold text-sm uppercase tracking-tight">{crop.name}</span>
-              <span className="text-[10px] text-gold-100/50 uppercase tracking-widest">{crop.scientificName || crop.season}</span>
+              <span className="font-bold text-sm uppercase tracking-tight">{crop.nameEnglish}</span>
+              <span className="text-[10px] text-gold-100/50 uppercase tracking-widest">{(crop as any).scientificName || crop.season}</span>
             </div>
           ))}
         </div>

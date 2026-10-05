@@ -33,14 +33,29 @@ export const FarmIntelligenceCard = ({ farmId, farmName, acres, district, crop, 
         })
         .catch(() => setMarketPrice(1850));
 
-      // Mock AI advisory based on crop
-      setTimeout(() => {
-        setAdvisory(`Optimal time to apply nitrogen fertilizer for ${crop}. Keep soil moisture above 60%.`);
-      }, 1500);
+      // Fetch real AI advisory from latest diagnostic
+      if (farmId) {
+        apiGet(`/api/farms/${farmId}/diagnostics`)
+          .then((d: any) => {
+            if (d && d.length > 0) {
+              try {
+                const report = JSON.parse(d[0].aiReport);
+                setAdvisory(report.soil_health_report?.soil_amendment_recommendations || `Keep soil moisture optimal for ${crop}.`);
+              } catch (e) {
+                setAdvisory(`Keep soil moisture optimal for ${crop}.`);
+              }
+            } else {
+              setAdvisory(`Consider taking a soil test for ${crop} to get AI recommendations.`);
+            }
+          })
+          .catch(() => setAdvisory(`Ensure timely irrigation and pest monitoring for ${crop}.`));
+      } else {
+        setAdvisory(`Ensure timely irrigation and pest monitoring for ${crop}.`);
+      }
     } else {
       setAdvisory("Please add a crop to get AI advisory.");
     }
-  }, [crop, district]);
+  }, [crop, district, farmId]);
 
   const estimatedYield = acres * 8; // quintals
   const estimatedEarnings = marketPrice ? estimatedYield * marketPrice : null;

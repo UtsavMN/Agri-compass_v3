@@ -317,7 +317,6 @@ public class AiController {
 
     @SuppressWarnings("unchecked")
     @PostMapping("/soil-recommendation")
-    @Cacheable(value = "soilRecommendations", key = "#body.hashCode()")
     public ResponseEntity<Map<String, Object>> getSoilRecommendation(@RequestBody Map<String, Object> body) {
         ObjectMapper mapper = new ObjectMapper();
 

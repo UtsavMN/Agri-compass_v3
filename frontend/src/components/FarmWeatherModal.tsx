@@ -115,7 +115,7 @@ export default function FarmWeatherModal({ farmId, farmName, isOpen, onClose }: 
         <div className="space-y-6">
           {/* Add New Log Form */}
           <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg bg-gray-50">
-            <h3 className="font-medium text-gray-900">Add Weather Observation</h3>
+            <h3 className="font-medium text-gold-100">Add Weather Observation</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -186,7 +186,7 @@ export default function FarmWeatherModal({ farmId, farmName, isOpen, onClose }: 
 
           {/* Weather Logs List */}
           <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Recent Observations</h3>
+            <h3 className="font-medium text-gold-100">Recent Observations</h3>
 
             {isLoading ? (
               <div className="text-center py-4">
@@ -204,7 +204,7 @@ export default function FarmWeatherModal({ farmId, farmName, isOpen, onClose }: 
                 {logs.map((log) => (
                   <div key={log.id} className="border rounded-lg p-4 bg-white">
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-gold-100/70">
                         <Calendar className="h-4 w-4" />
                         {format(new Date(log.created_at), 'MMM d, yyyy h:mm a')}
                       </div>

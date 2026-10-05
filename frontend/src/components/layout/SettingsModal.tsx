@@ -5,7 +5,6 @@ import { Bell, MapPin, Shield, Smartphone, Sun, Ruler } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useUser } from '@/store';
 import { apiPatch } from '@/lib/httpClient';
-import { Checkbox } from '@/components/ui/checkbox';
 
 interface SettingsModalProps {
   isOpen: boolean;

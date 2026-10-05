@@ -31,8 +31,8 @@ const mapToCropCard = (dto: any): CropCard => {
     kKgAcre: (raw.npk_requirement_kg_per_ha?.K ? Math.round(raw.npk_requirement_kg_per_ha.K / 2.471) : dto.nutrient?.potassiumKg) || null,
     aiScore: dto.aiScore?.profitabilityScore || 85,
     pdfAvailable: true,
-    temperatureRange: dto.temperatureRange || "",
-    waterRequirement: dto.waterRequirement || ""
+    /* temperatureRange: dto.temperatureRange, */
+    /* waterRequirement: dto.waterRequirement */
   };
 };
 

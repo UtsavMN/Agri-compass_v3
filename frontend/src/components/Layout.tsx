@@ -26,10 +26,10 @@ import {
   Sprout,
   TrendingUp,
   FileText,
-  _User,
-  _LogOut,
+  User,
+  LogOut,
   Menu,
-  _Cloud,
+  Cloud,
   X,
   Languages,
   Settings,
@@ -57,13 +57,13 @@ import { WeatherChip } from '@/components/layout/WeatherChip';
 
 export default function Layout({
   children,
-  _fullBleed = false,
+  fullBleed = false,
   hideHeader = false,
 }: LayoutProps) {
   const { user, profile, signOut } = useUser();
   const { openUserProfile } = useClerk();
   const { language, toggleLanguage, t } = useLanguage();
-  const { selectedDistrict, _setSelectedDistrict } = useDistrict();
+  const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

@@ -34,7 +34,7 @@ export default function ForgotPassword() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
             Forgot Password
           </h1>
-          <p className="text-gray-600">We'll send you a link to reset it</p>
+          <p className="text-gold-100/70">We'll send you a link to reset it</p>
         </div>
 
         <div className="bg-white p-8 rounded-xl shadow-xl w-full">
@@ -65,7 +65,7 @@ export default function ForgotPassword() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link to="/auth" className="flex items-center justify-center text-gray-600 hover:text-green-600 transition-colors">
+            <Link to="/auth" className="flex items-center justify-center text-gold-100/70 hover:text-green-600 transition-colors">
               <ArrowLeft className="h-4 w-4 mr-2" /> Back to Login
             </Link>
           </div>

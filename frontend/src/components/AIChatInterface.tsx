@@ -271,7 +271,7 @@ export default function AIChatInterface({ selectedFarmId, onFarmSelect }: AIChat
               className="flex justify-start"
             >
               <div className="bg-gray-100 rounded-lg px-4 py-3 max-w-[80%]">
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex items-center gap-2 text-gold-100/70">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-sm">AI is thinking...</span>
                 </div>

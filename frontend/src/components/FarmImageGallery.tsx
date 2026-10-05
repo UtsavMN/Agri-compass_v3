@@ -116,8 +116,8 @@ export default function FarmImageGallery({
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
               <div className="text-center">
                 <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Upload Farm Images</h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <h3 className="text-lg font-medium text-gold-100 mb-2">Upload Farm Images</h3>
+                <p className="text-sm text-gold-100/70 mb-4">
                   Share photos of your crops, equipment, or farm activities
                 </p>
 

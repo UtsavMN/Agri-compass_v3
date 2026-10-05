@@ -132,7 +132,7 @@ export default function NotificationBell() {
                   {getNotificationIcon(notification.type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-gold-100">
                     Someone {getNotificationText(notification)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">

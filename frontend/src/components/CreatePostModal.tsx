@@ -286,7 +286,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
               <input {...getInputProps()} />
               <div className="flex flex-col items-center gap-2">
                 <Upload className="h-8 w-8 text-gray-400" />
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gold-100/70">
                   Drop images here or click to upload
                 </p>
                 <p className="text-xs text-gray-500">

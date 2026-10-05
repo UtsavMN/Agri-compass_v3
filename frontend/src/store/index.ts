@@ -21,7 +21,6 @@ export interface Profile {
   preferences?: string | null;
 }
 
-export const MOCK_USERS: any[] = [];
 
 export interface Notification {
   id: string;

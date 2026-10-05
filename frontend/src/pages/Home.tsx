@@ -226,7 +226,7 @@ export default function Home() {
             <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-6">
               Welcome to Agri Compass
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gold-100/70 mb-8 max-w-2xl mx-auto">
               Karnataka's AI-powered agricultural platform connecting farmers, experts, and communities
             </p>
             <Button
@@ -253,7 +253,7 @@ export default function Home() {
               <h1 className="text-gradient">
                 {language === 'kn' ? 'ಕೃಷಿ ಸಮುದಾಯ' : 'Farmer Community'}
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gold-100/70 mt-2">
                 {language === 'kn' ? 'ಕೃಷಿಕರೊಂದಿಗೆ ಜ್ಞಾನ ಹಂಚಿಕೊಳ್ಳಿ ಮತ್ತು ಸಂಪರ್ಕಿಸಿ' : 'Share knowledge and connect with fellow farmers'}
               </p>
             </div>
@@ -340,7 +340,7 @@ export default function Home() {
               {cropsLoading ? (
                 <div className="text-center py-8">
                   <div className="loading-shimmer h-32 rounded-lg mb-4"></div>
-                  <p className="text-gray-600">{language === 'kn' ? 'ಲೋಡ್ ಆಗುತ್ತಿದೆ...' : 'Loading crops...'}</p>
+                  <p className="text-gold-100/70">{language === 'kn' ? 'ಲೋಡ್ ಆಗುತ್ತಿದೆ...' : 'Loading crops...'}</p>
                 </div>
               ) : (
                 <StaggerContainer>
@@ -377,7 +377,7 @@ export default function Home() {
                       <h3 className="text-xl font-semibold mb-2">
                         {language === 'kn' ? 'ಇನ್ನೂ ಪೋಸ್ಟ್ ಇಲ್ಲ' : 'No posts yet'}
                       </h3>
-                      <p className="text-gray-600 mb-4">
+                      <p className="text-gold-100/70 mb-4">
                         {language === 'kn' ? 'ಮೊದಲ ಪೋಸ್ಟ್ ಮಾಡಿ!' : 'Be the first to share something!'}
                       </p>
                       <Button onClick={() => window.location.href = '/community'}>

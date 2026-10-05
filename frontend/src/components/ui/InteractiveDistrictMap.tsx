@@ -128,7 +128,7 @@ interface InteractiveDistrictMapProps {
 
 export function InteractiveDistrictMap({
   selectedDistrictName,
-  _onSelectDistrictName
+  onSelectDistrictName
 }: InteractiveDistrictMapProps) {
   const [selectedTalukName, setSelectedTalukName] = useState<string>('');
   const [hoveredTalukName, setHoveredTalukName] = useState<string | null>(null);

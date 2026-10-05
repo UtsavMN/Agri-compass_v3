@@ -180,7 +180,7 @@ export default function AirAgent() {
         <ScrollReveal>
           <div>
             <h1 className="text-gradient">AI Agent</h1>
-            <p className="text-gray-600 mt-2">Your AI-powered agricultural assistant for Karnataka farmers</p>
+            <p className="text-gold-100/70 mt-2">Your AI-powered agricultural assistant for Karnataka farmers</p>
           </div>
         </ScrollReveal>
 

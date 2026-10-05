@@ -89,7 +89,7 @@ export default function CommentSection({ postId, commentsCount, onCommentsCountC
         variant="ghost"
         size="sm"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
+        className="flex items-center gap-2 text-gold-100/70 hover:text-gray-800"
       >
         <MessageCircle className="h-4 w-4" />
         {commentsCount} {commentsCount === 1 ? 'comment' : 'comments'}

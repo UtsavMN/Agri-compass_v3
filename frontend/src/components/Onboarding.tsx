@@ -144,7 +144,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     {onboardingSteps[currentStep].description}
                   </CardDescription>
 
-                  <p className="text-gray-600 text-sm leading-relaxed">
+                  <p className="text-gold-100/70 text-sm leading-relaxed">
                     {onboardingSteps[currentStep].content}
                   </p>
                 </motion.div>

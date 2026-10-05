@@ -7,8 +7,8 @@ import {
   MapPin, 
   Phone, 
   X, 
-  _ExternalLink, 
-  _Bookmark, 
+  ExternalLink, 
+  Bookmark, 
   ChevronRight, 
   ChevronLeft, 
   Trash2,
@@ -331,7 +331,7 @@ export function Marketplace() {
 // Create listing modal sub-component
 function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const { toast } = useToast();
-  const { _user, profile } = useUser();
+  const { user, profile } = useUser();
   const [step, setStep] = useState(1);
   const [listingType, setListingType] = useState<'sell' | 'buy'>('sell');
   const [selectedCategory, setSelectedCategory] = useState<typeof LISTING_CATEGORIES[0] | null>(null);

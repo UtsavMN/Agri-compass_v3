@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  ArrowLeft, DollarSign, Droplets, MapPin, _ListChecks, Sprout, AlertTriangle,
-  Beaker, _Zap, Calendar, Wind, Shield, BarChart3, TrendingUp, History, Info,
+  ArrowLeft, DollarSign, Droplets, MapPin, ListChecks, Sprout, AlertTriangle,
+  Beaker, Zap, Calendar, Wind, Shield, BarChart3, TrendingUp, History, Info,
   Leaf, Settings, ExternalLink, Activity, Printer, Brain
 } from 'lucide-react';
 import { apiGet } from '@/lib/httpClient';
@@ -220,7 +220,7 @@ export default function CropDetails() {
             {displayImage ? (
               <img
                 src={displayImage}
-                alt={crop.name}
+                alt={crop.nameEnglish}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
@@ -243,7 +243,7 @@ export default function CropDetails() {
                   <Badge variant="outline" className="border-gold-400/30 text-gold-400 font-black px-4 py-1.5 text-[10px] uppercase tracking-widest bg-earth-main/60 backdrop-blur-md print:border-black print:text-black">
                     {crop.durationDays} DAY CYCLE
                   </Badge>
-                  {crop.difficultyLevel && (
+                  {crop.difficulty && (
                     <Badge
                       variant="outline"
                       className={`font-black px-4 py-1.5 text-[10px] uppercase tracking-widest bg-earth-main/60 backdrop-blur-md print:border-black print:text-black ${crop.difficulty?.toLowerCase() === 'easy'
@@ -367,7 +367,7 @@ export default function CropDetails() {
                         </div>
                         <div className="p-3 bg-[#191610] rounded-xl border border-[#2A2720]">
                           <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-1">Temperature</span>
-                          <span className="text-sm font-mono text-[#C9A84C]">{crop.temperatureRange || "N/A"}</span>
+                          <span className="text-sm font-mono text-[#C9A84C]">{(crop as any).temperatureRange || "N/A"}</span>
                         </div>
                       </div>
                     </CardContent>
@@ -386,7 +386,7 @@ export default function CropDetails() {
                       </div>
                       <div>
                         <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-2">Water Req.</span>
-                        <p className="text-[#F5F0E8] text-sm">{crop.waterRequirement || crop.irrigation?.water_requirement || "N/A"}</p>
+                        <p className="text-[#F5F0E8] text-sm">{(crop as any).waterRequirement || crop.irrigation?.water_requirement || "N/A"}</p>
                       </div>
                     </CardContent>
                   </Card>

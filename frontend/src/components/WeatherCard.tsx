@@ -116,7 +116,7 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600 mb-3">{error || 'Unable to load weather data'}</p>
+          <p className="text-sm text-gold-100/70 mb-3">{error || 'Unable to load weather data'}</p>
           <Button
             variant="outline"
             size="sm"
@@ -165,19 +165,19 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
               <div className={`text-2xl font-bold ${getTemperatureColor(weather.temperature)}`}>
                 {weather.temperature}°C
               </div>
-              <div className="text-xs text-gray-600">Temperature</div>
+              <div className="text-xs text-gold-100/70">Temperature</div>
             </div>
 
             <div className="text-center p-3 bg-blue-50 rounded-lg">
               <Droplets className="h-6 w-6 mx-auto mb-1 text-blue-500" />
               <div className="text-2xl font-bold text-blue-600">{weather.humidity}%</div>
-              <div className="text-xs text-gray-600">Humidity</div>
+              <div className="text-xs text-gold-100/70">Humidity</div>
             </div>
 
             <div className="text-center p-3 bg-blue-50 rounded-lg">
               <Wind className="h-6 w-6 mx-auto mb-1 text-gray-500" />
-              <div className="text-2xl font-bold text-gray-600">{weather.windSpeed} km/h</div>
-              <div className="text-xs text-gray-600">Wind Speed</div>
+              <div className="text-2xl font-bold text-gold-100/70">{weather.windSpeed} km/h</div>
+              <div className="text-xs text-gold-100/70">Wind Speed</div>
             </div>
 
             <div className="text-center p-3 bg-blue-50 rounded-lg">
@@ -185,7 +185,7 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
               <div className="text-lg font-semibold text-gray-700 capitalize">
                 {weather.description}
               </div>
-              <div className="text-xs text-gray-600">Conditions</div>
+              <div className="text-xs text-gold-100/70">Conditions</div>
             </div>
           </div>
 
@@ -241,7 +241,7 @@ export default function WeatherCard({ district, farmId, compact = false }: Weath
                     <h5 className="text-sm font-medium text-gray-700 mb-2">Farming Tips:</h5>
                     <ul className="space-y-1">
                       {advisory.farmingTips.slice(0, 3).map((tip) => (
-                        <li key={tip} className="text-sm text-gray-600 flex items-start gap-2">
+                        <li key={tip} className="text-sm text-gold-100/70 flex items-start gap-2">
                           <span className="text-green-500 mt-1">•</span>
                           {tip}
                         </li>

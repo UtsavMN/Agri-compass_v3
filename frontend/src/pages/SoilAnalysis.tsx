@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { apiGet, apiPost } from '@/lib/httpClient';
 import { Button } from '@/components/ui/button';
 import { History, Sparkles,
@@ -10,13 +11,13 @@ import { History, Sparkles,
   AlertTriangle,
   TrendingUp,
   CheckCircle,
-  _ChevronDown,
-  _ChevronUp,
+  ChevronDown,
+  ChevronUp,
   Printer,
-  _ArrowRight,
+  ArrowRight,
   Info,
   MapPin,
-  _Calendar,
+  Calendar,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -65,6 +66,7 @@ const getSoilColor = (value: number, ideal: [number, number]) => {
 };
 
 export function SoilAnalysisContent() {
+  const { toast } = useToast();
   const [farms, setFarms] = useState<any[]>([]);
   const [selectedFarmId, setSelectedFarmId] = useState<string>('');
   const [showHistory, setShowHistory] = useState(false);
