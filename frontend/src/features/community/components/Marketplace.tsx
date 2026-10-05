@@ -7,8 +7,8 @@ import {
   MapPin, 
   Phone, 
   X, 
-  ExternalLink, 
-  Bookmark, 
+   
+   
   ChevronRight, 
   ChevronLeft, 
   Trash2,
@@ -46,7 +46,7 @@ export const formatCurrency = (value: number) => {
 };
 
 export function Marketplace() {
-  const { user } = useUser();
+  
   const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [listingType, setListingType] = useState<'buy' | 'sell' | 'all'>('all');
