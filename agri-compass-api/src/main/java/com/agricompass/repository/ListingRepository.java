@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface ListingRepository extends JpaRepository<Listing, Long> {
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"userProfile"})
     @Query("SELECT l FROM Listing l WHERE l.active = true AND " +
            "(:category = '' OR LOWER(l.category) = LOWER(:category)) AND " +
            "(:type = '' OR LOWER(l.listingType) = LOWER(:type)) AND " +
