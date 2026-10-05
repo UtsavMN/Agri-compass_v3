@@ -164,14 +164,14 @@ export default function Weather() {
             
             {/* Location Selector */}
             <div className="relative w-full md:w-64">
-              <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gold-400" />
+              <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gold-400 z-10 pointer-events-none" />
               <Select value={localDistrict} onValueChange={setLocalDistrict}>
-                <SelectTrigger className="pl-12 bg-earth-elevated/40 border-earth-border text-gold-100 focus:border-gold-400 h-12 rounded-xl text-xs">
+                <SelectTrigger className="pl-12 bg-earth-elevated/80 border-earth-border !text-white font-medium focus:border-gold-400 h-12 rounded-xl text-sm shadow-sm relative z-0">
                   <SelectValue placeholder="Select your district..." />
                 </SelectTrigger>
-                <SelectContent className="bg-earth-card border-earth-border text-gold-100">
+                <SelectContent className="bg-earth-elevated !text-white border-earth-border">
                   {districts.map((district) => (
-                    <SelectItem key={district} value={district}>
+                    <SelectItem key={district} value={district} className="hover:bg-earth-border/40 focus:bg-earth-border/40 cursor-pointer">
                       {district}
                     </SelectItem>
                   ))}
@@ -286,15 +286,15 @@ export default function Weather() {
               </div>
             </ScrollReveal>
 
-            {/* 5-Day Forecast Grid */}
+            {/* 3-Day Forecast Grid */}
             {weatherInfo.weather.forecast && weatherInfo.weather.forecast.length > 0 && (
               <ScrollReveal delay={0.2}>
                 <div className="space-y-4">
                   <h2 className="text-xs text-gold-400 font-black uppercase tracking-widest flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" /> 5-Day Timeline Forecast
+                    <TrendingUp className="h-4 w-4" /> 3-Day Timeline Forecast
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-                    {weatherInfo.weather.forecast.slice(0, 5).map((day, idx) => (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {weatherInfo.weather.forecast.slice(0, 3).map((day, idx) => (
                       <div key={idx} className="card-base p-4 text-center relative overflow-hidden flex flex-col justify-between py-5 hover:border-gold-400/20 transition-all duration-300 card-hover">
                         <div className="absolute top-0 left-0 right-0 h-[2px]"
                           style={{ background: getDayGradient(day.description) }} />
