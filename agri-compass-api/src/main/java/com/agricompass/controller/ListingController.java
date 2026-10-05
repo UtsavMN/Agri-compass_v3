@@ -20,6 +20,9 @@ public class ListingController {
     @Autowired
     private ListingRepository listingRepository;
 
+    @Autowired
+    private com.agricompass.service.UserService userService;
+
     @GetMapping
     public ResponseEntity<Page<ListingDTO>> getListings(
         @RequestParam(defaultValue = "0") int page,
@@ -43,9 +46,9 @@ public class ListingController {
 
     @PostMapping
     public ResponseEntity<ListingDTO> createListing(
-        @RequestBody CreateListingRequest request,
-        @RequestHeader("X-Mock-User-Id") String userId
+        @RequestBody CreateListingRequest request
     ) {
+        String userId = userService.syncUser(null).getId();
         Listing listing = new Listing();
         listing.setTitle(request.getTitle());
         listing.setDescription(request.getDescription());
@@ -65,9 +68,9 @@ public class ListingController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteListing(
-        @PathVariable Long id,
-        @RequestHeader("X-Mock-User-Id") String userId
+        @PathVariable Long id
     ) {
+        String userId = userService.syncUser(null).getId();
         Listing listing = listingRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing not found"));
         if (!listing.getUserId().equals(userId))
