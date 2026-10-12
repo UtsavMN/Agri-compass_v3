@@ -40,6 +40,7 @@ public class SecurityConfig {
                     "/api/health",
                     "/api/crops/**",
                     "/api/schemes/**",
+                    "/api/marketplace/**",
                     "/api/users/search",
                     "/api/users/check-handle",
                     "/api/users/*/public",

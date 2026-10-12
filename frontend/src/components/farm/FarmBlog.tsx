@@ -3,7 +3,7 @@ import { useAuth, useUser } from '@clerk/clerk-react';
 import { apiGet, apiPost } from '@/lib/httpClient';
 import { FarmUpdateCard } from './FarmUpdateCard';
 import { Button } from '@/components/ui/button';
-import { ImageIcon, Loader2, Send } from 'lucide-react';
+import { ImageIcon, Loader2, Send, Sprout } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
 
@@ -142,7 +142,7 @@ export function FarmBlog({ farmId, ownerId, isOwner: isOwnerProp }: FarmBlogProp
           <EmptyState 
             title="No Updates Yet" 
             description={isOwner ? "Share your first farm update above to start your timeline." : "The owner hasn't shared any updates for this farm yet."}
-            icon="Sprout"
+            icon={Sprout}
           />
         )}
       </div>

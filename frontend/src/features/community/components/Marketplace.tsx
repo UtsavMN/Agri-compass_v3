@@ -46,7 +46,7 @@ export const formatCurrency = (value: number) => {
 };
 
 export function Marketplace() {
-  
+  const { user } = useUser();
   const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [listingType, setListingType] = useState<'buy' | 'sell' | 'all'>('all');
@@ -74,8 +74,18 @@ export function Marketplace() {
         url += `&search=${encodeURIComponent(searchTerm)}`;
       }
       const data = await apiGet(url);
-      // Backend returns a Page object: data.content
-      setListings(data.content || []);
+      const rawList = data?.content || (Array.isArray(data) ? data : []);
+      const mapped = rawList.map((item: any) => ({
+        ...item,
+        listingType: item.listingType || item.listing_type || 'sell',
+        priceUnit: item.priceUnit || item.price_unit || 'Total Price',
+        imageUrl: item.imageUrl || item.image_url || '',
+        userId: item.userId || item.user_id || '',
+        sellerName: item.sellerName || item.seller_name || 'Farmer Partner',
+        sellerVerified: item.sellerVerified !== undefined ? item.sellerVerified : (item.seller_verified !== undefined ? item.seller_verified : true),
+        createdAt: item.createdAt || item.created_at || new Date().toISOString()
+      }));
+      setListings(mapped);
     } catch (error) {
       console.error('Error loading listings:', error);
       toast({
@@ -380,15 +390,23 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
 
       const finalTitle = title.trim() || `${subType} - ${location}`;
 
+      const cleanPrice = typeof price === 'string' ? parseFloat(price.replace(/,/g, '')) : parseFloat(String(price));
+
       const payload = {
         title: finalTitle,
         description: finalDescription,
         category: selectedCategory?.label || 'General',
         listingType,
-        price: parseFloat(price),
+        listing_type: listingType,
+        type: listingType,
+        price: !isNaN(cleanPrice) ? cleanPrice : 0,
         priceUnit,
+        price_unit: priceUnit,
         location: location.trim(),
-        imageUrl: imageUrl.trim() || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?fit=crop&w=400&h=300&q=60'
+        imageUrl: imageUrl.trim() || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?fit=crop&w=400&h=300&q=60',
+        image_url: imageUrl.trim() || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?fit=crop&w=400&h=300&q=60',
+        userId: user?.id,
+        user_id: user?.id
       };
 
       await apiPost('/api/marketplace', payload);
