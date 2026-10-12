@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiGet, apiPost, apiDelete } from '@/lib/httpClient';
+import { UploadAPI } from '@/lib/api/upload';
 import { useUser } from '@/store';
 import { LISTING_CATEGORIES } from '@/data/marketplaceCategories';
 import { 
@@ -7,14 +8,22 @@ import {
   MapPin, 
   Phone, 
   X, 
-   
-   
   ChevronRight, 
   ChevronLeft, 
   Trash2,
   CheckCircle,
   Search,
-  ShoppingCart
+  ShoppingCart,
+  MessageCircle,
+  Upload,
+  Check,
+  CheckCircle2,
+  Tag,
+  Package,
+  Clock,
+  Sparkles,
+  ExternalLink,
+  ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -30,6 +39,15 @@ export interface Listing {
   price: number;
   priceUnit: string;
   location: string;
+  address?: string;
+  contactPhone?: string;
+  contact_phone?: string;
+  quantity?: string;
+  quantityUnit?: string;
+  quantity_unit?: string;
+  isNegotiable?: boolean;
+  is_negotiable?: boolean;
+  status?: string;
   imageUrl: string;
   userId: string;
   sellerName: string;
@@ -45,18 +63,31 @@ export const formatCurrency = (value: number) => {
   }).format(value);
 };
 
+export const timeAgo = (dateStr: string) => {
+  try {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    if (hours < 1) return 'Just now';
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  } catch {
+    return 'Recently';
+  }
+};
+
 export function Marketplace() {
   const { user } = useUser();
   const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [listingType, setListingType] = useState<'buy' | 'sell' | 'all'>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [contactingListing, setContactingListing] = useState<Listing | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     loadListings();
   }, [activeCategory, listingType, searchTerm]);
 
@@ -75,10 +106,16 @@ export function Marketplace() {
       }
       const data = await apiGet(url);
       const rawList = data?.content || (Array.isArray(data) ? data : []);
-      const mapped = rawList.map((item: any) => ({
+      const mapped: Listing[] = rawList.map((item: any) => ({
         ...item,
         listingType: item.listingType || item.listing_type || 'sell',
         priceUnit: item.priceUnit || item.price_unit || 'Total Price',
+        address: item.address || item.location || '',
+        contactPhone: item.contactPhone || item.contact_phone || '+91 98450 12345',
+        quantity: item.quantity || '1',
+        quantityUnit: item.quantityUnit || item.quantity_unit || 'Units',
+        isNegotiable: item.isNegotiable !== undefined ? item.isNegotiable : (item.is_negotiable !== undefined ? item.is_negotiable : false),
+        status: item.status || 'ACTIVE',
         imageUrl: item.imageUrl || item.image_url || '',
         userId: item.userId || item.user_id || '',
         sellerName: item.sellerName || item.seller_name || 'Farmer Partner',
@@ -116,119 +153,204 @@ export function Marketplace() {
     }
   };
 
+  const handleMarkSold = async (id: number) => {
+    try {
+      await apiPost(`/api/marketplace/${id}/mark-sold`, {});
+      toast({
+        title: '🎉 Listing Marked as Sold!',
+        description: 'Congratulations! This deal is completed and the post has been removed from the feed.',
+      });
+      loadListings();
+    } catch (error) {
+      console.error('Error marking as sold:', error);
+      toast({
+        title: 'Update failed',
+        description: 'Could not mark listing as sold. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
 
-
-  const timeAgo = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - d.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${diffDays}d ago`;
+  const handleBuyComplete = async (listingId: number) => {
+    try {
+      await apiPost(`/api/marketplace/${listingId}/buy`, {});
+      toast({
+        title: '🎉 Purchase Completed!',
+        description: 'Congratulations on your deal! The listing has been marked as sold and removed.',
+      });
+      setContactingListing(null);
+      loadListings();
+    } catch (error) {
+      console.error('Error completing purchase:', error);
+      toast({
+        title: 'Purchase update failed',
+        description: 'Could not record deal completion. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header & Create Button */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* Header bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[rgba(255,255,255,0.06)]">
         <div>
-          <h2 className="text-[22px] font-serif font-black text-[#f0ece0] tracking-tight">Farmer Marketplace</h2>
-          <p className="text-[13px] text-[#6a6050] mt-0.5 font-medium">
-            Buy and sell crops, land, equipment, and farm inputs directly with local growers.
+          <div className="flex items-center gap-2">
+            <h1 className="font-serif font-black text-2xl md:text-3xl text-[#f0ece0] tracking-tight">
+              Farmer Marketplace
+            </h1>
+            <span className="text-[10px] bg-green-500/10 border border-green-500/20 text-green-400 font-extrabold uppercase px-2 py-0.5 rounded-full tracking-wider">
+              Live Trades
+            </span>
+          </div>
+          <p className="text-[12px] text-[#a09880] mt-1 font-medium">
+            Buy and sell crops, machinery, land, and fertilizers directly with verified local farmers.
           </p>
         </div>
-        <button onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-[#c49a2a] hover:bg-[#d4aa3a] text-[#0f0f0b] font-bold px-5 py-3 rounded-xl text-[12px] uppercase tracking-wider transition-colors shadow-lg shrink-0">
-          <Plus size={16} strokeWidth={2.5} />
-          Post a listing
+
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center justify-center gap-2 bg-[#c49a2a] hover:bg-[#d4aa3a] text-[#0f0f0b] px-5 py-2.5 rounded-xl font-extrabold uppercase text-[12px] tracking-wider transition-all shadow hover:shadow-gold-glow shrink-0"
+        >
+          <Plus size={16} strokeWidth={3} />
+          Post a Listing
         </button>
       </div>
 
-      {/* Filters block */}
-      <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 items-center">
-        {/* Buy / Sell / All toggle */}
-        <div className="flex gap-2 bg-earth-elevated/20 p-1 rounded-xl border border-earth-border/40 w-fit shrink-0">
-          {(['all', 'buy', 'sell'] as const).map(type => (
-            <button key={type}
-              onClick={() => setListingType(type)}
+      {/* Filter and Search Bar */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Listing type toggles */}
+          <div className="flex items-center gap-1.5 p-1 bg-white/3 rounded-xl border border-white/5 shrink-0">
+            <button
+              onClick={() => setListingType('all')}
               className={cn(
-                'px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all',
-                listingType === type
-                  ? 'bg-[#c49a2a] text-[#0f0f0b] shadow-inner'
+                'px-3.5 py-1.5 rounded-lg text-[11px] font-extrabold uppercase tracking-wider transition-all',
+                listingType === 'all'
+                  ? 'bg-[#c49a2a] text-[#0f0f0b] shadow'
                   : 'text-[#a09880] hover:text-[#f0ece0]'
-              )}>
-              {type === 'all' ? 'All listings' : type === 'buy' ? '🔍 Looking to buy' : '📢 For sale'}
+              )}
+            >
+              All Listings
+            </button>
+            <button
+              onClick={() => setListingType('buy')}
+              className={cn(
+                'px-3.5 py-1.5 rounded-lg text-[11px] font-extrabold uppercase tracking-wider transition-all',
+                listingType === 'buy'
+                  ? 'bg-[#c49a2a] text-[#0f0f0b] shadow'
+                  : 'text-[#a09880] hover:text-[#f0ece0]'
+              )}
+            >
+              🔍 Looking to Buy
+            </button>
+            <button
+              onClick={() => setListingType('sell')}
+              className={cn(
+                'px-3.5 py-1.5 rounded-lg text-[11px] font-extrabold uppercase tracking-wider transition-all',
+                listingType === 'sell'
+                  ? 'bg-[#c49a2a] text-[#0f0f0b] shadow'
+                  : 'text-[#a09880] hover:text-[#f0ece0]'
+              )}
+            >
+              📢 For Sale
+            </button>
+          </div>
+
+          {/* Search box */}
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6a6050]" />
+            <input
+              type="text"
+              placeholder="Search crop, equipment, village, keyword..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white/3 border border-white/5 text-[#f0ece0] pl-10 pr-4 py-2 rounded-xl text-xs font-medium placeholder:text-[#6a6050] focus:border-[#c49a2a] outline-none transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Category horizontal scroll */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <button
+            onClick={() => setActiveCategory('all')}
+            className={cn(
+              'px-3.5 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider whitespace-nowrap border transition-all',
+              activeCategory === 'all'
+                ? 'bg-[#c49a2a] border-[#c49a2a] text-[#0f0f0b] font-extrabold'
+                : 'border-[rgba(255,255,255,0.08)] bg-white/3 text-[#a09880] hover:text-[#f0ece0]'
+            )}
+          >
+            All Categories
+          </button>
+          {LISTING_CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.label)}
+              className={cn(
+                'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider whitespace-nowrap border transition-all',
+                activeCategory === cat.label
+                  ? 'bg-[#c49a2a] border-[#c49a2a] text-[#0f0f0b] font-extrabold'
+                  : 'border-[rgba(255,255,255,0.08)] bg-white/3 text-[#a09880] hover:text-[#f0ece0]'
+              )}
+            >
+              <span>{cat.icon}</span>
+              {cat.label}
             </button>
           ))}
         </div>
-
-        {/* Search */}
-        <div className="relative w-full">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#6a6050]" />
-          <input
-            placeholder="Search crop, equipment, land, keyword..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 bg-earth-elevated/20 border border-earth-border/40 text-gold-100 focus:border-[#c49a2a] h-12 rounded-xl text-xs font-bold uppercase tracking-widest placeholder:text-[#6a6050] outline-none"
-          />
-        </div>
       </div>
 
-      {/* Category filter chips */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-        <button
-          onClick={() => setActiveCategory('all')}
-          className={cn('px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider border shrink-0 transition-all',
-            activeCategory === 'all'
-              ? 'bg-[#c49a2a] text-[#0f0f0b] border-[#c49a2a]'
-              : 'border-[rgba(255,255,255,0.08)] text-[#a09880] bg-earth-elevated/20 hover:border-white/10'
-          )}>
-          All categories
-        </button>
-        {LISTING_CATEGORIES.map(cat => (
-          <button key={cat.id}
-            onClick={() => setActiveCategory(cat.id)}
-            className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider border shrink-0 transition-all',
-              activeCategory === cat.id
-                ? 'border-[rgba(196,154,42,0.4)] text-[#c49a2a] bg-[rgba(196,154,42,0.06)]'
-                : 'border-[rgba(255,255,255,0.08)] text-[#a09880] bg-earth-elevated/20 hover:border-white/10'
-            )}>
-            <span className="text-sm">{cat.icon}</span>
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Listings grid */}
+      {/* Listings Grid */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <CardShimmer className="h-64" />
-          <CardShimmer className="h-64" />
+          <CardShimmer />
+          <CardShimmer />
+          <CardShimmer />
+          <CardShimmer />
         </div>
       ) : listings.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {listings.map(listing => (
-            <div key={listing.id} className="card-base card-hover overflow-hidden flex flex-col justify-between transition-all">
+            <div key={listing.id} className="card-base card-hover overflow-hidden flex flex-col justify-between transition-all border border-earth-border/40 hover:border-gold-400/30">
               <div>
                 {/* Image */}
-                {listing.imageUrl && (
-                  <div className="h-44 overflow-hidden relative border-b border-[rgba(255,255,255,0.05)]">
-                    <img src={listing.imageUrl} alt={listing.title}
+                {listing.imageUrl ? (
+                  <div className="h-48 overflow-hidden relative border-b border-[rgba(255,255,255,0.05)] bg-[#111]">
+                    <img 
+                      src={listing.imageUrl} 
+                      alt={listing.title}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                       onError={e => e.currentTarget.style.display = 'none'}
                     />
                     <div className="absolute top-3 left-3 flex gap-2">
-                      <span className="text-[10px] text-[#c49a2a] bg-[rgba(196,154,42,0.12)] border border-[rgba(196,154,42,0.2)] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider backdrop-blur-md">
+                      <span className="text-[10px] text-[#c49a2a] bg-[rgba(196,154,42,0.15)] border border-[rgba(196,154,42,0.3)] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider backdrop-blur-md shadow-sm">
                         {listing.category}
                       </span>
                       <span className={cn(
-                        'text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider backdrop-blur-md border',
+                        'text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider backdrop-blur-md border shadow-sm',
+                        listing.listingType === 'sell'
+                          ? 'bg-[rgba(74,154,106,0.18)] text-[#4a9a6a] border-[rgba(74,154,106,0.3)]'
+                          : 'bg-[rgba(74,122,196,0.18)] text-[#4a7ac4] border-[rgba(74,122,196,0.3)]'
+                      )}>
+                        {listing.listingType === 'sell' ? '📢 For Sale' : '🔍 Wanted'}
+                      </span>
+                    </div>
+
+                    {listing.isNegotiable && (
+                      <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 text-[9px] font-bold text-amber-300">
+                        Negotiable
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-5 pb-0 flex items-center justify-between">
+                    <div className="flex gap-2">
+                      <span className="text-[10px] text-[#c49a2a] bg-[rgba(196,154,42,0.12)] border border-[rgba(196,154,42,0.2)] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        {listing.category}
+                      </span>
+                      <span className={cn(
+                        'text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border',
                         listing.listingType === 'sell'
                           ? 'bg-[rgba(74,154,106,0.12)] text-[#4a9a6a] border-[rgba(74,154,106,0.2)]'
                           : 'bg-[rgba(74,122,196,0.12)] text-[#4a7ac4] border-[rgba(74,122,196,0.2)]'
@@ -236,81 +358,88 @@ export function Marketplace() {
                         {listing.listingType === 'sell' ? '📢 For Sale' : '🔍 Wanted'}
                       </span>
                     </div>
+                    {listing.isNegotiable && (
+                      <span className="text-[9px] font-bold text-amber-300 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
+                        Negotiable
+                      </span>
+                    )}
                   </div>
                 )}
 
                 <div className="p-5">
-                  {!listing.imageUrl && (
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-[9px] text-[#c49a2a] bg-[rgba(196,154,42,0.1)] px-2 py-0.5 rounded font-bold uppercase tracking-wider border border-[rgba(196,154,42,0.15)]">
-                        {listing.category}
+                  <h3 className="font-bold text-[17px] text-[#f0ece0] mb-1.5 leading-snug">{listing.title}</h3>
+                  <p className="text-[12px] text-[#a09880] mb-3 leading-relaxed line-clamp-2 font-medium">{listing.description}</p>
+                  
+                  {/* Quantity & Location tags */}
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    {listing.quantity && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-gold-300 bg-gold-400/10 px-2.5 py-1 rounded-lg border border-gold-400/15">
+                        <Package size={11} className="text-gold-400" />
+                        {listing.quantity} {listing.quantityUnit || 'Units'} available
                       </span>
-                      <span className={cn(
-                        'text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border',
-                        listing.listingType === 'sell'
-                          ? 'bg-[rgba(74,154,106,0.12)] text-[#4a9a6a] border-[rgba(74,154,106,0.2)]'
-                          : 'bg-[rgba(74,122,196,0.12)] text-[#4a7ac4] border-[rgba(74,122,196,0.2)]'
-                      )}>
-                        {listing.listingType === 'sell' ? '📢 For Sale' : '🔍 Wanted'}
-                      </span>
-                    </div>
-                  )}
-
-                  <h3 className="font-bold text-[16px] text-[#f0ece0] mb-2 leading-tight">{listing.title}</h3>
-                  <p className="text-[12px] text-[#a09880] mb-4 leading-relaxed line-clamp-3 font-medium">{listing.description}</p>
+                    )}
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-earth-subtext bg-white/5 px-2.5 py-1 rounded-lg border border-white/5">
+                      <MapPin size={11} className="text-[#c49a2a]" />
+                      {listing.address || listing.location}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               <div className="px-5 pb-5">
-                {/* Key details */}
+                {/* Price block */}
                 <div className="flex items-center justify-between mb-4 p-3 bg-white/3 rounded-xl border border-white/5">
                   <div>
-                    <p className="text-[18px] font-black text-[#c49a2a] leading-none mb-1">
+                    <p className="text-[20px] font-black text-[#c49a2a] leading-none mb-1">
                       {formatCurrency(listing.price)}
                     </p>
                     <p className="text-[10px] text-[#6a6050] font-bold uppercase tracking-wider">{listing.priceUnit}</p>
                   </div>
                   <div className="text-right">
-                    <div className="flex items-center justify-end gap-1 text-[11px] text-[#a09880] font-bold uppercase">
-                      <MapPin size={11} className="text-[#c49a2a]" />
-                      {listing.location}
-                    </div>
+                    <p className="text-[11px] text-[#a09880] font-bold uppercase">{listing.location}</p>
                     <p className="text-[10px] text-[#6a6050] mt-0.5 font-semibold">{timeAgo(listing.createdAt)}</p>
                   </div>
                 </div>
 
-                {/* Seller info */}
+                {/* Seller info & Action buttons */}
                 <div className="flex items-center gap-3 pt-3 border-t border-[rgba(255,255,255,0.06)]">
-                  <div className="w-8 h-8 rounded-full bg-[rgba(196,154,42,0.15)] border border-[rgba(196,154,42,0.2)] flex items-center justify-center text-[12px] font-black text-[#c49a2a]">
+                  <div className="w-9 h-9 rounded-full bg-[rgba(196,154,42,0.15)] border border-[rgba(196,154,42,0.2)] flex items-center justify-center text-[13px] font-black text-[#c49a2a] shrink-0">
                     {(listing.sellerName || 'F')[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-bold text-[#f0ece0] truncate">{listing.sellerName || 'Farmer Partner'}</p>
+                    <p className="text-[13px] font-bold text-[#f0ece0] truncate">{listing.sellerName || 'Farmer Partner'}</p>
                     {listing.sellerVerified && (
                       <p className="text-[10px] text-[#4a9a6a] font-bold flex items-center gap-1">
-                        <CheckCircle size={10} className="fill-[#4a9a6a]/10" /> Verified Seller
+                        <CheckCircle size={10} className="fill-[#4a9a6a]/10" /> Verified Grower
                       </p>
                     )}
                   </div>
 
                   {user?.id === listing.userId ? (
-                    <button onClick={() => handleDeleteListing(listing.id)}
-                      className="flex items-center justify-center p-2 rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all"
-                      title="Delete listing">
-                      <Trash2 size={13} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => handleMarkSold(listing.id)}
+                        className="flex items-center gap-1 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 text-[11px] font-bold px-3 py-2 rounded-lg transition-all"
+                        title="Mark as Sold and remove from marketplace"
+                      >
+                        <Check size={12} />
+                        Mark Sold
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteListing(listing.id)}
+                        className="flex items-center justify-center p-2 rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all"
+                        title="Delete listing"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   ) : (
                     <button 
-                      onClick={() => {
-                        toast({
-                          title: 'Contact Details',
-                          description: `Reach out to the seller at: contact.agri@agricompass.com`,
-                        });
-                      }}
-                      className="flex items-center gap-1 bg-[#c49a2a] hover:bg-[#d4aa3a] text-[#0f0f0b] text-[11px] font-extrabold uppercase px-3 py-2 rounded-lg tracking-wider transition-all shadow"
+                      onClick={() => setContactingListing(listing)}
+                      className="flex items-center gap-1.5 bg-[#c49a2a] hover:bg-[#d4aa3a] text-[#0f0f0b] text-[11px] font-black uppercase px-4 py-2.5 rounded-lg tracking-wider transition-all shadow hover:shadow-gold-glow shrink-0"
                     >
-                      <Phone size={11} />
-                      Contact
+                      <Phone size={12} />
+                      Contact & Buy
                     </button>
                   )}
                 </div>
@@ -330,10 +459,155 @@ export function Marketplace() {
         />
       )}
 
+      {/* Contact & Buy Deal Modal */}
+      {contactingListing && (
+        <ContactFarmerModal
+          listing={contactingListing}
+          onClose={() => setContactingListing(null)}
+          onBuyComplete={() => handleBuyComplete(contactingListing.id)}
+        />
+      )}
+
       {/* Create listing modal */}
       {showCreateModal && (
         <CreateListingModal onClose={() => setShowCreateModal(false)} onCreated={loadListings} />
       )}
+    </div>
+  );
+}
+
+// Contact Farmer & Buy Deal Sub-Component
+function ContactFarmerModal({ 
+  listing, 
+  onClose, 
+  onBuyComplete 
+}: { 
+  listing: Listing; 
+  onClose: () => void; 
+  onBuyComplete: () => void; 
+}) {
+  const [isBuying, setIsBuying] = useState(false);
+  const cleanPhone = (listing.contactPhone || '9845012345').replace(/[^0-9+]/g, '');
+  const waNumber = cleanPhone.startsWith('+') ? cleanPhone.replace('+', '') : `91${cleanPhone.replace(/^0+/, '')}`;
+  const whatsappText = encodeURIComponent(
+    `Hello ${listing.sellerName || 'Farmer Partner'}, I am interested in purchasing your listing "${listing.title}" listed for ${formatCurrency(listing.price)} (${listing.priceUnit}) on Agri-Compass. Is it available for pickup?`
+  );
+
+  const handleConfirmDeal = async () => {
+    setIsBuying(true);
+    try {
+      await onBuyComplete();
+    } finally {
+      setIsBuying(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in select-none">
+      <div className="bg-[#14140f] border border-[rgba(255,255,255,0.12)] rounded-2xl w-full max-w-[500px] shadow-2xl overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-white/3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gold-400/15 border border-gold-400/30 flex items-center justify-center text-gold-400 font-black text-sm">
+              {(listing.sellerName || 'F')[0].toUpperCase()}
+            </div>
+            <div>
+              <h2 className="font-serif font-black text-lg text-gold-100">{listing.sellerName || 'Farmer Partner'}</h2>
+              <p className="text-[11px] text-green-400 font-bold flex items-center gap-1">
+                <ShieldCheck size={12} /> Verified Agricultural Seller
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-earth-subtext hover:text-gold-100 p-1 rounded-lg">
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-5">
+          {/* Item Summary Card */}
+          <div className="bg-earth-card border border-earth-border/40 rounded-xl p-4 flex gap-4 items-center">
+            {listing.imageUrl ? (
+              <img src={listing.imageUrl} alt={listing.title} className="w-16 h-16 rounded-lg object-cover shrink-0 border border-white/10" />
+            ) : (
+              <div className="w-16 h-16 rounded-lg bg-gold-400/10 flex items-center justify-center text-2xl shrink-0">
+                🌾
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <h4 className="font-bold text-sm text-gold-100 truncate">{listing.title}</h4>
+              <p className="text-gold-300 font-extrabold text-base mt-0.5">
+                {formatCurrency(listing.price)} <span className="text-xs font-medium text-earth-subtext">({listing.priceUnit})</span>
+              </p>
+              {listing.quantity && (
+                <p className="text-[11px] text-earth-subtext font-semibold mt-0.5">
+                  Available: {listing.quantity} {listing.quantityUnit || 'Units'}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Location & Address */}
+          <div className="bg-white/3 border border-white/5 rounded-xl p-4 space-y-2">
+            <div className="flex items-start gap-2.5">
+              <MapPin size={16} className="text-gold-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[11px] uppercase tracking-wider font-extrabold text-gold-300">Pickup Address / Farm Location</p>
+                <p className="text-xs text-gold-100 font-medium mt-0.5 leading-relaxed">
+                  {listing.address || listing.location || 'Karnataka, India'}
+                </p>
+                <p className="text-[11px] text-earth-subtext font-semibold mt-1">District: {listing.location}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Direct Communication Action Buttons */}
+          <div className="space-y-3">
+            <p className="text-[11px] uppercase tracking-wider font-extrabold text-earth-subtext">Direct Contact Channels</p>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <a
+                href={`tel:${cleanPhone}`}
+                className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition-all shadow"
+              >
+                <Phone size={14} />
+                Call Farmer
+              </a>
+
+              <a
+                href={`https://wa.me/${waNumber}?text=${whatsappText}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-black font-extrabold text-xs py-3 rounded-xl transition-all shadow"
+              >
+                <MessageCircle size={14} />
+                Chat WhatsApp
+              </a>
+            </div>
+          </div>
+
+          {/* Complete Deal / Buy Button */}
+          <div className="pt-2 border-t border-white/5">
+            <div className="bg-gold-400/5 border border-gold-400/15 rounded-xl p-4 space-y-3">
+              <div>
+                <p className="text-xs font-bold text-gold-200">Already completed or agreed on this purchase?</p>
+                <p className="text-[11px] text-earth-subtext mt-0.5">
+                  Confirming this deal will automatically mark the listing as sold and remove it from the community feed.
+                </p>
+              </div>
+
+              <button
+                onClick={handleConfirmDeal}
+                disabled={isBuying}
+                className="w-full flex items-center justify-center gap-2 bg-[#c49a2a] hover:bg-[#d4aa3a] text-[#0f0f0b] font-black text-xs uppercase tracking-wider py-3 rounded-xl transition-all shadow hover:shadow-gold-glow"
+              >
+                <CheckCircle2 size={15} />
+                {isBuying ? 'Marking Deal as Completed...' : 'Confirm Deal & Remove Listing'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -351,8 +625,15 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [priceUnit, setPriceUnit] = useState('Total Price');
+  const [quantity, setQuantity] = useState('1');
+  const [quantityUnit, setQuantityUnit] = useState('Quintals');
+  const [isNegotiable, setIsNegotiable] = useState(false);
   const [location, setLocation] = useState('');
+  const [address, setAddress] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Custom Dynamic Fields
   const [subType, setSubType] = useState('');
@@ -361,6 +642,9 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
   useEffect(() => {
     if (profile?.location || profile?.district) {
       setLocation(profile.location || profile.district || '');
+    }
+    if (profile?.phone) {
+      setContactPhone(profile.phone);
     }
   }, [profile]);
 
@@ -371,11 +655,34 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
     }
   }, [selectedCategory]);
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const res = await UploadAPI.uploadMedia(file, 'agri-compass/marketplace');
+      if (res?.url) {
+        setImageUrl(res.url);
+        toast({ title: 'Image uploaded successfully!' });
+      }
+    } catch (err) {
+      console.error('Failed to upload image:', err);
+      toast({
+        title: 'Image upload failed',
+        description: 'You can also paste a direct image URL.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!price || !location.trim()) {
+    if (!price || !location.trim() || !address.trim() || !contactPhone.trim()) {
       toast({
         title: 'Validation failed',
-        description: 'Price and location are required fields.',
+        description: 'Price, Location, Full Address, and Phone Number are required fields.',
         variant: 'destructive',
       });
       return;
@@ -389,7 +696,6 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
       }
 
       const finalTitle = title.trim() || `${subType} - ${location}`;
-
       const cleanPrice = typeof price === 'string' ? parseFloat(price.replace(/,/g, '')) : parseFloat(String(price));
 
       const payload = {
@@ -402,7 +708,16 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
         price: !isNaN(cleanPrice) ? cleanPrice : 0,
         priceUnit,
         price_unit: priceUnit,
+        quantity: quantity.trim() || '1',
+        quantityUnit: quantityUnit.trim() || 'Units',
+        quantity_unit: quantityUnit.trim() || 'Units',
+        isNegotiable,
+        is_negotiable: isNegotiable,
         location: location.trim(),
+        address: address.trim(),
+        contactPhone: contactPhone.trim(),
+        contact_phone: contactPhone.trim(),
+        phone: contactPhone.trim(),
         imageUrl: imageUrl.trim() || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?fit=crop&w=400&h=300&q=60',
         image_url: imageUrl.trim() || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?fit=crop&w=400&h=300&q=60',
         userId: user?.id,
@@ -411,8 +726,8 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
 
       await apiPost('/api/marketplace', payload);
       toast({
-        title: 'Listing posted!',
-        description: 'Your listing is now live on the farmer marketplace.',
+        title: '🎉 Listing posted!',
+        description: 'Your produce is now live on the farmer marketplace with your contact details.',
       });
       onCreated();
       onClose();
@@ -430,7 +745,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6 select-none animate-fade-in">
-      <div className="bg-[#1a1a14] border border-[rgba(255,255,255,0.1)] rounded-2xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col justify-between">
+      <div className="bg-[#1a1a14] border border-[rgba(255,255,255,0.1)] rounded-2xl w-full max-w-[580px] max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col justify-between">
         
         {/* Modal header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[rgba(255,255,255,0.07)]">
@@ -512,23 +827,22 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                 </select>
               </div>
 
-              {/* Removed Custom Fields */}
-
-              {/* Core Details */}
+              {/* Core Title */}
               <div className="space-y-1">
-                <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Listing Title (Optional)</label>
+                <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Listing Title</label>
                 <input
                   type="text"
-                  placeholder="e.g. High Quality Sona Masuri Rice Seedlings"
+                  placeholder="e.g. Sona Masuri Rice Seedlings (Grade A)"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-12 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"
+                  className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-11 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Price & Unit */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Price (₹)</label>
+                  <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Price (₹) *</label>
                   <input
                     type="number"
                     placeholder="e.g. 5000"
@@ -538,7 +852,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Unit / Frequency</label>
+                  <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Price Unit</label>
                   <input
                     type="text"
                     value={priceUnit}
@@ -548,38 +862,129 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Description Details (Optional)</label>
-                <textarea
-                  placeholder="Describe your produce, equipment or services..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 p-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Location / Taluk</label>
+              {/* Quantity & Negotiable */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1 sm:col-span-1">
+                  <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Quantity Available</label>
                   <input
                     type="text"
-                    placeholder="Mandya, Ballari, etc."
+                    placeholder="e.g. 50"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-10 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"
+                  />
+                </div>
+                <div className="space-y-1 sm:col-span-1">
+                  <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Quantity Unit</label>
+                  <select
+                    value={quantityUnit}
+                    onChange={(e) => setQuantityUnit(e.target.value)}
+                    className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-10 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"
+                  >
+                    <option value="Quintals">Quintals</option>
+                    <option value="Kg">Kg</option>
+                    <option value="Bags">Bags</option>
+                    <option value="Acres">Acres</option>
+                    <option value="Tons">Tons</option>
+                    <option value="Units">Units / Pieces</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2 pt-6 sm:col-span-1">
+                  <input
+                    type="checkbox"
+                    id="negotiable"
+                    checked={isNegotiable}
+                    onChange={(e) => setIsNegotiable(e.target.checked)}
+                    className="w-4 h-4 rounded border-earth-border/40 accent-[#c49a2a]"
+                  />
+                  <label htmlFor="negotiable" className="text-xs text-gold-200 font-bold cursor-pointer">
+                    Price Negotiable
+                  </label>
+                </div>
+              </div>
+
+              {/* Location & Address */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">District *</label>
+                  <input
+                    type="text"
+                    placeholder="Shivamogga, Mandya, etc."
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-10 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Photo URL (Optional)</label>
+                  <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Farmer Phone Number *</label>
                   <input
                     type="text"
-                    placeholder="Paste crop/equipment image link"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="+91 98450 12345"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
                     className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-10 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Full Farm / Village Address *</label>
+                <input
+                  type="text"
+                  placeholder="Village, Taluk, Landmark or Pin Code for pickup"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-10 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"
+                />
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1">
+                <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Produce / Item Description</label>
+                <textarea
+                  placeholder="Detail crop quality, harvest date, variety, condition..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={2}
+                  className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 p-2.5 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none resize-none"
+                />
+              </div>
+
+              {/* Photo Upload */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Produce Photo</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    disabled={uploadingImage}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3.5 py-2 rounded-lg text-xs font-bold text-gold-200 transition-colors"
+                  >
+                    <Upload size={13} />
+                    {uploadingImage ? 'Uploading...' : 'Upload Image File'}
+                  </button>
+
+                  <span className="text-[10px] text-earth-subtext font-bold uppercase">or URL:</span>
+                  <input
+                    type="text"
+                    placeholder="https://..."
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    className="flex-1 bg-earth-main/50 border border-earth-border/40 text-gold-100 h-9 px-3 rounded-lg text-xs font-medium focus:border-[#c49a2a] outline-none truncate"
+                  />
+                </div>
+                {imageUrl && (
+                  <div className="mt-2 w-16 h-16 rounded-lg overflow-hidden border border-white/10">
+                    <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -587,8 +992,8 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
           {step === 3 && (
             <div className="space-y-6">
               <div>
-                <p className="text-[12px] text-[#a09880] font-bold uppercase tracking-widest text-center mb-4">Confirm Listing Details</p>
-                <div className="bg-[#1e1e16] border border-[rgba(255,255,255,0.06)] rounded-xl p-5 space-y-4">
+                <p className="text-[12px] text-[#a09880] font-bold uppercase tracking-widest text-center mb-4">Confirm Real-World Trade Details</p>
+                <div className="bg-[#1e1e16] border border-[rgba(255,255,255,0.06)] rounded-xl p-5 space-y-3.5">
                   <div className="flex justify-between items-center pb-2 border-b border-white/5">
                     <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Type</span>
                     <span className="text-[11px] text-[#c49a2a] bg-[rgba(196,154,42,0.1)] px-2 py-0.5 rounded font-extrabold uppercase">
@@ -596,28 +1001,34 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                     </span>
                   </div>
                   <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                    <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Category</span>
-                    <span className="text-xs font-bold text-[#f0ece0]">{selectedCategory?.label}</span>
-                  </div>
-                  <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                    <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Title</span>
-                    <span className="text-xs font-bold text-[#f0ece0] truncate max-w-[200px]">{title || `${subType} - ${location}`}</span>
+                    <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Item Title</span>
+                    <span className="text-xs font-bold text-[#f0ece0] truncate max-w-[240px]">{title || `${subType} - ${location}`}</span>
                   </div>
                   <div className="flex justify-between items-center pb-2 border-b border-white/5">
                     <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Price</span>
-                    <span className="text-xs font-black text-[#c49a2a]">{formatCurrency(parseFloat(price) || 0)} ({priceUnit})</span>
+                    <span className="text-xs font-black text-[#c49a2a]">
+                      {formatCurrency(parseFloat(price) || 0)} ({priceUnit}) {isNegotiable && '• Negotiable'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                    <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Quantity</span>
+                    <span className="text-xs font-bold text-[#f0ece0]">{quantity} {quantityUnit}</span>
+                  </div>
+                  <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                    <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Pickup Address</span>
+                    <span className="text-xs font-bold text-[#f0ece0] truncate max-w-[240px]">{address || location}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Location</span>
-                    <span className="text-xs font-bold text-[#f0ece0]">{location}</span>
+                    <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Farmer Contact</span>
+                    <span className="text-xs font-bold text-emerald-400">{contactPhone}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-4 flex gap-3 items-start text-xs text-yellow-400">
-                <CheckCircle size={15} className="mt-0.5 shrink-0 text-yellow-500" />
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex gap-3 items-start text-xs text-emerald-400">
+                <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-400" />
                 <div>
-                  <span className="font-bold uppercase tracking-wider">Safety Policy:</span> Double check descriptions. Misrepresenting crops or machinery will result in account suspension.
+                  <span className="font-bold uppercase tracking-wider">Buyer Safety:</span> Your phone number and pickup address will be displayed so buyers can directly call and WhatsApp you for the purchase.
                 </div>
               </div>
             </div>
@@ -640,10 +1051,10 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
             <div />
           ) : step === 2 ? (
             <button onClick={() => {
-              if (!price || !location.trim()) {
+              if (!price || !location.trim() || !address.trim() || !contactPhone.trim()) {
                 toast({
                   title: 'Validation failed',
-                  description: 'Price and location are required fields.',
+                  description: 'Please fill in Price, District, Full Address, and Phone Number.',
                   variant: 'destructive'
                 });
                 return;
@@ -657,7 +1068,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
           ) : (
             <button onClick={handleSubmit} disabled={isSubmitting}
               className="flex items-center gap-1.5 bg-[#c49a2a] hover:bg-[#d4aa3a] text-[#0f0f0b] px-6 py-3 rounded-lg text-[11px] uppercase tracking-wider font-extrabold transition-all shadow shrink-0">
-              {isSubmitting ? 'Posting...' : 'Confirm & Post'}
+              {isSubmitting ? 'Posting...' : 'Confirm & Post Listing'}
             </button>
           )}
         </div>

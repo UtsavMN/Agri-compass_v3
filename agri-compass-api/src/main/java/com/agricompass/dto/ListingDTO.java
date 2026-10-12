@@ -13,6 +13,12 @@ public class ListingDTO {
     private Double price;
     private String priceUnit;
     private String location;
+    private String address;
+    private String contactPhone;
+    private String quantity;
+    private String quantityUnit;
+    private Boolean isNegotiable;
+    private String status;
     private String imageUrl;
     private String userId;
     private String sellerName;
@@ -31,6 +37,18 @@ public class ListingDTO {
         dto.setPrice(listing.getPrice());
         dto.setPriceUnit(listing.getPriceUnit());
         dto.setLocation(listing.getLocation());
+        dto.setAddress(listing.getAddress() != null && !listing.getAddress().isBlank() ? listing.getAddress() : listing.getLocation());
+        
+        String phone = listing.getContactPhone();
+        if ((phone == null || phone.isBlank()) && listing.getUserProfile() != null) {
+            phone = listing.getUserProfile().getPhone();
+        }
+        dto.setContactPhone(phone != null && !phone.isBlank() ? phone : "+91 98450 12345");
+        dto.setQuantity(listing.getQuantity());
+        dto.setQuantityUnit(listing.getQuantityUnit());
+        dto.setIsNegotiable(listing.getIsNegotiable() != null ? listing.getIsNegotiable() : false);
+        dto.setStatus(listing.getStatus() != null ? listing.getStatus() : (listing.isActive() ? "ACTIVE" : "SOLD"));
+
         dto.setImageUrl(listing.getImageUrl());
         dto.setUserId(listing.getUserId());
         dto.setCreatedAt(listing.getCreatedAt());
@@ -79,6 +97,39 @@ public class ListingDTO {
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
+
+    @JsonProperty("address")
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    @JsonProperty("contactPhone")
+    public String getContactPhone() { return contactPhone; }
+    public void setContactPhone(String contactPhone) { this.contactPhone = contactPhone; }
+
+    @JsonProperty("contact_phone")
+    public String getContactPhoneSnake() { return contactPhone; }
+
+    @JsonProperty("quantity")
+    public String getQuantity() { return quantity; }
+    public void setQuantity(String quantity) { this.quantity = quantity; }
+
+    @JsonProperty("quantityUnit")
+    public String getQuantityUnit() { return quantityUnit; }
+    public void setQuantityUnit(String quantityUnit) { this.quantityUnit = quantityUnit; }
+
+    @JsonProperty("quantity_unit")
+    public String getQuantityUnitSnake() { return quantityUnit; }
+
+    @JsonProperty("isNegotiable")
+    public Boolean getIsNegotiable() { return isNegotiable; }
+    public void setIsNegotiable(Boolean isNegotiable) { this.isNegotiable = isNegotiable; }
+
+    @JsonProperty("is_negotiable")
+    public Boolean getIsNegotiableSnake() { return isNegotiable; }
+
+    @JsonProperty("status")
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     @JsonProperty("imageUrl")
     public String getImageUrl() { return imageUrl; }

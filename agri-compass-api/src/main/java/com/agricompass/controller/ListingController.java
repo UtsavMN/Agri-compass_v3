@@ -88,8 +88,9 @@ public class ListingController {
         }
 
         // 3. Ensure UserProfile exists in database to prevent FK constraint failure
+        com.agricompass.entity.UserProfile userProfile = userProfileRepository.findById(userId).orElse(null);
         try {
-            if (userProfileRepository.findById(userId).isEmpty()) {
+            if (userProfile == null) {
                 com.agricompass.entity.UserProfile fallbackProfile = new com.agricompass.entity.UserProfile();
                 fallbackProfile.setClerkUserId(userId);
                 fallbackProfile.setUsernameHandle(userId);
@@ -99,10 +100,10 @@ public class ListingController {
                 fallbackProfile.setLanguage("kn");
                 fallbackProfile.setOnboardingCompleted(0);
                 try {
-                    userProfileRepository.save(fallbackProfile);
+                    userProfile = userProfileRepository.save(fallbackProfile);
                 } catch (Exception handleEx) {
                     fallbackProfile.setUsernameHandle(userId + "_" + (System.currentTimeMillis() % 10000));
-                    userProfileRepository.save(fallbackProfile);
+                    userProfile = userProfileRepository.save(fallbackProfile);
                 }
             }
         } catch (Exception ignored) {}
@@ -164,6 +165,37 @@ public class ListingController {
             imageUrl = imageUrl.trim();
         }
 
+        String address = (String) body.get("address");
+        if (address == null || address.trim().isEmpty()) {
+            address = location;
+        } else {
+            address = address.trim();
+        }
+
+        String contactPhone = (String) body.get("contact_phone");
+        if (contactPhone == null) contactPhone = (String) body.get("contactPhone");
+        if (contactPhone == null) contactPhone = (String) body.get("phone");
+        if ((contactPhone == null || contactPhone.trim().isEmpty()) && userProfile != null) {
+            contactPhone = userProfile.getPhone();
+        }
+        if (contactPhone == null || contactPhone.trim().isEmpty()) {
+            contactPhone = "+91 98450 12345";
+        } else {
+            contactPhone = contactPhone.trim();
+        }
+
+        String quantity = body.get("quantity") != null ? String.valueOf(body.get("quantity")).trim() : "1";
+        String quantityUnit = (String) body.get("quantity_unit");
+        if (quantityUnit == null) quantityUnit = (String) body.get("quantityUnit");
+        if (quantityUnit == null || quantityUnit.trim().isEmpty()) quantityUnit = "Units";
+
+        Boolean isNegotiable = false;
+        if (body.get("is_negotiable") != null) {
+            isNegotiable = Boolean.parseBoolean(String.valueOf(body.get("is_negotiable")));
+        } else if (body.get("isNegotiable") != null) {
+            isNegotiable = Boolean.parseBoolean(String.valueOf(body.get("isNegotiable")));
+        }
+
         // 5. Construct and save Listing
         Listing listing = new Listing();
         listing.setTitle(title);
@@ -173,6 +205,12 @@ public class ListingController {
         listing.setPrice(price);
         listing.setPriceUnit(priceUnit);
         listing.setLocation(location);
+        listing.setAddress(address);
+        listing.setContactPhone(contactPhone);
+        listing.setQuantity(quantity);
+        listing.setQuantityUnit(quantityUnit);
+        listing.setIsNegotiable(isNegotiable);
+        listing.setStatus("ACTIVE");
         listing.setImageUrl(imageUrl);
         listing.setUserId(userId);
         listing.setCreatedAt(LocalDateTime.now());
@@ -180,6 +218,38 @@ public class ListingController {
 
         Listing saved = listingRepository.save(listing);
         return ResponseEntity.ok(ListingDTO.from(saved));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ListingDTO> getListingById(@PathVariable Long id) {
+        Listing listing = listingRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing not found"));
+        return ResponseEntity.ok(ListingDTO.from(listing));
+    }
+
+    @PostMapping("/{id}/buy")
+    public ResponseEntity<Map<String, Object>> buyListing(
+        @PathVariable Long id,
+        @RequestBody(required = false) Map<String, Object> body
+    ) {
+        Listing listing = listingRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing not found"));
+        
+        listing.setActive(false);
+        listing.setStatus("SOLD");
+        listingRepository.save(listing);
+        
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", "Order confirmed! The listing has been marked as SOLD and removed from active marketplace.",
+            "id", id,
+            "status", "SOLD"
+        ));
+    }
+
+    @PostMapping("/{id}/mark-sold")
+    public ResponseEntity<Map<String, Object>> markSold(@PathVariable Long id) {
+        return buyListing(id, null);
     }
 
     @DeleteMapping("/{id}")
@@ -202,11 +272,8 @@ public class ListingController {
         Listing listing = listingRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing not found"));
         
-        if (userId != null && !listing.getUserId().equals(userId)) {
-            // Not current user's listing, but allow deletion if no user logged in or admin
-        }
-        
         listing.setActive(false);
+        listing.setStatus("DELETED");
         listingRepository.save(listing);
         return ResponseEntity.noContent().build();
     }

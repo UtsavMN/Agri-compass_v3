@@ -39,6 +39,22 @@ public class Listing {
 
     private String location;
 
+    @Column(columnDefinition = "TEXT")
+    private String address;
+
+    @Column(name = "contact_phone")
+    private String contactPhone;
+
+    private String quantity;
+
+    @Column(name = "quantity_unit")
+    private String quantityUnit;
+
+    @Column(name = "is_negotiable")
+    private Boolean isNegotiable = false;
+
+    private String status = "ACTIVE";
+
     @Column(name = "image_url")
     private String imageUrl;
 
@@ -100,6 +116,24 @@ public class Listing {
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    public String getContactPhone() { return contactPhone; }
+    public void setContactPhone(String contactPhone) { this.contactPhone = contactPhone; }
+
+    public String getQuantity() { return quantity; }
+    public void setQuantity(String quantity) { this.quantity = quantity; }
+
+    public String getQuantityUnit() { return quantityUnit; }
+    public void setQuantityUnit(String quantityUnit) { this.quantityUnit = quantityUnit; }
+
+    public Boolean getIsNegotiable() { return isNegotiable; }
+    public void setIsNegotiable(Boolean isNegotiable) { this.isNegotiable = isNegotiable; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
