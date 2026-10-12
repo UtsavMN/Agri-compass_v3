@@ -69,20 +69,25 @@ public class UploadController {
 
         try {
             Cloudinary cloudinary = getCloudinaryClient();
-            if (cloudinary == null) {
-                // Return a reliable fallback URL if Cloudinary is not configured yet
-                return ResponseEntity.ok(Map.of(
-                    "url", "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80",
-                    "note", "Cloudinary not configured in environment, fallback applied"
-                ));
+            if (cloudinary != null) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap("folder", folder)
+                );
+                String secureUrl = uploadResult.get("secure_url").toString();
+                return ResponseEntity.ok(Map.of("url", secureUrl, "provider", "cloudinary"));
             }
-            
-            @SuppressWarnings("unchecked")
-            Map<String, Object> uploadResult = cloudinary.uploader().upload(
-                file.getBytes(),
-                ObjectUtils.asMap("folder", folder)
-            );
-            return ResponseEntity.ok(Map.of("url", uploadResult.get("secure_url").toString()));
+
+            // Fallback when Cloudinary is not yet configured in environment:
+            // Convert user's ACTUAL image bytes to a Data URL so their real uploaded photo is preserved and displayed!
+            String contentType = file.getContentType();
+            if (contentType == null || contentType.isBlank()) {
+                contentType = "image/jpeg";
+            }
+            String base64 = java.util.Base64.getEncoder().encodeToString(file.getBytes());
+            String dataUrl = "data:" + contentType + ";base64," + base64;
+            return ResponseEntity.ok(Map.of("url", dataUrl, "provider", "embedded_data"));
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
