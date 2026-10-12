@@ -26,31 +26,58 @@ public class NotificationController {
     private final FarmUpdateRepository farmUpdateRepository;
     private final UserProfileRepository userProfileRepository;
     private final UserService userService;
+    private final com.agricompass.repository.NotificationRepository notificationRepository;
 
     public NotificationController(
             FollowRepository followRepository,
             PostRepository postRepository,
             FarmUpdateRepository farmUpdateRepository,
             UserProfileRepository userProfileRepository,
-            UserService userService) {
+            UserService userService,
+            com.agricompass.repository.NotificationRepository notificationRepository) {
         this.followRepository = followRepository;
         this.postRepository = postRepository;
         this.farmUpdateRepository = farmUpdateRepository;
         this.userProfileRepository = userProfileRepository;
         this.userService = userService;
+        this.notificationRepository = notificationRepository;
     }
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getNotifications() {
-        String currentUserId = userService.syncUser(null).getId();
+        String currentUserId = null;
+        try {
+            UserProfile user = userService.syncUser(null);
+            if (user != null) currentUserId = user.getId();
+        } catch (Exception ignored) {}
 
-        // Get followed users
+        List<Map<String, Object>> notifications = new ArrayList<>();
+
+        if (currentUserId == null || currentUserId.isEmpty()) {
+            return ResponseEntity.ok(Map.of("notifications", notifications));
+        }
+
+        // 1. Fetch direct user notifications (such as marketplace buyer inquiries)
+        try {
+            List<com.agricompass.entity.Notification> directNotifs = notificationRepository.findByRecipientUserIdOrderByCreatedAtDesc(currentUserId);
+            for (com.agricompass.entity.Notification n : directNotifs) {
+                Map<String, Object> dto = new HashMap<>();
+                dto.put("id", n.getId());
+                dto.put("type", n.getType());
+                dto.put("message", n.getMessage());
+                dto.put("timestamp", n.getCreatedAt());
+                dto.put("link", n.getLink() != null ? n.getLink() : "/community");
+                dto.put("authorName", n.getAuthorName() != null ? n.getAuthorName() : "Farmer Partner");
+                dto.put("authorAvatar", n.getAuthorAvatar());
+                notifications.add(dto);
+            }
+        } catch (Exception ignored) {}
+
+        // 2. Get followed users
         List<String> followedUserIds = followRepository.findByFollowerId(currentUserId)
                 .stream()
                 .map(Follow::getFollowingId)
                 .collect(Collectors.toList());
-
-        List<Map<String, Object>> notifications = new ArrayList<>();
 
         if (!followedUserIds.isEmpty()) {
             // Get recent posts

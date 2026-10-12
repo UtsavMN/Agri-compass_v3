@@ -23,7 +23,8 @@ import {
   Clock,
   Sparkles,
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  Bell
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -171,24 +172,6 @@ export function Marketplace() {
     }
   };
 
-  const handleBuyComplete = async (listingId: number) => {
-    try {
-      await apiPost(`/api/marketplace/${listingId}/buy`, {});
-      toast({
-        title: '🎉 Purchase Completed!',
-        description: 'Congratulations on your deal! The listing has been marked as sold and removed.',
-      });
-      setContactingListing(null);
-      loadListings();
-    } catch (error) {
-      console.error('Error completing purchase:', error);
-      toast({
-        title: 'Purchase update failed',
-        description: 'Could not record deal completion. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -439,7 +422,7 @@ export function Marketplace() {
                       className="flex items-center gap-1.5 bg-[#c49a2a] hover:bg-[#d4aa3a] text-[#0f0f0b] text-[11px] font-black uppercase px-4 py-2.5 rounded-lg tracking-wider transition-all shadow hover:shadow-gold-glow shrink-0"
                     >
                       <Phone size={12} />
-                      Contact & Buy
+                      Contact / Inquire
                     </button>
                   )}
                 </div>
@@ -459,12 +442,11 @@ export function Marketplace() {
         />
       )}
 
-      {/* Contact & Buy Deal Modal */}
+      {/* Contact & Notify Modal */}
       {contactingListing && (
         <ContactFarmerModal
           listing={contactingListing}
           onClose={() => setContactingListing(null)}
-          onBuyComplete={() => handleBuyComplete(contactingListing.id)}
         />
       )}
 
@@ -476,29 +458,52 @@ export function Marketplace() {
   );
 }
 
-// Contact Farmer & Buy Deal Sub-Component
+// Contact Farmer & In-App Notification Modal Sub-Component
 function ContactFarmerModal({ 
   listing, 
-  onClose, 
-  onBuyComplete 
+  onClose
 }: { 
   listing: Listing; 
   onClose: () => void; 
-  onBuyComplete: () => void; 
 }) {
-  const [isBuying, setIsBuying] = useState(false);
-  const cleanPhone = (listing.contactPhone || '9845012345').replace(/[^0-9+]/g, '');
+  const [isNotifying, setIsNotifying] = useState(false);
+  const [inquiryMessage, setInquiryMessage] = useState('');
+  const { user } = useUser();
+  const { toast } = useToast();
+
+  const hasPhone = Boolean(
+    listing.contactPhone && 
+    listing.contactPhone.trim() && 
+    listing.contactPhone.replace(/[^0-9]/g, '').length >= 6
+  );
+  const cleanPhone = (listing.contactPhone || '').replace(/[^0-9+]/g, '');
   const waNumber = cleanPhone.startsWith('+') ? cleanPhone.replace('+', '') : `91${cleanPhone.replace(/^0+/, '')}`;
   const whatsappText = encodeURIComponent(
     `Hello ${listing.sellerName || 'Farmer Partner'}, I am interested in purchasing your listing "${listing.title}" listed for ${formatCurrency(listing.price)} (${listing.priceUnit}) on Agri-Compass. Is it available for pickup?`
   );
 
-  const handleConfirmDeal = async () => {
-    setIsBuying(true);
+  const handleNotifySeller = async () => {
+    setIsNotifying(true);
     try {
-      await onBuyComplete();
+      await apiPost(`/api/marketplace/${listing.id}/notify`, {
+        buyerId: user?.id,
+        buyerName: user?.fullName || user?.firstName || 'Interested Buyer',
+        message: inquiryMessage.trim() || undefined
+      });
+      toast({
+        title: '🔔 Notification Sent!',
+        description: `Farmer ${listing.sellerName || 'Partner'} has been notified about your interest in ${listing.title}.`,
+      });
+      onClose();
+    } catch (err) {
+      console.error('Failed to notify seller:', err);
+      toast({
+        title: 'Notification Error',
+        description: 'Unable to send notification to the seller right now. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
-      setIsBuying(false);
+      setIsNotifying(false);
     }
   };
 
@@ -562,47 +567,62 @@ function ContactFarmerModal({
           </div>
 
           {/* Direct Communication Action Buttons */}
-          <div className="space-y-3">
-            <p className="text-[11px] uppercase tracking-wider font-extrabold text-earth-subtext">Direct Contact Channels</p>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <a
-                href={`tel:${cleanPhone}`}
-                className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition-all shadow"
-              >
-                <Phone size={14} />
-                Call Farmer
-              </a>
+          {hasPhone ? (
+            <div className="space-y-3">
+              <p className="text-[11px] uppercase tracking-wider font-extrabold text-earth-subtext">Direct Contact Channels</p>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <a
+                  href={`tel:${cleanPhone}`}
+                  className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl transition-all shadow"
+                >
+                  <Phone size={14} />
+                  Call Farmer
+                </a>
 
-              <a
-                href={`https://wa.me/${waNumber}?text=${whatsappText}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-black font-extrabold text-xs py-3 rounded-xl transition-all shadow"
-              >
-                <MessageCircle size={14} />
-                Chat WhatsApp
-              </a>
+                <a
+                  href={`https://wa.me/${waNumber}?text=${whatsappText}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-black font-extrabold text-xs py-3 rounded-xl transition-all shadow"
+                >
+                  <MessageCircle size={14} />
+                  Chat WhatsApp
+                </a>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-white/3 border border-white/5 rounded-xl p-3 flex items-center gap-2.5 text-xs text-earth-subtext">
+              <Phone size={14} className="text-earth-subtext shrink-0" />
+              <span>Seller chose not to share phone publicly. Click "Notify Seller" below to connect in-app.</span>
+            </div>
+          )}
 
-          {/* Complete Deal / Buy Button */}
+          {/* In-App Seller Notification Action */}
           <div className="pt-2 border-t border-white/5">
             <div className="bg-gold-400/5 border border-gold-400/15 rounded-xl p-4 space-y-3">
               <div>
-                <p className="text-xs font-bold text-gold-200">Already completed or agreed on this purchase?</p>
+                <p className="text-xs font-bold text-gold-200">Interested in this item?</p>
                 <p className="text-[11px] text-earth-subtext mt-0.5">
-                  Confirming this deal will automatically mark the listing as sold and remove it from the community feed.
+                  Send an instant inquiry notification to the seller's bell icon so they know you want to buy.
                 </p>
               </div>
 
+              <input
+                type="text"
+                placeholder="Optional note (e.g. Is price negotiable? Can I inspect today?)"
+                value={inquiryMessage}
+                onChange={(e) => setInquiryMessage(e.target.value)}
+                className="w-full bg-[#12120e] border border-earth-border/40 text-gold-100 h-9 px-3 rounded-lg text-xs font-medium focus:border-[#c49a2a] outline-none placeholder:text-earth-subtext/60"
+              />
+
               <button
-                onClick={handleConfirmDeal}
-                disabled={isBuying}
+                onClick={handleNotifySeller}
+                disabled={isNotifying}
                 className="w-full flex items-center justify-center gap-2 bg-[#c49a2a] hover:bg-[#d4aa3a] text-[#0f0f0b] font-black text-xs uppercase tracking-wider py-3 rounded-xl transition-all shadow hover:shadow-gold-glow"
               >
-                <CheckCircle2 size={15} />
-                {isBuying ? 'Marking Deal as Completed...' : 'Confirm Deal & Remove Listing'}
+                <Bell size={15} />
+                {isNotifying ? 'Sending Notification...' : 'Notify Seller / Express Interest'}
               </button>
             </div>
           </div>
@@ -726,10 +746,10 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
   };
 
   const handleSubmit = async () => {
-    if (!price || !location.trim() || !address.trim() || !contactPhone.trim()) {
+    if (!price || !location.trim()) {
       toast({
         title: 'Validation failed',
-        description: 'Price, Location, Full Address, and Phone Number are required fields.',
+        description: 'Price and District are required fields.',
         variant: 'destructive',
       });
       return;
@@ -761,10 +781,10 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
         isNegotiable,
         is_negotiable: isNegotiable,
         location: location.trim(),
-        address: address.trim(),
-        contactPhone: contactPhone.trim(),
-        contact_phone: contactPhone.trim(),
-        phone: contactPhone.trim(),
+        address: address.trim() || location.trim(),
+        contactPhone: contactPhone.trim() || undefined,
+        contact_phone: contactPhone.trim() || undefined,
+        phone: contactPhone.trim() || undefined,
         imageUrl: imageUrl.trim() || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?fit=crop&w=400&h=300&q=60',
         image_url: imageUrl.trim() || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?fit=crop&w=400&h=300&q=60',
         userId: user?.id,
@@ -963,10 +983,10 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Farmer Phone Number *</label>
+                  <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Farmer Phone Number (Optional)</label>
                   <input
                     type="text"
-                    placeholder="+91 98450 12345"
+                    placeholder="+91 98450 XXXXX (leave blank if preferred)"
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
                     className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-10 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"
@@ -975,10 +995,10 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Full Farm / Village Address *</label>
+                <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Farm / Village Address (Optional)</label>
                 <input
                   type="text"
-                  placeholder="Village, Taluk, Landmark or Pin Code for pickup"
+                  placeholder="Village, Taluk, Landmark (leave blank if preferred)"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-10 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"
@@ -1063,11 +1083,15 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                   </div>
                   <div className="flex justify-between items-center pb-2 border-b border-white/5">
                     <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Pickup Address</span>
-                    <span className="text-xs font-bold text-[#f0ece0] truncate max-w-[240px]">{address || location}</span>
+                    <span className="text-xs font-bold text-[#f0ece0] truncate max-w-[240px]">
+                      {address.trim() ? address : `District: ${location} (Specific address withheld)`}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[11px] text-[#6a6050] uppercase font-bold tracking-wider">Farmer Contact</span>
-                    <span className="text-xs font-bold text-emerald-400">{contactPhone}</span>
+                    <span className="text-xs font-bold text-emerald-400">
+                      {contactPhone.trim() ? contactPhone : 'In-app notifications only'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1075,7 +1099,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
               <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex gap-3 items-start text-xs text-emerald-400">
                 <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-400" />
                 <div>
-                  <span className="font-bold uppercase tracking-wider">Buyer Safety:</span> Your phone number and pickup address will be displayed so buyers can directly call and WhatsApp you for the purchase.
+                  <span className="font-bold uppercase tracking-wider">Privacy & Reach:</span> {contactPhone.trim() ? 'Your contact number is included so buyers can call or WhatsApp you directly.' : 'Your contact number is withheld; buyers will send inquiries to your in-app notifications.'}
                 </div>
               </div>
             </div>
@@ -1098,10 +1122,10 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
             <div />
           ) : step === 2 ? (
             <button onClick={() => {
-              if (!price || !location.trim() || !address.trim() || !contactPhone.trim()) {
+              if (!price || !location.trim()) {
                 toast({
                   title: 'Validation failed',
-                  description: 'Please fill in Price, District, Full Address, and Phone Number.',
+                  description: 'Please fill in Price and District.',
                   variant: 'destructive'
                 });
                 return;

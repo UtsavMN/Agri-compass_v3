@@ -27,6 +27,9 @@ public class ListingController {
     @Autowired
     private com.agricompass.repository.UserProfileRepository userProfileRepository;
 
+    @Autowired
+    private com.agricompass.repository.NotificationRepository notificationRepository;
+
     @GetMapping
     public ResponseEntity<Page<ListingDTO>> getListings(
         @RequestParam(defaultValue = "0") int page,
@@ -179,7 +182,7 @@ public class ListingController {
             contactPhone = userProfile.getPhone();
         }
         if (contactPhone == null || contactPhone.trim().isEmpty()) {
-            contactPhone = "+91 98450 12345";
+            contactPhone = null;
         } else {
             contactPhone = contactPhone.trim();
         }
@@ -244,6 +247,67 @@ public class ListingController {
             "message", "Order confirmed! The listing has been marked as SOLD and removed from active marketplace.",
             "id", id,
             "status", "SOLD"
+        ));
+    }
+
+    @PostMapping("/{id}/notify")
+    public ResponseEntity<Map<String, Object>> notifySeller(
+        @PathVariable Long id,
+        @RequestBody(required = false) Map<String, Object> body,
+        @RequestHeader(value = "X-Mock-User-Id", required = false) String mockUserId,
+        @RequestHeader(value = "X-User-Id", required = false) String headerUserId
+    ) {
+        Listing listing = listingRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing not found"));
+
+        String buyerId = null;
+        try {
+            com.agricompass.entity.UserProfile profile = userService.syncUser(null);
+            if (profile != null) buyerId = profile.getId();
+        } catch (Exception ignored) {}
+
+        if (buyerId == null || buyerId.trim().isEmpty()) {
+            if (mockUserId != null && !mockUserId.trim().isEmpty()) buyerId = mockUserId.trim();
+            else if (headerUserId != null && !headerUserId.trim().isEmpty()) buyerId = headerUserId.trim();
+            else if (body != null && body.get("buyerId") != null) buyerId = String.valueOf(body.get("buyerId")).trim();
+            else if (body != null && body.get("buyer_id") != null) buyerId = String.valueOf(body.get("buyer_id")).trim();
+        }
+
+        String buyerName = "A buyer";
+        String buyerAvatar = null;
+        if (buyerId != null) {
+            com.agricompass.entity.UserProfile buyerProfile = userProfileRepository.findById(buyerId).orElse(null);
+            if (buyerProfile != null) {
+                buyerName = buyerProfile.getFullName() != null && !buyerProfile.getFullName().isEmpty()
+                    ? buyerProfile.getFullName() : buyerProfile.getUsername();
+                buyerAvatar = buyerProfile.getAvatarUrl();
+            }
+        }
+        if (body != null && body.get("buyerName") != null && !String.valueOf(body.get("buyerName")).isBlank()) {
+            buyerName = String.valueOf(body.get("buyerName")).trim();
+        }
+
+        String customMsg = body != null && body.get("message") != null ? String.valueOf(body.get("message")).trim() : null;
+        String notificationMessage = customMsg != null && !customMsg.isEmpty()
+            ? buyerName + " is interested in your listing '" + listing.getTitle() + "': \"" + customMsg + "\""
+            : buyerName + " expressed interest in purchasing '" + listing.getTitle() + "' (" + (listing.getPrice() != null ? listing.getPrice() : "") + " " + (listing.getPriceUnit() != null ? listing.getPriceUnit() : "") + ")!";
+
+        if (listing.getUserId() != null && !listing.getUserId().isEmpty()) {
+            com.agricompass.entity.Notification notification = new com.agricompass.entity.Notification();
+            notification.setRecipientUserId(listing.getUserId());
+            notification.setSenderUserId(buyerId);
+            notification.setAuthorName(buyerName);
+            notification.setAuthorAvatar(buyerAvatar);
+            notification.setType("MARKETPLACE_INTEREST");
+            notification.setMessage(notificationMessage);
+            notification.setLink("/community");
+            notificationRepository.save(notification);
+        }
+
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", "Notification sent to seller successfully!",
+            "listingId", id
         ));
     }
 

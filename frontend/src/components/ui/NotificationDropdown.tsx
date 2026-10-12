@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, CloudLightning, FileText, Sprout } from 'lucide-react';
+import { Bell, CloudLightning, FileText, Sprout, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { apiGet } from '@/lib/httpClient';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
 
 interface Notification {
   id: string;
-  type: 'POST' | 'FARM_UPDATE' | 'WEATHER_ALERT';
+  type: 'POST' | 'FARM_UPDATE' | 'WEATHER_ALERT' | 'MARKETPLACE_INTEREST' | string;
   message: string;
   timestamp: string;
   link: string;
@@ -101,6 +101,7 @@ export const NotificationDropdown: React.FC = () => {
       case 'WEATHER_ALERT': return <CloudLightning className="text-amber-400 w-4 h-4" />;
       case 'POST': return <FileText className="text-blue-400 w-4 h-4" />;
       case 'FARM_UPDATE': return <Sprout className="text-green-400 w-4 h-4" />;
+      case 'MARKETPLACE_INTEREST': return <ShoppingCart className="text-[#c49a2a] w-4 h-4" />;
       default: return <Bell className="text-gold-400 w-4 h-4" />;
     }
   };
