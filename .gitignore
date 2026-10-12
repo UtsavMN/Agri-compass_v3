@@ -43,3 +43,5 @@ agri-compass-api/*.txt
 bin/
 jdk-17/
 *.zip
+.vercel
+.env*
