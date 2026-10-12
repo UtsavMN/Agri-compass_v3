@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { apiGet, apiPost } from '@/lib/httpClient';
+import { UploadAPI } from '@/lib/api/upload';
 import { FarmUpdateCard } from './FarmUpdateCard';
 import { Button } from '@/components/ui/button';
 import { ImageIcon, Loader2, Send, Sprout } from 'lucide-react';
@@ -51,16 +52,8 @@ export function FarmBlog({ farmId, ownerId, isOwner: isOwnerProp }: FarmBlogProp
       let imageUrls = '[]';
       
       if (selectedFile) {
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-        formData.append('folder', 'agri-compass/farm-updates');
-        // Need custom fetch for FormData to /api/upload
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-        const uploadData = await uploadRes.json();
-        if (uploadData.url) {
+        const uploadData = await UploadAPI.uploadMedia(selectedFile, 'agri-compass/farm-updates');
+        if (uploadData?.url) {
           imageUrls = JSON.stringify([uploadData.url]);
         }
       }

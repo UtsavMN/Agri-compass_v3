@@ -126,7 +126,17 @@ public class PostController {
 
     @PostMapping
     public ResponseEntity<Post> createPost(@RequestBody Map<String, Object> body) {
-        String userId = userService.syncUser(null).getId();
+        String userId = null;
+        try {
+            com.agricompass.entity.UserProfile p = userService.syncUser(null);
+            if (p != null) userId = p.getId();
+        } catch (Exception ignored) {}
+
+        if (userId == null || userId.trim().isEmpty()) {
+            if (body.get("userId") != null) userId = String.valueOf(body.get("userId")).trim();
+            else if (body.get("user_id") != null) userId = String.valueOf(body.get("user_id")).trim();
+            else userId = "farmer_anonymous";
+        }
 
         String bodyContent = body.get("body") != null ? (String) body.get("body") : (String) body.get("content");
         String category = (String) body.get("category");
@@ -136,14 +146,38 @@ public class PostController {
                 ? userProfile.getDistrict() 
                 : (String) body.get("location");
 
+        List<String> imagesList = new ArrayList<>();
+        Object imagesObj = body.get("images");
+        if (imagesObj instanceof List<?>) {
+            for (Object item : (List<?>) imagesObj) {
+                if (item != null && !item.toString().isBlank()) {
+                    imagesList.add(item.toString().trim());
+                }
+            }
+        } else if (imagesObj instanceof String && !((String) imagesObj).isBlank()) {
+            imagesList.add(((String) imagesObj).trim());
+        }
+
+        if (body.get("imageUrl") != null && !body.get("imageUrl").toString().isBlank()) {
+            String img = body.get("imageUrl").toString().trim();
+            if (!imagesList.contains(img)) imagesList.add(img);
+        } else if (body.get("image_url") != null && !body.get("image_url").toString().isBlank()) {
+            String img = body.get("image_url").toString().trim();
+            if (!imagesList.contains(img)) imagesList.add(img);
+        }
+
         Post post = Post.builder()
             .userId(userId)
             .body(bodyContent)
             .location(location)
+            .images(imagesList)
             .build();
+
         if (category != null) {
             post.setCategory(category);
         }
+        post.setImages(imagesList);
+
         return ResponseEntity.ok(postRepository.save(post));
     }
 

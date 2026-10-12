@@ -44,6 +44,8 @@ public class SecurityConfig {
                     "/api/schemes",
                     "/api/marketplace",
                     "/api/marketplace/**",
+                    "/api/upload",
+                    "/api/upload/**",
                     "/api/users/search",
                     "/api/users/check-handle",
                     "/api/users/*/public",

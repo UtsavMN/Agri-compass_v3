@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useUser, useDistrict } from "@/store";
 import { DISTRICTS } from "@/data/masterData";
 import { apiPut } from "@/lib/httpClient";
+import { UploadAPI } from "@/lib/api/upload";
+import { Loader2 } from "lucide-react";
 
 export function EditProfileModal({ onClose }: { onClose: () => void }) {
   const { profile, updateProfile } = useUser();
   const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const [loading, setLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     fullName: profile?.full_name || "",
     usernameHandle: profile?.username || "",
@@ -20,6 +24,22 @@ export function EditProfileModal({ onClose }: { onClose: () => void }) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const res = await UploadAPI.uploadMedia(file, "agri-compass/avatars");
+      if (res?.url) {
+        setFormData(prev => ({ ...prev, avatarUrl: res.url }));
+      }
+    } catch (err) {
+      console.error("Avatar upload failed", err);
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -56,17 +76,31 @@ export function EditProfileModal({ onClose }: { onClose: () => void }) {
         <h2 className="text-2xl font-serif text-[#F5F0E8] mb-6">Edit Profile</h2>
         
         <div className="space-y-4">
-          {/* Avatar Upload (Mock for now, should integrate Cloudinary) */}
+          {/* Avatar Upload */}
           <div className="flex items-center gap-4 mb-2">
-            <div className="w-16 h-16 rounded-full bg-[#1a1a0e] border border-[#C9A84C]/30 flex items-center justify-center overflow-hidden">
-              {formData.avatarUrl ? (
+            <div className="w-16 h-16 rounded-full bg-[#1a1a0e] border border-[#C9A84C]/30 flex items-center justify-center overflow-hidden relative">
+              {uploadingAvatar ? (
+                <Loader2 className="w-6 h-6 animate-spin text-[#C9A84C]" />
+              ) : formData.avatarUrl ? (
                 <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-[#C9A84C] font-bold text-xl">{formData.fullName.charAt(0)}</span>
+                <span className="text-[#C9A84C] font-bold text-xl">{formData.fullName.charAt(0) || "F"}</span>
               )}
             </div>
-            <button className="px-4 py-2 border border-[#1E1E1E] text-xs font-bold uppercase tracking-wider text-[#F5F0E8]/70 hover:text-[#C9A84C] rounded-lg transition-colors">
-              Change Photo
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleAvatarFile}
+              accept="image/*"
+              className="hidden"
+            />
+            <button
+              type="button"
+              disabled={uploadingAvatar}
+              onClick={() => fileInputRef.current?.click()}
+              className="px-4 py-2 border border-[#1E1E1E] text-xs font-bold uppercase tracking-wider text-[#F5F0E8]/70 hover:text-[#C9A84C] rounded-lg transition-colors flex items-center gap-2"
+            >
+              {uploadingAvatar ? "Uploading..." : "Change Photo"}
             </button>
           </div>
 

@@ -27,6 +27,9 @@ public class Post {
     @Column(name = "likes_count")
     private Integer likesCount = 0;
 
+    @Column(name = "images_json", columnDefinition = "TEXT")
+    private String imagesJson = "[]";
+
     @Column(name = "created_at", updatable = false)
     private String createdAt;
 
@@ -78,7 +81,39 @@ public class Post {
     public String getLocation() { return district; }
     public void setLocation(String loc) { this.district = loc; }
 
-    public java.util.List<String> getImages() { return java.util.Collections.emptyList(); }
+    public java.util.List<String> getImages() {
+        if (imagesJson == null || imagesJson.trim().isEmpty() || imagesJson.equals("[]")) {
+            return java.util.Collections.emptyList();
+        }
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            return mapper.readValue(imagesJson, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<String>>() {});
+        } catch (Exception e) {
+            String[] parts = imagesJson.split(",");
+            java.util.List<String> res = new java.util.ArrayList<>();
+            for (String p : parts) {
+                if (!p.trim().isEmpty()) res.add(p.trim().replace("\"", "").replace("[", "").replace("]", ""));
+            }
+            return res;
+        }
+    }
+
+    public void setImages(java.util.List<String> images) {
+        if (images == null || images.isEmpty()) {
+            this.imagesJson = "[]";
+            return;
+        }
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            this.imagesJson = mapper.writeValueAsString(images);
+        } catch (Exception e) {
+            this.imagesJson = "[\"" + String.join("\",\"", images) + "\"]";
+        }
+    }
+
+    public String getImagesJson() { return imagesJson; }
+    public void setImagesJson(String json) { this.imagesJson = json; }
+
     public String getVideoUrl() { return null; }
     public String getKnCaption() { return null; }
 
@@ -131,6 +166,9 @@ public class Post {
             post.district = this.location;
             if (this.cropTags != null && !this.cropTags.isEmpty()) {
                 post.category = this.cropTags.get(0);
+            }
+            if (this.images != null && !this.images.isEmpty()) {
+                post.setImages(this.images);
             }
             return post;
         }
