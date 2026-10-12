@@ -92,75 +92,115 @@ export const VoiceCommandModal = ({ isOpen, onClose }: VoiceCommandModalProps) =
     if ('speechSynthesis' in window) {
       // Cancel any current speaking
       window.speechSynthesis.cancel();
-      
+     
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang;
-      
-      // Try to find a matching voice locale
+     
       const voices = window.speechSynthesis.getVoices();
       const matchedVoice = voices.find(voice => voice.lang.startsWith(lang.split('-')[0]));
       if (matchedVoice) {
         utterance.voice = matchedVoice;
       }
-      
+     
       utterance.rate = 0.95; // Slightly slower for better clarity
       window.speechSynthesis.speak(utterance);
     }
   };
 
-  // Local fallback keyword matcher
+  // Word boundary matcher — handles both Kannada (substring) and English (word boundary)
+  const isWordMatch = (text: string, term: string): boolean => {
+    if (/[^\x00-\x7F]/.test(term)) {
+      // Non-ASCII (Kannada) — use substring match
+      return text.includes(term);
+    }
+    // ASCII (English) — use word boundary regex
+    const regex = new RegExp(`\\b${term}\\b`, 'i');
+    return regex.test(text);
+  };
+
+  // Local fallback keyword matcher with regional Kannada dialect variations
   const runLocalFallback = (spokenText: string): CommandGuide | null => {
     const textLower = spokenText.toLowerCase().trim();
-    
+   
+    // Expanded crop vocabulary covering English & Kannada regional dialects, phonetic script, and common variants
     const KANNADA_CROP_MAP: Record<string, string> = {
-      'ರಾಗಿ': 'ragi',
-      'ಭತ್ತ': 'rice',
-      'ಅಕ್ಕಿ': 'rice',
-      'ಗೋಧಿ': 'wheat',
-      'ಮೆಕ್ಕೆಜೋಳ': 'maize',
-      'ಜೋಳ': 'jowar',
-      'ಕಬ್ಬು': 'sugarcane',
-      'ಹತ್ತಿ': 'cotton',
-      'ಶೇಂಗಾ': 'groundnut',
-      'ಕಡಲೆಕಾಯಿ': 'groundnut',
-      'ಬೆಳ್ಳುಳ್ಳಿ': 'garlic',
-      'ಈರುಳ್ಳಿ': 'onion',
-      'ಶುಂಠಿ': 'ginger',
-      'ಕಾಫಿ': 'coffee',
-      'ಟೊಮೆಟೊ': 'tomato',
-      'ಆಲೂಗಡ್ಡೆ': 'potato',
-      'ಬದನೆಕಾಯಿ': 'brinjal',
-      'ಮೆಣಸಿನಕಾಯಿ': 'chilli',
-      'ತೆಂಗಿನಕಾಯಿ': 'coconut'
+      // Banana
+      'ಬಾಳೆ': 'banana', 'ಬಾಳೆಹಣ್ಣು': 'banana', 'banana': 'banana', 'bananas': 'banana',
+      // Mango
+      'ಮಾವು': 'mango', 'ಮಾವಿನಕಾಯಿ': 'mango', 'mango': 'mango', 'mangoes': 'mango',
+      // Arecanut
+      'ಅಡಿಕೆ': 'arecanut', 'ಅಡಕೆ': 'arecanut', 'arecanut': 'arecanut', 'betel nut': 'arecanut',
+      // Papaya
+      'ಪರಂಗಿ': 'papaya', 'ಪಪ್ಪಾಯಿ': 'papaya', 'papaya': 'papaya',
+      // Pomegranate
+      'ದಾಳಿಂಬೆ': 'pomegranate', 'pomegranate': 'pomegranate',
+      // Turmeric
+      'ಅರಿಶಿನ': 'turmeric', 'ಅರಿಷಿಣ': 'turmeric', 'turmeric': 'turmeric',
+      // Cardamom
+      'ಏಲಕ್ಕಿ': 'cardamom', 'cardamom': 'cardamom',
+      // Ragi (Finger Millet)
+      'ರಾಗಿ': 'ragi', 'ragi': 'ragi',
+      // Rice / Paddy
+      'ಭತ್ತ': 'rice', 'ಅಕ್ಕಿ': 'rice', 'ಬತ್ತ': 'rice', 'rice': 'rice', 'paddy': 'rice',
+      // Wheat
+      'ಗೋಧಿ': 'wheat', 'ಗೋದೀ': 'wheat', 'wheat': 'wheat',
+      // Maize / Corn
+      'ಮೆಕ್ಕೆಜೋಳ': 'maize', 'ಮೆಕ್ಕೆ ಜೋಳ': 'maize', 'ಮುಸುಕಿನ ಜೋಳ': 'maize', 'maize': 'maize', 'corn': 'maize',
+      // Jowar / Sorghum
+      'ಜೋಳ': 'jowar', 'ಜೋಳಾ': 'jowar', 'jowar': 'jowar',
+      // Sugarcane
+      'ಕಬ್ಬು': 'sugarcane', 'ಕಬ್ಬಿನ': 'sugarcane', 'ಖಬ್ಬು': 'sugarcane', 'sugarcane': 'sugarcane', 'cane': 'sugarcane',
+      // Cotton
+      'ಹತ್ತಿ': 'cotton', 'ಅತ್ತಿ': 'cotton', 'cotton': 'cotton',
+      // Groundnut / Peanut
+      'ಶೇಂಗಾ': 'groundnut', 'ಕಡಲೆಕಾಯಿ': 'groundnut', 'ಕಡ್ಲೇಕಾಯಿ': 'groundnut', 'groundnut': 'groundnut', 'peanut': 'groundnut',
+      // Garlic
+      'ಬೆಳ್ಳುಳ್ಳಿ': 'garlic', 'ಬೆಳ್ಳುಳಿ': 'garlic', 'garlic': 'garlic',
+      // Onion
+      'ಈರುಳ್ಳಿ': 'onion', 'ಉಳ್ಳಾಗಡ್ಡಿ': 'onion', 'ಉಳ್ಳಾಗಡ್ಡಿಗಳು': 'onion', 'onion': 'onion',
+      // Ginger
+      'ಶುಂಠಿ': 'ginger', 'ಅಲ್ಲಾ': 'ginger', 'ginger': 'ginger',
+      // Coffee
+      'ಕಾಫಿ': 'coffee', 'coffee': 'coffee',
+      // Tea
+      'ಟೀ': 'tea', 'ಚಹಾ': 'tea', 'tea': 'tea',
+      // Tomato
+      'ಟೊಮೆಟೊ': 'tomato', 'ಟೊಮೋಟೊ': 'tomato', 'ಟೊಮೆಟೋ': 'tomato', 'tomato': 'tomato',
+      // Potato
+      'ಆಲೂಗಡ್ಡೆ': 'potato', 'ಆಲೂ': 'potato', 'potato': 'potato',
+      // Brinjal / Eggplant
+      'ಬದನೆಕಾಯಿ': 'brinjal', 'ಬದನೆ': 'brinjal', 'brinjal': 'brinjal',
+      // Chilli
+      'ಮೆಣಸಿನಕಾಯಿ': 'chilli', 'ಮೆಣಸಿನ ಕಾಯಿ': 'chilli', 'ಖಾರ': 'chilli', 'chilli': 'chilli',
+      // Coconut
+      'ತೆಂಗಿನಕಾಯಿ': 'coconut', 'ತಂಗಿನಕಾಯಿ': 'coconut', 'ತೆಂಗು': 'coconut', 'ತೆಂಗಿನ': 'coconut', 'coconut': 'coconut'
     };
 
-    // 1. Check for specific crop matches in Kannada crop map
+    // 1. Check for specific crop matches in Kannada / English crop map using word boundary
     for (const [knName, enName] of Object.entries(KANNADA_CROP_MAP)) {
-      if (textLower.includes(knName)) {
+      if (isWordMatch(textLower, knName)) {
         const matchedCrop = availableCrops.find(c => c.toLowerCase().includes(enName));
-        if (matchedCrop) {
-          const slug = matchedCrop.toLowerCase().trim()
-            .replace(/[^\w\s-]/g, '')
-            .replace(/[\s/]+/g, '-')
-            .replace(/-+/g, '-')
-            .replace(/^-+|-+$/g, '');
-          return {
-            phrase: `${matchedCrop} ಬೆಳೆ ವಿವರ`,
-            englishPhrase: `${matchedCrop} Crop Details`,
-            action: `${matchedCrop} Details`,
-            route: `/crop/${slug}`
-          };
-        }
+        const cropDisplayName = matchedCrop || enName.charAt(0).toUpperCase() + enName.slice(1);
+        const slug = cropDisplayName.toLowerCase().trim()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/[\s/]+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        return {
+          phrase: `${cropDisplayName} ಬೆಳೆ ವಿವರ`,
+          englishPhrase: `${cropDisplayName} Crop Details`,
+          action: `${cropDisplayName} Details`,
+          route: `/crop/${slug}`
+        };
       }
     }
 
-    // 2. Check for specific crop matches in English availableCrops
+    // 2. Check for specific crop matches in English availableCrops using word boundary
     for (const crop of availableCrops) {
       const cropLower = crop.toLowerCase();
-      // Split Ragi (Finger Millet) into ["ragi", "finger millet"]
       const parts = cropLower.split(/[()]/).map(p => p.trim()).filter(Boolean);
       for (const part of parts) {
-        if (part.length > 2 && textLower.includes(part)) {
+        if (part.length > 2 && isWordMatch(textLower, part)) {
           const slug = crop.toLowerCase().trim()
             .replace(/[^\w\s-]/g, '')
             .replace(/[\s/]+/g, '-')
@@ -176,100 +216,102 @@ export const VoiceCommandModal = ({ isOpen, onClose }: VoiceCommandModalProps) =
       }
     }
 
-    // 3. Generic matches (e.g. general crops registry, weather, farm, etc.)
+    // 3. Generic matches incorporating Regional Dialects
+    // (Uttara Karnataka, Karavali, Kalyana Karnataka, Mysore, Kanglish)
+
+    // CROPS MODULE
     if (
-      textLower.includes('ಬೆಳೆ') || 
-      textLower.includes('ಬೆಳೆಗಳು') || 
-      textLower.includes('ಬೆಳೆಗಳ') ||
-      textLower.includes('crop') ||
-      textLower.includes('crops')
+      textLower.includes('ಬೆಳೆ') || textLower.includes('ಬೆಳೆಗಳು') || textLower.includes('ಬೆಳೆಗಳ') ||
+      textLower.includes('ಬೆಳಿ') || textLower.includes('ಬುಳೆ') || textLower.includes('ಬ್ಯಾಳೆ') ||
+      textLower.includes('ಪೈರು') || textLower.includes('ಫಸಲು') || textLower.includes('ಧಾನ್ಯ') ||
+      textLower.includes('bili') || textLower.includes('bule') || textLower.includes('bele') ||
+      textLower.includes('crop') || textLower.includes('crops')
     ) {
-      return commandGuides[0]; // Crops Page
+      return commandGuides[0];
     }
+
+    // WEATHER MODULE
     if (
-      textLower.includes('ಹವಾಮಾನ') || 
-      textLower.includes('ಹವೆ') || 
-      textLower.includes('ಮಳೆ') ||
-      textLower.includes('weather') ||
-      textLower.includes('rain') ||
-      textLower.includes('forecast')
+      textLower.includes('ಹವಾಮಾನ') || textLower.includes('ಹವೆ') || textLower.includes('ಮಳೆ') ||
+      textLower.includes('ಮಳಿ') || textLower.includes('ಬೀಳ್ತೈತೆ') || textLower.includes('ಬರತೈತಿ') ||
+      textLower.includes('ಮೇಘ') || textLower.includes('mali') || textLower.includes('male') ||
+      textLower.includes('weather') || textLower.includes('rain') || textLower.includes('forecast')
     ) {
-      return commandGuides[1]; // Weather
+      return commandGuides[1];
     }
+
+    // MARKET PRICES MODULE
     if (
-      textLower.includes('ಮಾರುಕಟ್ಟೆ') || 
-      textLower.includes('ಬೆಲೆ') || 
-      textLower.includes('ಧಾರಣೆ') ||
-      textLower.includes('ದರ') ||
-      textLower.includes('ರೇಟ್') ||
-      textLower.includes('market') ||
-      textLower.includes('price') ||
-      textLower.includes('prices')
+      textLower.includes('ಮಾರುಕಟ್ಟೆ') || textLower.includes('ಬೆಲೆ') || textLower.includes('ಧಾರಣೆ') ||
+      textLower.includes('ಧಾರಣಿ') || textLower.includes('ದರ') || textLower.includes('ರೇಟ್') ||
+      textLower.includes('ಅಂಗಡಿ') || textLower.includes('ಸಂತೆ') || textLower.includes('ಸಂತೆಯಲ್ಲಿ') ||
+      textLower.includes('sante') || textLower.includes('dharani') || textLower.includes('angadi') ||
+      textLower.includes('market') || textLower.includes('price') || textLower.includes('prices') || textLower.includes('rate')
     ) {
-      return commandGuides[2]; // Market Prices
+      return commandGuides[2];
     }
+
+    // MY FARM MODULE
     if (
-      textLower.includes('ಜಮೀನು') || 
-      textLower.includes('ಹೊಲ') || 
-      textLower.includes('ತೋಟ') ||
-      textLower.includes('ಫಾರ್ಮ್') ||
-      textLower.includes('farm') ||
-      textLower.includes('land')
+      textLower.includes('ಜಮೀನು') || textLower.includes('ಜಮೀನಿನ') || textLower.includes('ಜಮೀನ') ||
+      textLower.includes('ಹೊಲ') || textLower.includes('ತೋಟ') ||
+      textLower.includes('ಗದ್ದೆ') || textLower.includes('ಖಾತೆ') || textLower.includes('ಕಂಡೊಡು') ||
+      textLower.includes('ಫಾರ್ಮ್') || textLower.includes('hola') || textLower.includes('gadde') ||
+      textLower.includes('jameenu') || textLower.includes('thota') || textLower.includes('farm') || textLower.includes('land')
     ) {
-      return commandGuides[3]; // My Farm
+      return commandGuides[3];
     }
+
+    // GOV SCHEMES MODULE
     if (
-      textLower.includes('ಯೋಜನೆ') || 
-      textLower.includes('ಯೋಜನೆಗಳು') || 
-      textLower.includes('ಸರ್ಕಾರ') ||
-      textLower.includes('scheme') ||
-      textLower.includes('schemes') ||
-      textLower.includes('yojana')
+      textLower.includes('ಯೋಜನೆ') || textLower.includes('ಯೋಜನೆಗಳು') || textLower.includes('ಯೋಜನಾ') ||
+      textLower.includes('ಸರ್ಕಾರ') || textLower.includes('ಸರಕಾರ') || textLower.includes('ಸರ್ಕಾರಾ') ||
+      textLower.includes('ಸಹಾಯಧನ') || textLower.includes('ಸವಲತ್ತು') || textLower.includes('sarkara') ||
+      textLower.includes('yojana') || textLower.includes('scheme') || textLower.includes('schemes')
     ) {
-      return commandGuides[4]; // Gov Schemes
+      return commandGuides[4];
     }
+
+    // SOIL ANALYSIS MODULE
     if (
-      textLower.includes('ಮಣ್ಣು') || 
-      textLower.includes('ಮಣ್ಣಿನ') || 
-      textLower.includes('ಪರೀಕ್ಷೆ') ||
-      textLower.includes('soil')
+      textLower.includes('ಮಣ್ಣು') || textLower.includes('ಮಣ್ಣಿನ') || textLower.includes('ಮಣ್ಣಿಂದು') ||
+      textLower.includes('ನೆಲ') || textLower.includes('ಭೂಮಿ') || textLower.includes('ಪರೀಕ್ಷೆ') ||
+      textLower.includes('ಪರೀಕ್ಷಿ') || textLower.includes('mannu') || textLower.includes('mannindu') ||
+      textLower.includes('soil') || textLower.includes('land test')
     ) {
-      return commandGuides[5]; // Soil Analysis
+      return commandGuides[5];
     }
+
+    // COMMUNITY MODULE
     if (
-      textLower.includes('ಸಮುದಾಯ') || 
-      textLower.includes('ಚರ್ಚೆ') || 
-      textLower.includes('ಗೆಳೆಯರು') ||
-      textLower.includes('ರೈತರು') ||
-      textLower.includes('community') ||
-      textLower.includes('forum')
+      textLower.includes('ಸಮುದಾಯ') || textLower.includes('ಚರ್ಚೆ') || textLower.includes('ಗೆಳೆಯರು') ||
+      textLower.includes('ರೈತರು') || textLower.includes('ಒಕ್ಕೂಟ') || textLower.includes('ಸಂಘ') ||
+      textLower.includes('geleyaru') || textLower.includes('raitharu') || textLower.includes('community') || textLower.includes('forum')
     ) {
-      return commandGuides[6]; // Community
+      return commandGuides[6];
     }
+
+    // DASHBOARD / HOME MODULE
     if (
-      textLower.includes('ಮುಖಪುಟ') || 
-      textLower.includes('ಡ್ಯಾಶ್') || 
-      textLower.includes('ಮುಖ್ಯ') ||
-      textLower.includes('dashboard') ||
-      textLower.includes('home')
+      textLower.includes('ಮುಖಪುಟ') || textLower.includes('ಮುಖ್ಯ') || textLower.includes('ಮನೆ') ||
+      textLower.includes('ಶುರು') || textLower.includes('ಮೊದಲು') || textLower.includes('ಡ್ಯಾಶ್') ||
+      textLower.includes('ಹೋಮ್') || textLower.includes('mukhya') || textLower.includes('home') ||
+      textLower.includes('dashboard') || textLower.includes('main')
     ) {
-      return commandGuides[7]; // Dashboard
+      return commandGuides[7];
     }
+
+    // AI ASSISTANT / KRISHI MITRA
     if (
-      textLower.includes('ಮಿತ್ರ') || 
-      textLower.includes('ಕೃಷಿಮಿತ್ರ') || 
-      textLower.includes('ಕೃಷಿ ಮಿತ್ರ') || 
-      textLower.includes('ಸಹಾಯ') ||
-      textLower.includes('assistant') ||
-      textLower.includes('krishi') ||
-      textLower.includes('help')
+      textLower.includes('ಮಿತ್ರ') || textLower.includes('ಕೃಷಿಮಿತ್ರ') || textLower.includes('ಕೃಷಿ ಮಿತ್ರ') ||
+      textLower.includes('ಸಹಾಯ') || textLower.includes('assistant') || textLower.includes('krishi') || textLower.includes('help')
     ) {
-      return commandGuides[8]; // Krishi Mitra
+      return commandGuides[8];
     }
+
+    // PROFILE
     if (
-      textLower.includes('ಪ್ರೊಫೈಲ್') || 
-      textLower.includes('ಖಾತೆ') || 
-      textLower.includes('profile')
+      textLower.includes('ಪ್ರೊಫೈಲ್') || textLower.includes('ಖಾತೆ') || textLower.includes('profile') || textLower.includes('account')
     ) {
       return {
         phrase: 'ಪ್ರೊಫೈಲ್',
@@ -278,6 +320,7 @@ export const VoiceCommandModal = ({ isOpen, onClose }: VoiceCommandModalProps) =
         route: '/profile'
       };
     }
+
     return null;
   };
 
@@ -300,9 +343,9 @@ export const VoiceCommandModal = ({ isOpen, onClose }: VoiceCommandModalProps) =
     setIsAnalyzing(true);
     let matched: CommandGuide | null = null;
 
-    // Dynamically build system prompt with crop names and farm names from DB
+    // Enhanced System Prompt with Kannada Regional Dialect awareness
     const dynamicSystemPrompt = `You are the voice command intent classifier for Agri Compass.
-Analyze the user's spoken input (in Kannada or English) and classify it into one of these intents and target paths:
+Analyze the user's spoken input (in standard Kannada, Regional Kannada Dialects like Uttara Karnataka, Karavali, Kalyana Karnataka, South Karnataka, or English/Kanglish phonetics) and classify it into one of these intents and target paths:
 - Intent: 'CROPS', Path: '/crops'
 - Intent: 'WEATHER', Path: '/weather'
 - Intent: 'MARKET_PRICES', Path: '/market-prices'
@@ -315,17 +358,26 @@ Analyze the user's spoken input (in Kannada or English) and classify it into one
 - Intent: 'ASSISTANT', Path: 'krishimitra'
 - Intent: 'UNKNOWN', Path: ''
 
+DIALECT DICTIONARY & CONTEXT:
+1. Weather: 'ಮಳಿ', 'ಹವಾಮಾನ', 'ಹವೆ', 'ಮಳೆ ಬೀಳ್ತೈತೆ', 'ಮಳೆ ಎಂದೇ', 'weather', 'rain' -> '/weather'
+2. Crops: 'ಬೆಳಿ', 'ಬೆಳೆ', 'ಬುಳೆ', 'ಬ್ಯಾಳೆ', 'ಪೈರು', 'ಫಸಲು', 'crops' -> '/crops'
+3. Market: 'ಧಾರಣಿ', 'ಧಾರಣೆ', 'ದರ', 'ರೇಟ್', 'ಅಂಗಡಿ', 'ಸಂತೆ', 'ಬೆಲೆ', 'market' -> '/market-prices'
+4. Farm: 'ಹೊಲ', 'ಗದ್ದೆ', 'ಜಮೀನು', 'ತೋಟ', 'ಕಂಡೊಡು', 'ಫಾರ್ಮ್', 'farm' -> '/my-farm'
+5. Schemes: 'ಸರಕಾರ', 'ಸರ್ಕಾರಾ', 'ಯೋಜನಾ', 'ಯೋಜನೆ', 'ಸಹಾಯಧನ', 'schemes' -> '/schemes'
+6. Soil: 'ಮಣ್ಣಿಂದು', 'ಮಣ್ಣು', 'ನೆಲ', 'ಪರೀಕ್ಷಿ', 'soil' -> '/soil-analysis'
+7. Home/Dashboard: 'ಮುಖಪುಟ', 'ಮನೆ', 'ಶುರು', 'ಮೊದಲು', 'ಹೋಮ್', 'home' -> '/dashboard'
+
 DATABASE CONTEXT:
 - Available Crops: [ ${availableCrops.join(', ')} ]
 - User's Farms: [ ${userFarms.join(', ')} ]
 
 ADDITIONAL ROUTING RULES:
-1. If the user mentions any crop in the "Available Crops" list (like "Rice" or "ರಾಗಿ"), set the Path to "/crop/CropName" where CropName is the matched crop name in English (Capitalized, e.g. "Rice", "Maize", "Ragi").
-2. If they ask about a specific farm in the "User's Farms" list, route to "/my-farm".
+1. If the user mentions any crop in "Available Crops" or regional equivalents (e.g., "ರಾಗಿ", "ಭತ್ತ", "Rice", "Maize"), set Path to "/crop/CropName" (e.g. "/crop/Rice").
+2. If they ask about a specific farm, route to "/my-farm".
 
 Respond ONLY with a minified, valid JSON object matching this schema:
 {"intent": "INTENT_NAME", "path": "TARGET_PATH", "reason": "Brief explanation in English"}
-Do NOT wrap the response in markdown code blocks like \`\`\`. Output plain text JSON only.`;
+Do NOT wrap in markdown fences. Output plain text JSON only.`;
 
     try {
       // 1. Send the speech transcript to Gemini classifier backend endpoint
@@ -339,7 +391,6 @@ Do NOT wrap the response in markdown code blocks like \`\`\`. Output plain text 
         try {
           const result = JSON.parse(cleanedJson);
           if (result && result.path) {
-            // Find in commandGuides or create a dynamic one
             const targetPath = result.path;
             const existingGuide = commandGuides.find(g => g.route === targetPath);
             if (existingGuide) {
@@ -354,8 +405,7 @@ Do NOT wrap the response in markdown code blocks like \`\`\`. Output plain text 
             } else if (targetPath.startsWith('/crop/')) {
               let cropParam = targetPath.split('/').pop() || '';
               cropParam = decodeURIComponent(cropParam).toLowerCase().trim();
-              
-              // Find the matching crop dynamically from availableCrops list
+             
               const matchedCrop = availableCrops.find(c => {
                 const name = c.toLowerCase().trim();
                 const slugName = c.toLowerCase().trim()
@@ -363,10 +413,10 @@ Do NOT wrap the response in markdown code blocks like \`\`\`. Output plain text 
                   .replace(/[\s/]+/g, '-')
                   .replace(/-+/g, '-')
                   .replace(/^-+|-+$/g, '');
-                
-                return name === cropParam || 
-                       slugName === cropParam || 
-                       name.includes(cropParam) || 
+               
+                return name === cropParam ||
+                       slugName === cropParam ||
+                       name.includes(cropParam) ||
                        cropParam.includes(name);
               });
 
@@ -402,33 +452,46 @@ Do NOT wrap the response in markdown code blocks like \`\`\`. Output plain text 
 
     if (matched) {
       setMatchedCommand(matched);
-      
-      // Audio confirmation in Kannada or English
+     
       const feedbackText = lang === 'kn-IN'
         ? `${matched.phrase} ಪುಟಕ್ಕೆ ಹೋಗಲಾಗುತ್ತಿದೆ`
         : `Navigating to ${matched.action}`;
-      
+     
       speakFeedback(feedbackText);
 
-      // Execute navigation after short delay to let user see match
       setTimeout(() => {
         onClose();
         if (matched?.route === 'krishimitra') {
-          // Trigger the KrishiMitra float assistant event
           window.dispatchEvent(new CustomEvent('open-krishimitra'));
         } else if (matched?.route) {
           navigate(matched.route);
         }
-        // Reset states
         setTranscript('');
         setMatchedCommand(null);
       }, 1500);
     } else {
-      // Speak out warning if no match found
-      const retryText = lang === 'kn-IN'
-        ? "ಕ್ಷಮಿಸಿ, ಆಜ್ಞೆ ಅರ್ಥವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ."
-        : "Sorry, command not recognized. Please try again.";
-      speakFeedback(retryText);
+      // DEFAULT: Navigate to dashboard when command is unrecognized
+      const defaultHomeGuide: CommandGuide = {
+        phrase: 'ಮುಖಪುಟಕ್ಕೆ ಹೋಗು',
+        englishPhrase: 'Go to dashboard',
+        action: 'Dashboard',
+        route: '/dashboard'
+      };
+
+      setMatchedCommand(defaultHomeGuide);
+
+      const fallbackText = lang === 'kn-IN'
+        ? 'ಆಜ್ಞೆ ಅರ್ಥವಾಗಲಿಲ್ಲ, ಮುಖಪುಟಕ್ಕೆ ತೆಗೆದುಕೊಂಡು ಹೋಗಲಾಗುತ್ತಿದೆ'
+        : 'Command not recognized, taking you to the dashboard';
+
+      speakFeedback(fallbackText);
+
+      setTimeout(() => {
+        onClose();
+        navigate('/dashboard');
+        setTranscript('');
+        setMatchedCommand(null);
+      }, 1800);
     }
   };
 
