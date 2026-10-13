@@ -123,7 +123,7 @@ public class AiController {
     @PostMapping("/chat")
     public ResponseEntity<Map<String, Object>> chat(
         @RequestBody Map<String, Object> body,
-        @RequestHeader(value = "X-Mock-User-Id", required = false) Long userId
+        @RequestHeader(value = "X-User-Id", required = false) String userId
     ) {
         String message = (String) body.get("message");
         if (message == null) {
@@ -404,49 +404,11 @@ public class AiController {
             }
         }
         
-        // 3. Fallback mock response if everything fails
-        log.warn("All AI providers failed or not configured, returning mock soil recommendation data");
-        
-        Map<String, Object> mockResponse = Map.of(
-            "recommended_crops", List.of(
-                Map.of(
-                    "crop_name", "Rice (Paddy)",
-                    "suitability_score", 92,
-                    "expected_yield_per_acre_tons", 2.5,
-                    "growing_guide", Map.of(
-                        "sowing_details", "Sow in well-prepared puddled fields. Maintain 5cm water.",
-                        "fertilizer_npk_schedule_per_acre", "Basal: 50kg DAP, 25kg MOP. Top dress: 25kg Urea at tillering.",
-                        "irrigation_plan", "Maintain continuous submergence (5cm) until two weeks before harvest.",
-                        "pest_disease_management", "Monitor for Stem Borer and Blast. Use Trichogramma and proper fungicides.",
-                        "harvesting_tips", "Harvest when 80% panicles turn golden yellow. Dry to 14% moisture."
-                    )
-                ),
-                Map.of(
-                    "crop_name", "Maize",
-                    "suitability_score", 85,
-                    "expected_yield_per_acre_tons", 3.0,
-                    "growing_guide", Map.of(
-                        "sowing_details", "Sow on ridges and furrows. Plant spacing 60x20 cm.",
-                        "fertilizer_npk_schedule_per_acre", "Basal: 50kg DAP, 25kg MOP. Top dress: 50kg Urea at knee high stage.",
-                        "irrigation_plan", "Irrigate at critical stages: seedling, knee high, silking, and grain filling.",
-                        "pest_disease_management", "Monitor for Fall Armyworm. Apply recommended biological/chemical controls.",
-                        "harvesting_tips", "Harvest when husks turn yellow and grains are hard."
-                    )
-                )
-            ),
-            "soil_health_report", Map.of(
-                "status", "Good",
-                "limiting_factors", List.of("Slightly low Nitrogen", "Needs organic carbon"),
-                "soil_amendment_recommendations", "Add 5 tons of Farm Yard Manure (FYM) per acre to improve soil structure and organic matter."
-            ),
-            "warnings", List.of(
-                "Nitrogen levels are slightly below optimal for high-yielding varieties.",
-                "Ensure proper drainage to prevent waterlogging."
-            ),
-            "confidence_level", 88
-        );
-        
-        return ResponseEntity.ok(mockResponse);
+        // 3. Service unavailable if all AI providers fail
+        log.warn("All AI providers failed or not configured for soil analysis");
+        return ResponseEntity.status(503).body(Map.of(
+            "error", "AI soil analysis service is currently unavailable. Please check your API key configuration or try again shortly."
+        ));
     }
 
     private String stripMarkdownFences(String text) {

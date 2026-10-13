@@ -31,9 +31,10 @@ public class MarketController {
 
         if (dataGovApiKey == null || dataGovApiKey.equals("default") || dataGovApiKey.trim().isEmpty() || dataGovApiKey.contains("your-")) {
             return ResponseEntity.ok(Map.of(
-                "prices", getMockData(district),
+                "prices", List.of(),
                 "district", district,
-                "fetchedAt", LocalDateTime.now()
+                "fetchedAt", LocalDateTime.now(),
+                "message", "Market API key not configured"
             ));
         }
 
@@ -76,14 +77,6 @@ public class MarketController {
             log.error("Failed to fetch market prices: {}", e.getMessage());
         }
 
-        if (allParsedPrices.isEmpty()) {
-            return ResponseEntity.ok(Map.of(
-                "prices", getMockData(district), // fallback to mock if completely empty
-                "district", district,
-                "fetchedAt", LocalDateTime.now()
-            ));
-        }
-
         return ResponseEntity.ok(Map.of(
             "prices", allParsedPrices,
             "district", district,
@@ -113,29 +106,9 @@ public class MarketController {
                 }
                 
                 price.put("date", record.get("arrival_date"));
-                price.put("trend", Math.random() > 0.5 ? "up" : "down");
                 parsedPrices.add(price);
             }
         }
         return parsedPrices;
-    }
-
-    private List<Map<String, Object>> getMockData(String district) {
-        List<Map<String, Object>> mock = new ArrayList<>();
-        String[] commodities = {"Tomato", "Onion", "Potato", "Cotton", "Maize"};
-        for (String c : commodities) {
-            Map<String, Object> m = new HashMap<>();
-            m.put("commodity", c);
-            m.put("market", district + " APMC");
-            m.put("district", district);
-            int basePrice = 1500 + (int)(Math.random() * 3000);
-            m.put("minPrice", basePrice - 200);
-            m.put("maxPrice", basePrice + 300);
-            m.put("modalPrice", basePrice);
-            m.put("date", LocalDateTime.now().toString());
-            m.put("trend", Math.random() > 0.5 ? "up" : "down");
-            mock.add(m);
-        }
-        return mock;
     }
 }

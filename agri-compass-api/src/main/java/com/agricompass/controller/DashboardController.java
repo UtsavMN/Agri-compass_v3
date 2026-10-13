@@ -33,9 +33,13 @@ public class DashboardController {
 
     @GetMapping("/summary")
     public ResponseEntity<?> getDashboardSummary() {
-        // Since we are mocking the missing services based on what exists in the project:
-        String currentUserId = userService.syncUser(null).getId();
-        UserProfile profile = userProfileRepository.findByIdIgnoreCase(currentUserId).orElse(null);
+        UserProfile profile = null;
+        try {
+            UserProfile synced = userService.syncUser(null);
+            if (synced != null && synced.getId() != null) {
+                profile = userProfileRepository.findByIdIgnoreCase(synced.getId()).orElse(null);
+            }
+        } catch (Exception ignored) {}
         
         long userCount = userProfileRepository.count();
         // Just return some basic data to fulfill the frontend's single-call requirement

@@ -136,7 +136,7 @@ export default function NotificationBell() {
                     Someone {getNotificationText(notification)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {format(new Date(notification.created_at), 'MMM d, h:mm a')}
+                    {format(new Date(notification.created_at), 'dd MMM yyyy, hh:mm a')}
                   </p>
                 </div>
                 {!notification.read && (

@@ -53,7 +53,7 @@ export default function PostDetail() {
           <Card className="overflow-hidden">
             <CardHeader className="bg-leaf-600 text-white">
               <CardTitle>{post.user?.full_name || post.user?.username || 'Farmer'}</CardTitle>
-              <CardDescription>{post.created_at ? format(new Date(post.created_at), 'PPPP') : 'Recently'}</CardDescription>
+              <CardDescription>{post.created_at ? format(new Date(post.created_at), 'dd MMM yyyy, hh:mm a') : ''}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-3">

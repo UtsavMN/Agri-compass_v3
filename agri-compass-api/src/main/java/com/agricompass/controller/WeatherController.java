@@ -170,48 +170,10 @@ public class WeatherController {
             return ResponseEntity.ok(weatherResponse);
         } catch (Exception e) {
             log.error("Failed to fetch weather for {}: {}", targetDistrict, e.getMessage());
-            int baseTemp = 24 + Math.abs(targetDistrict.hashCode() % 12);
-            int baseHum = 40 + Math.abs(targetDistrict.hashCode() % 40);
-            int baseWind = 5 + Math.abs(targetDistrict.hashCode() % 15);
-
-            // Build dynamic mock forecast to ensure premium dark UI looks beautiful and has correct data
-            List<Map<String, Object>> mockForecast = new ArrayList<>();
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
-            Calendar cal = Calendar.getInstance();
-            for (int i = 1; i <= 5; i++) {
-                cal.add(Calendar.DATE, 1);
-                Map<String, Object> dayForecast = new HashMap<>();
-                dayForecast.put("date", sdf.format(cal.getTime()));
-                dayForecast.put("temp_max", Math.round(baseTemp + 2.0 + Math.random() * 3));
-                dayForecast.put("temp_min", Math.round(baseTemp - 5.0 + Math.random() * 3));
-                dayForecast.put("description", i % 2 == 0 ? "Scattered Clouds" : "Light Rain");
-                mockForecast.add(dayForecast);
-            }
-
-            Map<String, Object> fallbackAdvisory = new HashMap<>();
-            List<String> defaultTips = List.of(
-                "Check soil moisture before irrigation",
-                "Monitor for early pest signs this season",
-                "Apply mulch to retain soil water levels"
-            );
-            fallbackAdvisory.put("farmingTips", defaultTips);
-            fallbackAdvisory.put("tips", defaultTips);
-            fallbackAdvisory.put("summary", "Stable agricultural weather forecast. Monitor soil conditions.");
-
-            Map<String, Object> fallbackResponse = new HashMap<>();
-            fallbackResponse.put("district", targetDistrict);
-            fallbackResponse.put("weather", Map.of(
-                "temperature", baseTemp,
-                "humidity", baseHum,
-                "windSpeed", baseWind,
-                "description", "Partly Cloudy",
-                "forecast", mockForecast
-            ));
-            fallbackResponse.put("advisory", fallbackAdvisory);
-            fallbackResponse.put("alerts", new ArrayList<>());
-            fallbackResponse.put("timestamp", new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
-            fallbackResponse.put("fallback", true);
-            return ResponseEntity.ok(fallbackResponse);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Weather data currently unavailable for " + targetDistrict);
+            errorResponse.put("district", targetDistrict);
+            return ResponseEntity.status(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
         }
     }
 

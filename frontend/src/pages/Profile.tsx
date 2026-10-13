@@ -120,7 +120,7 @@ export default function Profile() {
               </h1>
               <p className="text-[#C9A84C] text-sm md:text-base font-medium">@{profile.username}</p>
               <p className="text-[#F5F0E8]/40 text-xs md:text-sm mt-1.5 flex items-center gap-1.5">
-                📍 {profile.district || profile.location || 'Unknown District'} · Farmer since {profile.created_at ? new Date(profile.created_at).getFullYear() : '2024'}
+                📍 {profile.district || profile.location || 'Unknown District'}{profile.created_at ? ` · Farmer since ${new Date(profile.created_at).getFullYear()}` : ''}
               </p>
               {profile.bio && (
                 <p className="text-[#F5F0E8]/70 text-sm mt-3 max-w-md line-clamp-2 leading-relaxed">

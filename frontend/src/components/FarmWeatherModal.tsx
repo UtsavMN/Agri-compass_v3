@@ -206,7 +206,7 @@ export default function FarmWeatherModal({ farmId, farmName, isOpen, onClose }: 
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2 text-sm text-gold-100/70">
                         <Calendar className="h-4 w-4" />
-                        {format(new Date(log.created_at), 'MMM d, yyyy h:mm a')}
+                        {format(new Date(log.created_at), 'dd MMM yyyy, hh:mm a')}
                       </div>
                       {log.conditions && (
                         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">

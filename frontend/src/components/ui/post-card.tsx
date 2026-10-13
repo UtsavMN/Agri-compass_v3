@@ -117,8 +117,8 @@ export const PostCard = React.memo(function PostCard({
                    </span>
                  )}
               </div>
-              <p className="text-[10px] font-bold text-gold-100/30 uppercase tracking-widest mt-0.5">
-                {post.created_at ? format(new Date(post.created_at), 'MMMM dd, yyyy') : 'Recently'}
+              <p className="text-[10px] font-bold text-gold-100/40 uppercase tracking-widest mt-0.5">
+                {post.created_at ? format(new Date(post.created_at), 'dd MMM yyyy, hh:mm a') : ''}
               </p>
             </div>
           </button>
@@ -229,7 +229,7 @@ export const PostCard = React.memo(function PostCard({
                           <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (comment.user?.id) navigate(`/profile/${comment.user.id}`); }} className="font-black text-[10px] text-gold-100 uppercase tracking-tighter hover:text-gold-400">
                             {comment.user?.full_name || comment.user?.username || 'Farmer'}
                           </button>
-                          <span className="text-[9px] font-bold text-gold-100/20 uppercase tracking-widest">{comment.created_at ? format(new Date(comment.created_at), 'MMM d') : 'Recently'}</span>
+                          <span className="text-[9px] font-bold text-gold-100/30 uppercase tracking-widest">{comment.created_at ? format(new Date(comment.created_at), 'dd MMM yyyy, hh:mm a') : ''}</span>
                         </div>
                         <p className="text-xs text-gold-100/60 leading-relaxed">{comment.content}</p>
                       </div>

@@ -123,7 +123,7 @@ export default function CommentSection({ postId, commentsCount, onCommentsCountC
                         {comment.user.full_name || comment.user.username}
                       </span>
                       <span className="text-xs text-gray-500">
-                        {format(new Date(comment.created_at), 'MMM d, yyyy')}
+                        {format(new Date(comment.created_at), 'dd MMM yyyy, hh:mm a')}
                       </span>
                     </div>
                     <p className="text-sm text-gray-800 whitespace-pre-wrap">

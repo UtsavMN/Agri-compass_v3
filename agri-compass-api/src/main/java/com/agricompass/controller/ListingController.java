@@ -54,7 +54,6 @@ public class ListingController {
     @PostMapping
     public ResponseEntity<ListingDTO> createListing(
         @RequestBody Map<String, Object> body,
-        @RequestHeader(value = "X-Mock-User-Id", required = false) String mockUserId,
         @RequestHeader(value = "X-User-Id", required = false) String headerUserId
     ) {
         // 1. Resolve userId safely
@@ -67,9 +66,7 @@ public class ListingController {
         } catch (Exception ignored) {}
 
         if (userId == null || userId.trim().isEmpty()) {
-            if (mockUserId != null && !mockUserId.trim().isEmpty()) {
-                userId = mockUserId.trim();
-            } else if (headerUserId != null && !headerUserId.trim().isEmpty()) {
+            if (headerUserId != null && !headerUserId.trim().isEmpty()) {
                 userId = headerUserId.trim();
             } else if (body.get("userId") != null) {
                 userId = String.valueOf(body.get("userId")).trim();
@@ -254,7 +251,6 @@ public class ListingController {
     public ResponseEntity<Map<String, Object>> notifySeller(
         @PathVariable Long id,
         @RequestBody(required = false) Map<String, Object> body,
-        @RequestHeader(value = "X-Mock-User-Id", required = false) String mockUserId,
         @RequestHeader(value = "X-User-Id", required = false) String headerUserId
     ) {
         Listing listing = listingRepository.findById(id)
@@ -267,8 +263,7 @@ public class ListingController {
         } catch (Exception ignored) {}
 
         if (buyerId == null || buyerId.trim().isEmpty()) {
-            if (mockUserId != null && !mockUserId.trim().isEmpty()) buyerId = mockUserId.trim();
-            else if (headerUserId != null && !headerUserId.trim().isEmpty()) buyerId = headerUserId.trim();
+            if (headerUserId != null && !headerUserId.trim().isEmpty()) buyerId = headerUserId.trim();
             else if (body != null && body.get("buyerId") != null) buyerId = String.valueOf(body.get("buyerId")).trim();
             else if (body != null && body.get("buyer_id") != null) buyerId = String.valueOf(body.get("buyer_id")).trim();
         }
@@ -319,7 +314,6 @@ public class ListingController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteListing(
         @PathVariable Long id,
-        @RequestHeader(value = "X-Mock-User-Id", required = false) String mockUserId,
         @RequestHeader(value = "X-User-Id", required = false) String headerUserId
     ) {
         String userId = null;
@@ -329,8 +323,7 @@ public class ListingController {
         } catch (Exception ignored) {}
 
         if (userId == null || userId.trim().isEmpty()) {
-            if (mockUserId != null) userId = mockUserId.trim();
-            else if (headerUserId != null) userId = headerUserId.trim();
+            if (headerUserId != null) userId = headerUserId.trim();
         }
 
         Listing listing = listingRepository.findById(id)

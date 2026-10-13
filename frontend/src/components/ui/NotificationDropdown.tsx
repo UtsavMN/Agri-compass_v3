@@ -165,7 +165,7 @@ export const NotificationDropdown: React.FC = () => {
                       {notif.type === 'WEATHER_ALERT' ? notif.message : `posted: ${notif.message.substring(0, 50)}${notif.message.length > 50 ? '...' : ''}`}
                     </p>
                     <span className="text-[10px] text-gold-100/40 mt-1 block">
-                      {new Date(notif.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                      {new Date(notif.timestamp).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
                     </span>
                   </div>
                 </div>

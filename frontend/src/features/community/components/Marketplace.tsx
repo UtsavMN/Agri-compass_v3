@@ -64,17 +64,26 @@ export const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-export const timeAgo = (dateStr: string) => {
+export const formatExactDateTime = (dateStr?: string) => {
+  if (!dateStr) return '';
   try {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
   } catch {
-    return 'Recently';
+    return '';
   }
+};
+
+export const timeAgo = (dateStr: string) => {
+  return formatExactDateTime(dateStr);
 };
 
 export function Marketplace() {
@@ -112,7 +121,7 @@ export function Marketplace() {
         listingType: item.listingType || item.listing_type || 'sell',
         priceUnit: item.priceUnit || item.price_unit || 'Total Price',
         address: item.address || item.location || '',
-        contactPhone: item.contactPhone || item.contact_phone || '+91 98450 12345',
+        contactPhone: item.contactPhone || item.contact_phone || '',
         quantity: item.quantity || '1',
         quantityUnit: item.quantityUnit || item.quantity_unit || 'Units',
         isNegotiable: item.isNegotiable !== undefined ? item.isNegotiable : (item.is_negotiable !== undefined ? item.is_negotiable : false),
@@ -380,7 +389,7 @@ export function Marketplace() {
                   </div>
                   <div className="text-right">
                     <p className="text-[11px] text-[#a09880] font-bold uppercase">{listing.location}</p>
-                    <p className="text-[10px] text-[#6a6050] mt-0.5 font-semibold">{timeAgo(listing.createdAt)}</p>
+                    <p className="text-[10px] text-[#a09880] mt-0.5 font-semibold">{formatExactDateTime(listing.createdAt)}</p>
                   </div>
                 </div>
 

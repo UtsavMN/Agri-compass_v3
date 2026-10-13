@@ -6,6 +6,7 @@ import { useDistrict } from '@/store';
 import { loadDistrictDataFromCSV } from '@/lib/csvLoader';
 import { apiGet } from '@/lib/httpClient';
 import { cropRecommender } from '@/lib/ai/cropRecommender';
+import { weatherAdvisor } from '@/lib/ai/weatherAdvisor';
 import { useCropList } from '@/hooks/useCropGuides';
 
 import { Card, CardContent,  CardHeader, CardTitle } from '@/components/ui/card';
@@ -92,7 +93,7 @@ export default function Dashboard() {
   const [communityPosts, setCommunityPosts] = useState<Post[]>([]);
   const [_mobileNavOpen, _setMobileNavOpen] = useState(false);
   const [userCount, setUserCount] = useState(0);
-
+  const [weatherState, setWeatherState] = useState<{ temp: number; condition: string }>({ temp: 26, condition: 'Clear' });
 
   useEffect(() => {
     if (!user) {
@@ -150,8 +151,15 @@ export default function Dashboard() {
       setLoading(true);
       
       const recommendationsPromise = cropRecommender.getRecommendations(selectedDistrict).catch(() => []);
-      const [recommendations] = await Promise.all([recommendationsPromise]);
+      const weatherPromise = weatherAdvisor.getWeatherData(selectedDistrict).catch(() => null);
+      const [recommendations, weatherData] = await Promise.all([recommendationsPromise, weatherPromise]);
       setCropRecommendations(recommendations);
+      if (weatherData) {
+        setWeatherState({
+          temp: weatherData.temperature,
+          condition: weatherData.description || 'Clear'
+        });
+      }
     } catch (error) {
       console.error('Error loading district data:', error);
     } finally {
@@ -167,8 +175,8 @@ export default function Dashboard() {
 
         {/* ===== HERO CAROUSEL (FULL BLEED) ===== */}
         <HeroCarousel 
-          temp={28} 
-          condition="Clear" 
+          temp={weatherState.temp} 
+          condition={weatherState.condition} 
           userCount={userCount} 
           newsItems={newsItems} 
         />

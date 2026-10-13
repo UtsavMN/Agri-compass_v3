@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Send, X, Sprout } from "lucide-react";
+import { Mic, Send, X, Sprout, Loader2 } from "lucide-react";
+import { apiPost } from "@/lib/httpClient";
 
 export const VoiceChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,21 +10,34 @@ export const VoiceChatbot = () => {
     { text: "ನಮಸ್ಕಾರ! ರೈತ ಮಿತ್ರ, ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?", sender: "bot" },
   ]);
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    setMessages((prev) => [...prev, { text: input, sender: "user" }]);
+  const handleSend = async () => {
+    const userText = input.trim();
+    if (!userText || isLoading) return;
+    setMessages((prev) => [...prev, { text: userText, sender: "user" }]);
     setInput("");
-    
-    // Mock response
-    setTimeout(() => {
+    setIsLoading(true);
+
+    try {
+      const res = await apiPost('/api/ai/chat', { message: userText });
+      const botReply = res?.reply || res?.response || "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಪ್ರಶ್ನೆಗೆ ಧನ್ಯವಾದಗಳು. ಇನ್ನಷ್ಟು ವಿವರಗಳನ್ನು ತಿಳಿಸಿ.";
       setMessages((prev) => [
         ...prev,
-        { text: "ಖಂಡಿತ, ಯಾವ ಬೆಳೆಯ ಬಗ್ಗೆ ಮಾಹಿತಿ ಬೇಕು?", sender: "bot" }
+        { text: botReply, sender: "bot" }
       ]);
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 1000);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { text: "ಕ್ಷಮಿಸಿ, AI ಸಂಪರ್ಕ ಸಾಧಿಸಲು ಸಾಧ್ಯವಾಗುತ್ತಿಲ್ಲ. ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.", sender: "bot" }
+      ]);
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
   };
 
   return (
@@ -76,6 +90,14 @@ export const VoiceChatbot = () => {
                   </div>
                 </motion.div>
               ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-[#1E1E1E] text-[#F5F0E8]/70 px-4 py-2.5 rounded-2xl text-sm flex items-center gap-2 rounded-bl-none">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#C9A84C]" />
+                    <span>Thinking...</span>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
@@ -88,7 +110,8 @@ export const VoiceChatbot = () => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSend()}
                   placeholder="Ask in Kannada or English..."
-                  className="flex-1 bg-transparent text-[#F5F0E8] px-3 text-sm focus:outline-none placeholder:text-[#F5F0E8]/30"
+                  disabled={isLoading}
+                  className="flex-1 bg-transparent text-[#F5F0E8] px-3 text-sm focus:outline-none placeholder:text-[#F5F0E8]/30 disabled:opacity-50"
                 />
                 <button
                   onClick={() => setIsRecording(!isRecording)}
@@ -100,7 +123,8 @@ export const VoiceChatbot = () => {
                 </button>
                 <button
                   onClick={handleSend}
-                  className="p-2 bg-[#C9A84C] text-[#0A0A0A] rounded-full hover:bg-[#D4B86A] transition-colors"
+                  disabled={isLoading || !input.trim()}
+                  className="p-2 bg-[#C9A84C] text-[#0A0A0A] rounded-full hover:bg-[#D4B86A] transition-colors disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                 </button>
