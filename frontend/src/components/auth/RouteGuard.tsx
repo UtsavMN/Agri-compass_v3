@@ -24,12 +24,16 @@ export const RouteGuard = ({ children }: { children: React.ReactNode }) => {
             const backendName = profile.fullName || profile.full_name || '';
             const backendImage = profile.profilePictureUrl || profile.avatar_url || '';
 
-            // If Clerk has a name/avatar and it differs from backend, auto-sync it
-            if ((clerkName && backendName !== clerkName) || (clerkImage && backendImage !== clerkImage)) {
+            // ONLY seed from Clerk if backend profile is completely missing name or picture
+            // Never overwrite user-customized profile pictures or names!
+            const isBackendNameMissing = !backendName || backendName === 'New User' || backendName === 'Anonymous Farmer';
+            const isBackendImageMissing = !backendImage;
+
+            if ((isBackendNameMissing && clerkName) || (isBackendImageMissing && clerkImage)) {
                try {
                   const updatedProfile = await apiPut('/api/profiles', {
-                     fullName: clerkName,
-                     avatarUrl: clerkImage
+                     fullName: isBackendNameMissing && clerkName ? clerkName : backendName,
+                     avatarUrl: isBackendImageMissing && clerkImage ? clerkImage : backendImage
                   });
                   setClerkUserAndProfile(clerkUser, updatedProfile);
                   return;

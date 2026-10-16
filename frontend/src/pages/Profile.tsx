@@ -19,6 +19,8 @@ import { useClerk } from "@clerk/clerk-react";
 import { SchemeCard } from "@/pages/GovSchemes";
 import { GOVERNMENT_SCHEMES } from "@/data/schemesData";
 
+import { FarmsAPI } from "@/lib/api/farms";
+
 type Tab = "posts" | "farms" | "schemes";
 
 export default function Profile() {
@@ -43,10 +45,23 @@ export default function Profile() {
 
   const loadUserFarms = async () => {
     try {
+      if (authUser?.id) {
+        const data = await FarmsAPI.getFarms(authUser.id);
+        if (Array.isArray(data)) {
+          setFarms(data);
+          return;
+        }
+      }
       const data = await apiGet(`/api/farms`);
-      setFarms(data || []);
+      setFarms(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Failed to load farms", error);
+      console.warn("FarmsAPI load error, trying direct /api/farms:", error);
+      try {
+        const fallback = await apiGet(`/api/farms`);
+        setFarms(Array.isArray(fallback) ? fallback : []);
+      } catch (e) {
+        console.error("Failed to load farms", e);
+      }
     }
   };
 
@@ -76,15 +91,25 @@ export default function Profile() {
     );
   }
 
+  const totalAcres = farms.reduce((sum, f) => {
+    const raw = f.area_acres !== undefined && f.area_acres !== null ? f.area_acres : f.areaAcres;
+    const parsed = Number(raw || 0);
+    return sum + (isNaN(parsed) ? 0 : parsed);
+  }, 0);
+
+  const activeCropsCount = farms.filter(f => f.current_crop || f.currentCrop || f.cropFocus).length;
+
   const userStats = {
-    totalAcres: farms.reduce((sum, f) => sum + (f.areaAcres || 0), 0),
-    cropsGrowing: farms.filter(f => f.cropFocus).length,
+    totalFarms: farms.length,
+    totalAcres: Math.round(totalAcres * 10) / 10,
+    cropsGrowing: activeCropsCount,
     totalPosts: posts.length,
-    reputation: "N/A", // Priority 2: Fix hardcoded reputation
   };
 
-  const avatarUrl = profile.avatar_url || profile.profile_picture_url;
-  const initial = (profile.full_name || profile.username || 'U').charAt(0).toUpperCase();
+  const avatarUrl = profile.avatar_url || profile.profile_picture_url || (profile as any).avatarUrl || (profile as any).profilePictureUrl;
+  const fullName = profile.full_name || (profile as any).fullName || profile.username || (profile as any).usernameHandle || 'Anonymous Farmer';
+  const username = profile.username || (profile as any).usernameHandle || 'farmer';
+  const initial = fullName.charAt(0).toUpperCase();
 
   return (
     <div className="w-full relative animate-fade-in min-h-screen bg-[#0A0A0A] pb-24">
@@ -116,9 +141,9 @@ export default function Profile() {
             {/* INFO */}
             <div className="mt-2 md:mt-0 md:pb-2">
               <h1 className="text-2xl md:text-3xl font-serif text-[#F5F0E8] leading-tight">
-                {profile.full_name || 'Anonymous Farmer'}
+                {fullName}
               </h1>
-              <p className="text-[#C9A84C] text-sm md:text-base font-medium">@{profile.username}</p>
+              <p className="text-[#C9A84C] text-sm md:text-base font-medium">@{username}</p>
               <p className="text-[#F5F0E8]/40 text-xs md:text-sm mt-1.5 flex items-center gap-1.5">
                 📍 {profile.district || profile.location || 'Unknown District'}{profile.created_at ? ` · Farmer since ${new Date(profile.created_at).getFullYear()}` : ''}
               </p>
@@ -171,12 +196,12 @@ export default function Profile() {
 
         {/* STATS ROW */}
         <AnimatedSection>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
             {[
-              { label: "Total Acres", value: userStats.totalAcres, suffix: " ac" },
-              { label: "Active Crops", value: userStats.cropsGrowing },
-              { label: "Posts", value: userStats.totalPosts },
-              { label: "Reputation", value: userStats.reputation, suffix: "" },
+              { label: "Registered Farms", value: userStats.totalFarms, suffix: userStats.totalFarms === 1 ? " Farm" : " Farms" },
+              { label: "Total Land Holding", value: userStats.totalAcres, suffix: " ac" },
+              { label: "Active Crops", value: userStats.cropsGrowing, suffix: "" },
+              { label: "Community Posts", value: userStats.totalPosts, suffix: "" },
             ].map((stat, i) => (
               <GoldCard key={i} className="text-center py-4 px-2">
                 <p className="text-2xl font-bold text-[#C9A84C]">{stat.value}{stat.suffix}</p>
@@ -196,7 +221,7 @@ export default function Profile() {
                 activeTab === tab ? "text-[#C9A84C]" : "text-[#F5F0E8]/40 hover:text-[#F5F0E8]/70"
               }`}
             >
-              {tab === "farms" ? "My Farms" : tab === "schemes" ? "Saved Schemes" : "Posts"}
+              {tab === "farms" ? `My Farms (${farms.length})` : tab === "schemes" ? `Saved Schemes (${savedSchemes.length})` : `Posts (${posts.length})`}
               {activeTab === tab && (
                 <motion.div
                   layoutId="profile-tab-indicator"
@@ -239,25 +264,37 @@ export default function Profile() {
             )}
 
             {activeTab === "farms" && (
-              <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {farms.length > 0 ? farms.map((farm, i) => (
-                  <motion.div key={i} variants={fadeUpVariants} custom={i}>
-                    <FarmIntelligenceCard
-                      farmId={farm.id}
-                      farmName={farm.name}
-                      acres={farm.area_acres || farm.areaAcres}
-                      district={farm.location}
-                      crop={farm.current_crop || farm.cropFocus}
-                      latestSoilHealth={farm.latest_soil_health}
-                    />
-                  </motion.div>
-                )) : (
-                  <div className="col-span-full text-center py-16 text-[#F5F0E8]/40 border border-[#1E1E1E] border-dashed rounded-2xl">
-                    <Sprout className="w-8 h-8 mx-auto mb-3 opacity-20" />
-                    <p>No farms added yet.</p>
+              <div className="space-y-4">
+                {farms.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 bg-[#141414] border border-[#1E1E1E] rounded-xl text-xs text-[#F5F0E8]/70">
+                    <span className="font-medium">
+                      Showing <strong className="text-[#C9A84C]">{farms.length}</strong> registered {farms.length === 1 ? "farm" : "farms"}
+                    </span>
+                    <span className="text-[#C9A84C] font-semibold bg-[#C9A84C]/10 px-2.5 py-1 rounded-full border border-[#C9A84C]/20">
+                      Total: {userStats.totalAcres} Acres
+                    </span>
                   </div>
                 )}
-              </motion.div>
+                <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {farms.length > 0 ? farms.map((farm, i) => (
+                    <motion.div key={i} variants={fadeUpVariants} custom={i}>
+                      <FarmIntelligenceCard
+                        farmId={farm.id}
+                        farmName={farm.name}
+                        acres={Number(farm.area_acres ?? farm.areaAcres ?? 0)}
+                        district={farm.location}
+                        crop={farm.current_crop || farm.cropFocus}
+                        latestSoilHealth={farm.latest_soil_health}
+                      />
+                    </motion.div>
+                  )) : (
+                    <div className="col-span-full text-center py-16 text-[#F5F0E8]/40 border border-[#1E1E1E] border-dashed rounded-2xl">
+                      <Sprout className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                      <p>No farms added yet.</p>
+                    </div>
+                  )}
+                </motion.div>
+              </div>
             )}
 
             {activeTab === "schemes" && (

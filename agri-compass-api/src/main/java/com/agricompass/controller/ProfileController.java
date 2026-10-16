@@ -42,9 +42,31 @@ public class ProfileController {
         }
         if (body.containsKey("district") && body.get("district") != null) {
             current.setDistrict((String) body.get("district"));
+        } else if (body.containsKey("location") && body.get("location") != null) {
+            current.setDistrict((String) body.get("location"));
         }
         if (body.containsKey("language") && body.get("language") != null) {
             current.setLanguage((String) body.get("language"));
+        }
+        if (body.containsKey("fullName") && body.get("fullName") != null) {
+            current.setFullName((String) body.get("fullName"));
+        } else if (body.containsKey("full_name") && body.get("full_name") != null) {
+            current.setFullName((String) body.get("full_name"));
+        }
+        if (body.containsKey("avatarUrl") && body.get("avatarUrl") != null) {
+            current.setProfilePictureUrl((String) body.get("avatarUrl"));
+        } else if (body.containsKey("avatar_url") && body.get("avatar_url") != null) {
+            current.setProfilePictureUrl((String) body.get("avatar_url"));
+        } else if (body.containsKey("profile_picture_url") && body.get("profile_picture_url") != null) {
+            current.setProfilePictureUrl((String) body.get("profile_picture_url"));
+        } else if (body.containsKey("profilePictureUrl") && body.get("profilePictureUrl") != null) {
+            current.setProfilePictureUrl((String) body.get("profilePictureUrl"));
+        }
+        if (body.containsKey("bio") && body.get("bio") != null) {
+            current.setBio((String) body.get("bio"));
+        }
+        if (body.containsKey("phone") && body.get("phone") != null) {
+            current.setPhone((String) body.get("phone"));
         }
         UserProfile saved = userService.updateProfile(current);
         return ResponseEntity.ok(saved);
@@ -68,6 +90,8 @@ public class ProfileController {
         String district = (String) body.get("district");
         String profilePictureUrl = (String) body.get("profile_picture_url");
         if (profilePictureUrl == null) profilePictureUrl = (String) body.get("profilePictureUrl");
+        if (profilePictureUrl == null) profilePictureUrl = (String) body.get("avatarUrl");
+        if (profilePictureUrl == null) profilePictureUrl = (String) body.get("avatar_url");
         
         String usernameHandle = (String) body.get("username_handle");
         if (usernameHandle == null) usernameHandle = (String) body.get("usernameHandle");
@@ -105,12 +129,15 @@ public class ProfileController {
         
         String avatarUrl = (String) body.get("avatarUrl");
         if (avatarUrl == null) avatarUrl = (String) body.get("avatar_url");
+        if (avatarUrl == null) avatarUrl = (String) body.get("profile_picture_url");
+        if (avatarUrl == null) avatarUrl = (String) body.get("profilePictureUrl");
         
         String location = (String) body.get("location");
         String phone = (String) body.get("phone");
         String languagePreference = (String) body.get("language_preference");
         if (languagePreference == null) languagePreference = (String) body.get("languagePreference");
         String district = (String) body.get("district");
+        if (district == null) district = location;
         
         String usernameHandle = (String) body.get("usernameHandle");
         if (usernameHandle == null) usernameHandle = (String) body.get("username_handle");
@@ -128,12 +155,15 @@ public class ProfileController {
         
         String avatarUrl = (String) body.get("avatarUrl");
         if (avatarUrl == null) avatarUrl = (String) body.get("avatar_url");
+        if (avatarUrl == null) avatarUrl = (String) body.get("profile_picture_url");
+        if (avatarUrl == null) avatarUrl = (String) body.get("profilePictureUrl");
         
         String location = (String) body.get("location");
         String phone = (String) body.get("phone");
         String languagePreference = (String) body.get("language_preference");
         if (languagePreference == null) languagePreference = (String) body.get("languagePreference");
         String district = (String) body.get("district");
+        if (district == null) district = location;
         
         String usernameHandle = (String) body.get("usernameHandle");
         if (usernameHandle == null) usernameHandle = (String) body.get("username_handle");

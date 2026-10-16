@@ -6,7 +6,9 @@ import { apiPut } from '@/lib/httpClient';
 export interface Profile {
   id: string;
   username: string | null;
+  usernameHandle?: string | null;
   full_name: string | null;
+  fullName?: string | null;
   email: string | null;
   district: string | null;
   phone: string | null;
@@ -15,12 +17,40 @@ export interface Profile {
   bio?: string | null;
   language?: string | null;
   avatar_url?: string | null;
+  avatarUrl?: string | null;
   profile_picture_url?: string | null;
+  profilePictureUrl?: string | null;
   cover_photo_url?: string | null;
   created_at?: string | null;
   preferences?: string | null;
 }
 
+export function normalizeProfile(p: any): Profile | null {
+  if (!p) return null;
+  const avatar = p.avatar_url || p.profile_picture_url || p.avatarUrl || p.profilePictureUrl || '';
+  const fullName = p.full_name || p.fullName || '';
+  const username = p.username || p.usernameHandle || p.username_handle || '';
+  const district = p.district || p.location || '';
+  return {
+    ...p,
+    id: p.id || p.clerkUserId || p.clerk_user_id || '',
+    username,
+    usernameHandle: username,
+    full_name: fullName,
+    fullName,
+    district,
+    location: district,
+    phone: p.phone || '',
+    bio: p.bio || '',
+    language: p.language || p.language_preference || 'en',
+    avatar_url: avatar,
+    avatarUrl: avatar,
+    profile_picture_url: avatar,
+    profilePictureUrl: avatar,
+    cover_photo_url: p.cover_photo_url || p.coverPhotoUrl || '',
+    preferences: p.preferences || '{}',
+  };
+}
 
 export interface Notification {
   id: string;
@@ -69,11 +99,11 @@ export const useStore = create<StoreState>()(
         switchUser: (_userId: string) => {},
         updateProfile: async (data: Partial<Profile>) => {
           const { user, profile } = get();
-          if (!user) return;
-          const nextProfile = { ...profile, ...data } as Profile;
+          const nextProfile = normalizeProfile({ ...profile, ...data }) as Profile;
           set({ profile: nextProfile });
+          if (!user?.id) return;
           try {
-            await apiPut(`/api/profiles/${user.id}`, data);
+            await apiPut(`/api/profiles`, data);
           } catch (error) {
             console.warn('Profile saved locally but backend sync failed:', error);
           }
@@ -82,11 +112,12 @@ export const useStore = create<StoreState>()(
           set({ activeUserId: '', user: null, profile: null, session: null });
         },
         setClerkUserAndProfile: (clerkUser: any, profile: any) => {
+          const norm = normalizeProfile(profile);
           set({
             activeUserId: clerkUser?.id || '',
             user: clerkUser,
-            profile: profile,
-            selectedDistrict: profile?.district && profile.district !== 'Unknown' ? profile.district : get().selectedDistrict || ''
+            profile: norm,
+            selectedDistrict: norm?.district && norm.district !== 'Unknown' ? norm.district : get().selectedDistrict || ''
           });
         },
 
