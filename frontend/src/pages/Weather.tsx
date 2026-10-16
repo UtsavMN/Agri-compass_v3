@@ -89,7 +89,6 @@ export default function Weather() {
   const [districtDetails, setDistrictDetails] = useState<Record<string, any>>({});
   const [weatherInfo, setWeatherInfo] = useState<{ weather: WeatherData; advisory: WeatherAdvice; timestamp?: string } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [forecastView, setForecastView] = useState<7 | 5>(7);
 
   useEffect(() => {
     loadDistricts();
@@ -460,129 +459,101 @@ export default function Weather() {
               </div>
             </ScrollReveal>
 
-            {/* 7-Day Precision Agricultural Forecast Grid */}
+            {/* 3-Day Precision Agricultural Forecast Grid */}
             {weatherInfo.weather.forecast && weatherInfo.weather.forecast.length > 0 && (
               <ScrollReveal delay={0.2}>
                 <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-gold-400" />
-                      <h2 className="text-base font-black text-gold-100 tracking-wide uppercase">
-                        Precision Agricultural Timeline Forecast
-                      </h2>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-gold-400/10 text-gold-300 border border-gold-400/30 font-bold">
-                        {weatherInfo.weather.forecast.length} Days Available
-                      </span>
-                    </div>
-
-                    {/* 5-Day vs 7-Day View Switch */}
-                    <div className="flex items-center bg-earth-elevated/60 p-1 rounded-xl border border-earth-border/50 text-xs">
-                      <button
-                        type="button"
-                        onClick={() => setForecastView(7)}
-                        className={`px-3 py-1 rounded-lg font-bold transition-all ${
-                          forecastView === 7
-                            ? 'bg-gold-400 text-earth-main shadow'
-                            : 'text-gold-100/60 hover:text-gold-100'
-                        }`}
-                      >
-                        7 Full Days
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setForecastView(5)}
-                        className={`px-3 py-1 rounded-lg font-bold transition-all ${
-                          forecastView === 5
-                            ? 'bg-gold-400 text-earth-main shadow'
-                            : 'text-gold-100/60 hover:text-gold-100'
-                        }`}
-                      >
-                        5 Days
-                      </button>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-gold-400" />
+                    <h2 className="text-base font-black text-gold-100 tracking-wide uppercase">
+                      3-Day Precision Agricultural Forecast
+                    </h2>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3.5">
-                    {weatherInfo.weather.forecast.slice(0, forecastView).map((day, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-earth-elevated/40 border border-earth-border/60 hover:border-gold-400/40 rounded-2xl p-4 text-center relative overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group backdrop-blur-sm"
-                      >
-                        {/* Day indicator line */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {weatherInfo.weather.forecast.slice(0, 3).map((day, idx) => {
+                      const dayTitle = idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' });
+                      return (
                         <div
-                          className="absolute top-0 left-0 right-0 h-[3px]"
-                          style={{ background: getDayGradient(day.description) }}
-                        />
+                          key={idx}
+                          className="bg-earth-elevated/40 border border-earth-border/60 hover:border-gold-400/40 rounded-2xl p-5 text-center relative overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group backdrop-blur-sm"
+                        >
+                          {/* Day indicator line */}
+                          <div
+                            className="absolute top-0 left-0 right-0 h-[3px]"
+                            style={{ background: getDayGradient(day.description) }}
+                          />
 
-                        {/* Top: Day Name & Date */}
-                        <div className="pt-1">
-                          <div className="text-sm font-black text-gold-100 flex items-center justify-center gap-1">
-                            {idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : day.day_name || 'Day'}
+                          {/* Top: Day Name & Date */}
+                          <div className="pt-1">
+                            <div className="text-base font-black text-gold-100 flex items-center justify-center gap-1">
+                              {dayTitle}
+                            </div>
+                            <div className="text-xs text-gold-100/50 mt-0.5">
+                              {formatForecastDate(day.date)}
+                            </div>
                           </div>
-                          <div className="text-[11px] text-gold-100/50 mt-0.5">
-                            {formatForecastDate(day.date)}
-                          </div>
-                        </div>
 
-                        {/* Center: Weather Icon & Condition */}
-                        <div className="my-3 flex flex-col items-center">
-                          <div className="p-2.5 rounded-2xl bg-earth-main/50 border border-earth-border/30 group-hover:scale-110 transition-transform">
-                            <WeatherIcon condition={day.description} size={36} />
-                          </div>
-                          <span className="text-[11px] font-bold text-gold-200 mt-2 line-clamp-1 capitalize">
-                            {day.description}
-                          </span>
-                        </div>
-
-                        {/* Temp Range */}
-                        <div className="bg-earth-main/50 rounded-xl p-2 border border-earth-border/30 mb-3">
-                          <div className="flex items-center justify-center gap-2">
-                            <span className="text-lg font-black text-gold-100">{day.temp_max}°</span>
-                            <span className="text-xs text-gold-100/40 font-semibold">/ {day.temp_min}°C</span>
-                          </div>
-                        </div>
-
-                        {/* Agricultural Metrics Micro-Grid */}
-                        <div className="space-y-1.5 text-[11px] text-gold-100/70 text-left pt-2 border-t border-earth-border/40">
-                          {/* Rain chance & mm */}
-                          <div className="flex items-center justify-between">
-                            <span className="text-gold-100/50 flex items-center gap-1">
-                              <CloudRain className="w-3 h-3 text-sky-400" /> Rain
-                            </span>
-                            <span className="font-bold text-sky-300">
-                              {day.precipitation_probability ?? 0}% ({day.precipitation}mm)
+                          {/* Center: Weather Icon & Condition */}
+                          <div className="my-4 flex flex-col items-center">
+                            <div className="p-3.5 rounded-2xl bg-earth-main/50 border border-earth-border/30 group-hover:scale-110 transition-transform">
+                              <WeatherIcon condition={day.description} size={42} />
+                            </div>
+                            <span className="text-xs font-bold text-gold-200 mt-2.5 line-clamp-1 capitalize">
+                              {day.description}
                             </span>
                           </div>
 
-                          {/* ET0 */}
-                          {day.et0 !== undefined && (
+                          {/* Temp Range */}
+                          <div className="bg-earth-main/50 rounded-xl p-2.5 border border-earth-border/30 mb-3.5">
+                            <div className="flex items-center justify-center gap-2">
+                              <span className="text-xl font-black text-gold-100">{day.temp_max}°</span>
+                              <span className="text-sm text-gold-100/40 font-semibold">/ {day.temp_min}°C</span>
+                            </div>
+                          </div>
+
+                          {/* Agricultural Metrics Micro-Grid */}
+                          <div className="space-y-2 text-xs text-gold-100/70 text-left pt-2.5 border-t border-earth-border/40">
+                            {/* Rain chance & mm */}
                             <div className="flex items-center justify-between">
-                              <span className="text-gold-100/50 flex items-center gap-1">
-                                <Waves className="w-3 h-3 text-emerald-400" /> ET₀
+                              <span className="text-gold-100/50 flex items-center gap-1.5">
+                                <CloudRain className="w-3.5 h-3.5 text-sky-400" /> Rain
                               </span>
-                              <span className="font-bold text-emerald-300">
-                                {day.et0} mm/d
+                              <span className="font-bold text-sky-300">
+                                {day.precipitation_probability ?? 0}% ({day.precipitation}mm)
                               </span>
                             </div>
-                          )}
 
-                          {/* Max Wind */}
-                          <div className="flex items-center justify-between">
-                            <span className="text-gold-100/50 flex items-center gap-1">
-                              <Wind className="w-3 h-3 text-amber-400" /> Wind
-                            </span>
-                            <span className="font-bold text-gold-200">
-                              {day.wind_speed_max ?? 10} km/h
-                            </span>
+                            {/* ET0 */}
+                            {day.et0 !== undefined && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-gold-100/50 flex items-center gap-1.5">
+                                  <Waves className="w-3.5 h-3.5 text-emerald-400" /> ET₀ Evap
+                                </span>
+                                <span className="font-bold text-emerald-300">
+                                  {day.et0} mm/d
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Max Wind */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-gold-100/50 flex items-center gap-1.5">
+                                <Wind className="w-3.5 h-3.5 text-amber-400" /> Wind
+                              </span>
+                              <span className="font-bold text-gold-200">
+                                {day.wind_speed_max ?? 10} km/h
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Spraying Suitability Pill */}
+                          <div className="mt-3.5 pt-2.5 border-t border-earth-border/30 flex justify-center">
+                            {getSpraySuitabilityPill(day.spraying_suitability)}
                           </div>
                         </div>
-
-                        {/* Spraying Suitability Pill */}
-                        <div className="mt-3 pt-2 border-t border-earth-border/30 flex justify-center">
-                          {getSpraySuitabilityPill(day.spraying_suitability)}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </ScrollReveal>
