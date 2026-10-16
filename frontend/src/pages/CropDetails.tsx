@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ArrowLeft, Droplets, MapPin, Sprout, AlertTriangle,
   Beaker, Calendar, Shield, BarChart3, Settings,
-  Activity, Printer, Brain, Layers, Clock, CheckCircle2,
+  Activity, Brain, Layers, Clock, CheckCircle2,
   Bug, FlaskConical, Sparkles
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -100,7 +100,7 @@ export default function CropDetails() {
       `}} />
 
       <div className="space-y-8 pb-12 print-container">
-        {/* Navigation & Print Actions */}
+        {/* Navigation */}
         <div className="flex justify-between items-center no-print">
           <ScrollReveal direction="left" delay={0.1}>
             <Button
@@ -110,15 +110,6 @@ export default function CropDetails() {
             >
               <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
               Crop Registry
-            </Button>
-          </ScrollReveal>
-          <ScrollReveal direction="right" delay={0.1}>
-            <Button
-              onClick={() => window.print()}
-              className="btn-gold flex items-center gap-2 py-4 px-6 rounded-2xl text-xs font-bold uppercase tracking-wider"
-            >
-              <Printer className="h-4 w-4" />
-              Print Technical Sheet
             </Button>
           </ScrollReveal>
         </div>
@@ -203,13 +194,11 @@ export default function CropDetails() {
                     <MapPin className="h-3 w-3 mr-1.5 shrink-0" /> Recommended: {JSON.parse(crop.districts || '[]').slice(0, 4).join(', ') || 'Karnataka Statewide'}
                   </p>
 
-                  {/* Dual Download Center */}
+                  {/* Cultivation Guide Download */}
                   <div className="no-print pt-1">
                     <PdfDownloadButton
                       slug={crop.slug}
                       cropName={crop.nameEnglish}
-                      crop={crop}
-                      showDatasetButton={true}
                     />
                   </div>
                 </div>
