@@ -5,6 +5,7 @@ import { WeatherCache, NetworkUtils } from '@/lib/cache'
 
 export interface WeatherResponse {
   district: string
+  placeName?: string
   weather: WeatherData
   advisory: WeatherAdvice
   timestamp: string
@@ -28,8 +29,9 @@ export class WeatherAPI {
   private static weatherAdvisor = new WeatherAdvisor()
 
   // Get microclimate weather directly for exact GPS coordinates
-  static async getWeatherForCoordinates(lat: number, lon: number, districtName?: string): Promise<WeatherResponse | null> {
-    const nearest = districtName || findNearestDistrict(lat, lon).district;
+  static async getWeatherForCoordinates(lat: number, lon: number, districtName?: string, placeName?: string): Promise<WeatherResponse | null> {
+    const nearestDistrict = districtName || findNearestDistrict(lat, lon).district;
+    const finalPlace = placeName || nearestDistrict;
     const cacheKey = `weather_coords_${lat.toFixed(3)}_${lon.toFixed(3)}`;
 
     // Try cache first
@@ -47,8 +49,9 @@ export class WeatherAPI {
     try {
       const data = await apiGet(`/api/weather/coordinates?lat=${lat}&lon=${lon}`);
       if (data && data.weather) {
-        WeatherCache.setWeather(cacheKey, data);
-        return data;
+        const responseData = { ...data, placeName: finalPlace };
+        WeatherCache.setWeather(cacheKey, responseData);
+        return responseData;
       }
     } catch {
       // Continue to high-precision direct client engine
@@ -56,11 +59,12 @@ export class WeatherAPI {
 
     // 2. High-precision microclimate query with exact coordinates via Open-Meteo
     try {
-      const weatherData = await this.weatherAdvisor.getWeatherData(nearest, { lat, lon });
+      const weatherData = await this.weatherAdvisor.getWeatherData(nearestDistrict, { lat, lon });
       if (weatherData) {
-        const advisory = await this.weatherAdvisor.getFarmingAdvice(weatherData, nearest);
+        const advisory = await this.weatherAdvisor.getFarmingAdvice(weatherData, nearestDistrict);
         const result: WeatherResponse = {
-          district: nearest,
+          district: nearestDistrict,
+          placeName: finalPlace,
           weather: weatherData,
           advisory,
           timestamp: new Date().toISOString(),
@@ -73,7 +77,7 @@ export class WeatherAPI {
       console.error('Weather coordinates client error:', fallbackError);
     }
 
-    return this.getWeatherForDistrict(nearest);
+    return this.getWeatherForDistrict(nearestDistrict);
   }
 
   // GET /api/weather/:district - Get current weather and advisory with caching

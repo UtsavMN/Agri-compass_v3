@@ -6,7 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { ScrollReveal } from '@/components/ui/animations';
 import { WeatherAPI } from '@/lib/api/weather';
-import { WeatherData, WeatherAdvice, findNearestDistrict } from '@/lib/ai/weatherAdvisor';
+import { WeatherData, WeatherAdvice } from '@/lib/ai/weatherAdvisor';
+import {
+  findNearestTaluk,
+  getTaluksByDistrict,
+  searchTaluks,
+  KarnatakaTaluk
+} from '@/data/karnatakaTaluks';
 import {
   Cloud,
   CloudRain,
@@ -30,7 +36,8 @@ import {
   Activity,
   Layers,
   Thermometer,
-  Waves
+  Waves,
+  Search
 } from 'lucide-react';
 
 const SKY_GRADIENTS: Record<string, string> = {
@@ -85,12 +92,16 @@ export default function Weather() {
   const { toast } = useToast();
   const { selectedDistrict: globalDistrict } = useDistrict();
   const [localDistrict, setLocalDistrict] = useState<string>('');
+  const [localTaluk, setLocalTaluk] = useState<string>('');
+  const [localPlaceName, setLocalPlaceName] = useState<string>('');
+  const [localCoords, setLocalCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [districts, setDistricts] = useState<string[]>([]);
   const [districtDetails, setDistrictDetails] = useState<Record<string, any>>({});
   const [weatherInfo, setWeatherInfo] = useState<{ weather: WeatherData; advisory: WeatherAdvice; timestamp?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [gpsActive, setGpsActive] = useState<{ lat: number; lon: number; distanceKm: number } | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsAnomaly, setGpsAnomaly] = useState<{ rawLat: number; rawLng: number; distanceKm: number } | null>(null);
 
   useEffect(() => {
     loadDistricts();
@@ -98,6 +109,26 @@ export default function Weather() {
 
   useEffect(() => {
     if (!localDistrict) {
+      // 1. Try to read detailed town/taluk preferences from settings
+      try {
+        const saved = localStorage.getItem('agri_compass_settings');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.location?.district) {
+            setLocalDistrict(parsed.location.district);
+            if (parsed.location.taluk) setLocalTaluk(parsed.location.taluk);
+            if (parsed.location.placeName) setLocalPlaceName(parsed.location.placeName);
+            if (parsed.location.lat && parsed.location.lng) {
+              setLocalCoords({ lat: parsed.location.lat, lon: parsed.location.lng });
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not read settings in weather', e);
+      }
+
+      // 2. Fallbacks: store district -> onboarding profile -> default
       if (globalDistrict) {
         setLocalDistrict(globalDistrict);
       } else if (profile?.district && profile.district !== 'Unknown') {
@@ -112,10 +143,47 @@ export default function Weather() {
 
   useEffect(() => {
     if (localDistrict && !gpsActive) {
-      loadWeatherData();
+      loadWeatherData(localDistrict, localCoords, localPlaceName || localTaluk);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localDistrict]);
+  }, [localDistrict, localTaluk, localCoords]);
+
+  const loadWeatherData = async (
+    targetDistrict: string,
+    coords?: { lat: number; lon: number } | null,
+    placeName?: string
+  ) => {
+    if (!targetDistrict) return;
+    setLoading(true);
+    try {
+      const result = coords
+        ? await WeatherAPI.getWeatherForCoordinates(coords.lat, coords.lon, targetDistrict, placeName)
+        : await WeatherAPI.getWeatherForDistrict(targetDistrict);
+
+      if (result) {
+        setWeatherInfo({
+          weather: result.weather,
+          advisory: result.advisory,
+          timestamp: result.timestamp
+        });
+      } else {
+        toast({
+          title: 'Meteorology Offline',
+          description: 'Could not fetch weather data from satellite or network stations.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading weather:', error);
+      toast({
+        title: 'Error loading weather',
+        description: 'Failed to load weather data. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUseGps = () => {
     if (!('geolocation' in navigator)) {
@@ -128,18 +196,51 @@ export default function Weather() {
     }
 
     setGpsLoading(true);
+    setGpsAnomaly(null);
+
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const lat = Number(pos.coords.latitude.toFixed(4));
         const lon = Number(pos.coords.longitude.toFixed(4));
-        const nearest = findNearestDistrict(lat, lon);
+        const nearest = findNearestTaluk(lat, lon);
 
-        setLocalDistrict(nearest.district);
+        // Check for laptop Wi-Fi anomaly (e.g. Bangladesh at 1,400+ km away)
+        if (nearest.isOutlier) {
+          setGpsLoading(false);
+          setGpsAnomaly({ rawLat: lat, rawLng: lon, distanceKm: nearest.distanceKm });
+          toast({
+            title: "Inaccurate Laptop Wi-Fi Location",
+            description: `Your laptop reported coordinates (${lat}° N, ${lon}° E) ~${nearest.distanceKm} km away. Please select your town (e.g. Sagara or Mysuru) from the dropdown.`,
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Inside Karnataka: resolve town name
+        let detectedPlace = nearest.taluk.name;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`, {
+            headers: { 'User-Agent': 'AgriCompass/3.0' }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const town = data.address?.town || data.address?.village || data.address?.suburb || data.address?.city;
+            if (town) detectedPlace = town;
+          }
+        } catch {
+          // fallback to nearest taluk
+        }
+
+        setLocalDistrict(nearest.taluk.district);
+        setLocalTaluk(nearest.taluk.name);
+        setLocalPlaceName(detectedPlace);
+        setLocalCoords({ lat, lon });
         setGpsActive({ lat, lon, distanceKm: nearest.distanceKm });
+        setGpsAnomaly(null);
 
         try {
           setLoading(true);
-          const result = await WeatherAPI.getWeatherForCoordinates(lat, lon, nearest.district);
+          const result = await WeatherAPI.getWeatherForCoordinates(lat, lon, nearest.taluk.district, detectedPlace);
           if (result) {
             setWeatherInfo({
               weather: result.weather,
@@ -147,8 +248,8 @@ export default function Weather() {
               timestamp: result.timestamp
             });
             toast({
-              title: "Hyper-Local Weather Loaded",
-              description: `Coordinates (${lat}° N, ${lon}° E) locked to ${nearest.district} (${nearest.distanceKm} km away).`,
+              title: "Nearby Place Weather Loaded",
+              description: `📍 ${detectedPlace} (${nearest.taluk.district} District) · ${lat}° N, ${lon}° E.`,
             });
           }
         } catch (e) {
@@ -201,36 +302,6 @@ export default function Weather() {
       });
     } catch (error) {
       console.error('Error loading districts:', error);
-    }
-  };
-
-  const loadWeatherData = async () => {
-    if (!localDistrict) return;
-    setLoading(true);
-    try {
-      const result = await WeatherAPI.getWeatherForDistrict(localDistrict);
-      if (result) {
-        setWeatherInfo({
-          weather: result.weather,
-          advisory: result.advisory,
-          timestamp: result.timestamp
-        });
-      } else {
-        toast({
-          title: 'Meteorology Offline',
-          description: 'Could not fetch weather data from satellite or network stations.',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error loading weather:', error);
-      toast({
-        title: 'Error loading weather',
-        description: 'Failed to load weather data. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -314,19 +385,28 @@ export default function Weather() {
               </p>
             </div>
 
-            {/* Location Selector, GPS Button & Sync Indicator */}
+            {/* Location Selector, Town Picker, GPS Button & Sync Indicator */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-              <div className="relative w-full sm:w-64">
-                <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gold-400 z-10 pointer-events-none" />
+              {/* 1. District Dropdown */}
+              <div className="relative w-full sm:w-56">
+                <MapPin className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gold-400 z-10 pointer-events-none" />
                 <Select
                   value={localDistrict}
                   onValueChange={(val) => {
+                    const taluks = getTaluksByDistrict(val);
+                    const firstTaluk = taluks[0];
                     setLocalDistrict(val);
+                    setLocalTaluk(firstTaluk?.name || val);
+                    setLocalPlaceName(firstTaluk?.name || val);
+                    if (firstTaluk) {
+                      setLocalCoords({ lat: firstTaluk.lat, lon: firstTaluk.lon });
+                    }
                     setGpsActive(null);
+                    setGpsAnomaly(null);
                   }}
                 >
-                  <SelectTrigger className="pl-11 bg-earth-elevated/80 border-earth-border !text-white font-medium focus:border-gold-400 h-12 rounded-xl text-sm shadow-sm relative z-0">
-                    <SelectValue placeholder="Select Karnataka District..." />
+                  <SelectTrigger className="pl-10 bg-earth-elevated/80 border-earth-border !text-white font-medium focus:border-gold-400 h-12 rounded-xl text-xs sm:text-sm shadow-sm relative z-0">
+                    <SelectValue placeholder="Select District..." />
                   </SelectTrigger>
                   <SelectContent className="bg-earth-elevated !text-white border-earth-border max-h-80">
                     {districts.map((district) => (
@@ -338,7 +418,36 @@ export default function Weather() {
                 </Select>
               </div>
 
-              {/* Hyper-Local GPS Auto-Detect Button */}
+              {/* 2. Local Town / Taluk Dropdown */}
+              <div className="relative w-full sm:w-48">
+                <Select
+                  value={localTaluk || localDistrict}
+                  onValueChange={(val) => {
+                    const taluks = getTaluksByDistrict(localDistrict);
+                    const selected = taluks.find(t => t.name === val);
+                    if (selected) {
+                      setLocalTaluk(selected.name);
+                      setLocalPlaceName(selected.name);
+                      setLocalCoords({ lat: selected.lat, lon: selected.lon });
+                    }
+                    setGpsActive(null);
+                    setGpsAnomaly(null);
+                  }}
+                >
+                  <SelectTrigger className="bg-earth-elevated/80 border-earth-border !text-white font-medium focus:border-gold-400 h-12 rounded-xl text-xs sm:text-sm shadow-sm relative z-0">
+                    <SelectValue placeholder="Select Town..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-earth-elevated !text-white border-earth-border max-h-80">
+                    {getTaluksByDistrict(localDistrict).map((t) => (
+                      <SelectItem key={t.name} value={t.name} className="hover:bg-earth-border/40 focus:bg-earth-border/40 cursor-pointer">
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* 3. Hyper-Local GPS Auto-Detect Button */}
               <button
                 type="button"
                 onClick={handleUseGps}
@@ -360,6 +469,21 @@ export default function Weather() {
             </div>
           </div>
         </ScrollReveal>
+
+        {/* Laptop GPS Anomaly Notice Banner */}
+        {gpsAnomaly && (
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs space-y-1.5 animate-fade-in">
+            <div className="flex items-center gap-2 font-bold text-amber-300">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>Inaccurate Laptop Wi-Fi Geolocation Detected</span>
+            </div>
+            <p className="text-amber-200/90 leading-relaxed">
+              Your laptop reported coordinates <strong>({gpsAnomaly.rawLat}° N, {gpsAnomaly.rawLng}° E)</strong> ~{gpsAnomaly.distanceKm} km away. 
+              Windows laptops lack satellite GPS chips and rely on ISP IP routing databases which can be in a different state or country. 
+              Your weather was <strong>protected and not changed to Bidar</strong>. Please select your local town (e.g. Sagara, Mysuru) from the dropdowns above.
+            </p>
+          </div>
+        )}
 
         {loading ? (
           /* Skeletons */
@@ -404,13 +528,14 @@ export default function Weather() {
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                   <div>
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className="text-[11px] font-bold text-gold-400 uppercase tracking-widest bg-gold-400/10 px-2.5 py-0.5 rounded-full border border-gold-400/30">
-                        {localDistrict}, Karnataka
+                      <span className="text-[12px] font-bold text-gold-300 uppercase tracking-widest bg-gold-400/10 px-3 py-1 rounded-full border border-gold-400/30 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-gold-400" />
+                        {localPlaceName || localTaluk || localDistrict}{localPlaceName && localPlaceName !== localDistrict ? `, ${localDistrict} District` : ', Karnataka'}
                       </span>
-                      {gpsActive && (
+                      {localCoords && (
                         <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
                           <Compass className="w-3 h-3 text-emerald-400" />
-                          GPS: {gpsActive.lat}° N, {gpsActive.lon}° E ({gpsActive.distanceKm} km)
+                          {gpsActive ? 'GPS' : 'Microclimate'}: {localCoords.lat}° N, {localCoords.lon}° E
                         </span>
                       )}
                       {weatherInfo.timestamp && (
