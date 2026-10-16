@@ -5,13 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ArrowLeft, Droplets, MapPin, Sprout, AlertTriangle,
   Beaker, Calendar, Shield, BarChart3, Settings,
-  Brain, Layers, Clock, CheckCircle2,
+  Layers, Clock, CheckCircle2,
   Bug, FlaskConical, Sparkles
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollReveal } from '@/components/ui/animations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { resolveCropImage, getCropImage } from '@/lib/cropImages';
 import { formatCurrency } from '@/data/masterData';
 import { CropDetailsShimmer } from '@/components/ui/loading-shimmer';
@@ -201,19 +200,6 @@ export default function CropDetails() {
                       cropName={crop.nameEnglish}
                     />
                   </div>
-                </div>
-
-                {/* AI Score Badge */}
-                <div className="bg-[#191610]/90 backdrop-blur-md border border-[#2A2720] p-4 rounded-2xl min-w-[160px] no-print shrink-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Brain className="h-4 w-4 text-gold-400" />
-                    <span className="text-[10px] uppercase tracking-widest font-bold text-gold-100/70">AI Suitability</span>
-                  </div>
-                  <div className="text-3xl font-black text-gold-100 flex items-baseline gap-1">
-                    {crop.aiScore || 88}
-                    <span className="text-gold-400 text-lg">%</span>
-                  </div>
-                  <Progress value={crop.aiScore || 88} className="h-1.5 bg-earth-border mt-2" indicatorClassName="bg-gold-400" />
                 </div>
               </div>
             </div>

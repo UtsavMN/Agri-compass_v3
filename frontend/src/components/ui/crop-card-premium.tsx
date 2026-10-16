@@ -65,16 +65,14 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
           </Badge>
         </div>
 
-        <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
-          <div className="flex items-center gap-1 bg-earth-main/80 backdrop-blur-md px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg border border-gold-400/30 shadow-lg">
-            <Star className="h-2 w-2 sm:h-3 sm:w-3 text-gold-400 fill-gold-400" />
-            {profitScore !== null ? (
+        {profitScore !== null && (
+          <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
+            <div className="flex items-center gap-1 bg-earth-main/80 backdrop-blur-md px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg border border-gold-400/30 shadow-lg">
+              <Star className="h-2 w-2 sm:h-3 sm:w-3 text-gold-400 fill-gold-400" />
               <span className="text-[8px] sm:text-[10px] font-black text-gold-100">{profitScore}%</span>
-            ) : (
-              <span className="text-[8px] sm:text-[10px] font-black text-gold-100/40">N/A</span>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4">
           <h3 className="text-sm sm:text-2xl font-black text-gold-100 tracking-tighter drop-shadow-lg truncate">{crop.nameEnglish}</h3>

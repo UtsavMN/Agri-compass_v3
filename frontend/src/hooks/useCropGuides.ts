@@ -88,7 +88,7 @@ export const mapToCropCard = (dto: any): CropCard => {
     nKgAcre: (raw.npk_requirement_kg_per_ha?.N ? Math.round(raw.npk_requirement_kg_per_ha.N / 2.471) : dto.nutrient?.nitrogenKg) || 45,
     pKgAcre: (raw.npk_requirement_kg_per_ha?.P ? Math.round(raw.npk_requirement_kg_per_ha.P / 2.471) : dto.nutrient?.phosphorusKg) || 25,
     kKgAcre: (raw.npk_requirement_kg_per_ha?.K ? Math.round(raw.npk_requirement_kg_per_ha.K / 2.471) : dto.nutrient?.potassiumKg) || 25,
-    aiScore: dto.aiScore?.profitabilityScore || (raw.frontend_display?.priority_crop ? 92 : 88),
+    aiScore: dto.aiScore?.profitabilityScore || null,
     pdfAvailable: true,
   };
 };
