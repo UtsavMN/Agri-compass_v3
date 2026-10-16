@@ -3,6 +3,8 @@ import { ReactNode, useState, useEffect } from 'react';
 import { KrishiMitraFloat } from '@/components/ai/KrishiMitraFloat';
 import { VoiceCommandModal } from '@/components/ai/VoiceCommandModal';
 import { HelpModal } from '@/components/layout/HelpModal';
+import { FeatureTourModal } from '@/components/tour/FeatureTourModal';
+import { useTourStore } from '@/store/tourStore';
 import { WeatherAlertModal } from '@/components/layout/WeatherAlertModal';
 import { FallingLeaves } from '@/components/ui/animations/FallingLeaves';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -40,6 +42,7 @@ import {
   MoreVertical,
   HelpCircle,
   Info,
+  Sparkles,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NotificationDropdown } from '@/components/ui/NotificationDropdown';
@@ -74,6 +77,18 @@ export default function Layout({
   const searchParams = new URLSearchParams(location.search);
   const alertId = searchParams.get('alertId');
   const isAlertModalOpen = !!alertId;
+
+  const { startTour } = useTourStore();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('tour') === 'true') {
+      startTour();
+      params.delete('tour');
+      const newSearch = params.toString();
+      navigate(`${location.pathname}${newSearch ? `?${newSearch}` : ''}`, { replace: true });
+    }
+  }, [location.search, navigate, location.pathname, startTour]);
 
   const closeAlertModal = () => {
     searchParams.delete('alertId');
@@ -275,6 +290,10 @@ export default function Layout({
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
+                <DropdownMenuItem className="hover:bg-earth-elevated/20 cursor-pointer focus:bg-earth-elevated/20" onSelect={() => startTour()}>
+                  <Sparkles className="mr-2 h-4 w-4 text-gold-400" />
+                  <span>Feature Tour</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem className="hover:bg-earth-elevated/20 cursor-pointer focus:bg-earth-elevated/20" onSelect={() => setIsHelpOpen(true)}>
                   <HelpCircle className="mr-2 h-4 w-4" />
                   <span>Help</span>
@@ -450,6 +469,9 @@ export default function Layout({
 
       {/* Help Modal Overlay */}
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+
+      {/* Interactive Feature Tour Modal */}
+      <FeatureTourModal />
 
       {/* Weather Alert Modal Overlay */}
       <WeatherAlertModal isOpen={isAlertModalOpen} onClose={closeAlertModal} alertId={alertId} />

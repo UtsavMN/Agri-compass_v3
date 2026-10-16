@@ -314,13 +314,26 @@ export default function Onboarding() {
                 Welcome, {form.fullName.split(" ")[0]}!
               </h1>
               <p className="text-[#C9A84C] text-lg mb-2">ಅಗ್ರಿ ಕಂಪಾಸ್ಗೆ ಸ್ವಾಗತ!</p>
-              <p className="text-[#F5F0E8]/40 text-sm mb-8">
-                Your account is ready. Start exploring your farm intelligence platform.
+              <p className="text-[#F5F0E8]/60 text-sm mb-6 max-w-sm mx-auto">
+                Your account is ready! Take a quick interactive tour to discover how Agri-Compass helps you track weather, mandis, and soil diagnostics.
               </p>
-              <button onClick={() => navigate("/dashboard")}
-                className="w-full py-3.5 bg-[#C9A84C] text-[#0A0A0A] font-semibold rounded-xl hover:bg-[#D4B86A] transition-colors">
-                Go to dashboard →
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={() => navigate("/dashboard?tour=true")}
+                  className="w-full py-3.5 bg-[#C9A84C] text-[#0A0A0A] font-bold rounded-xl hover:bg-[#D4B86A] transition-all shadow-[0_0_20px_rgba(201,168,76,0.3)] flex items-center justify-center gap-2"
+                >
+                  <span>Explore Features (Interactive Tour) →</span>
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('agricompass_tour_completed', 'true');
+                    navigate("/dashboard");
+                  }}
+                  className="w-full py-2.5 text-[#F5F0E8]/50 hover:text-[#F5F0E8] text-xs font-medium transition-colors"
+                >
+                  Skip Tour & Go to Dashboard
+                </button>
+              </div>
             </motion.div>
           )}
 

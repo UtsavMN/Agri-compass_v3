@@ -2,32 +2,51 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Languages, Send, Smartphone } from 'lucide-react';
+import { Languages, Send, Smartphone, PhoneCall, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useTourStore } from '@/store/tourStore';
+import { useUser } from '@/store';
 
 interface HelpModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const DEVELOPER_HELPLINES = [
+  { phone: '7022131508', display: '+91 70221 31508', role: 'Dev Team Support (Lead)' },
+  { phone: '8431742216', display: '+91 84317 42216', role: 'Dev Team Support' },
+  { phone: '9481306283', display: '+91 94813 06283', role: 'Dev Team Support' },
+  { phone: '7892653439', display: '+91 78926 53439', role: 'Dev Team Support' },
+];
+
 export function HelpModal({ isOpen, onClose }: HelpModalProps) {
   const { language, toggleLanguage } = useLanguage();
   const { toast } = useToast();
-  const [feedback, setFeedback] = useState('');
-  const [subject, setSubject] = useState('');
-  
-  const handleFeedbackSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!feedback.trim()) return;
-    
-    // Simulate sending feedback
+  const { startTour } = useTourStore();
+  const { profile } = useUser();
+
+  // Pick or randomize developer line based on profile id or session
+  const [devIndex, setDevIndex] = useState(() => {
+    if (profile?.id) {
+      let hash = 0;
+      for (let i = 0; i < profile.id.length; i++) {
+        hash = (hash << 5) - hash + profile.id.charCodeAt(i);
+      }
+      return Math.abs(hash) % DEVELOPER_HELPLINES.length;
+    }
+    return Math.floor(Math.random() * DEVELOPER_HELPLINES.length);
+  });
+
+  const activeDev = DEVELOPER_HELPLINES[devIndex];
+
+  const handleNextDev = () => {
+    const nextIdx = (devIndex + 1) % DEVELOPER_HELPLINES.length;
+    setDevIndex(nextIdx);
     toast({
-      title: "Feedback Sent",
-      description: "Thank you for helping us improve Agri-Compass!",
+      title: "Contact Switched",
+      description: `Connected to developer line: ${DEVELOPER_HELPLINES[nextIdx].display}`,
     });
-    setFeedback('');
-    setSubject('');
   };
 
   return (
@@ -47,30 +66,84 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
             </Button>
           </div>
           <DialogDescription className="text-sm text-gold-100/60 pt-2">
-            Find answers to common questions or send us feedback.
+            Find answers to common questions or connect directly with our technical team.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-6 space-y-8">
+        <div className="mt-6 space-y-6">
           {/* Direct Support Section */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <a href="tel:18001801551" className="flex items-center p-4 rounded-xl bg-earth-card border border-earth-border/40 hover:border-gold-400/50 transition-colors group">
-              <div className="h-10 w-10 rounded-full bg-gold-400/10 flex items-center justify-center mr-4 group-hover:bg-gold-400/20">
-                <Smartphone className="w-5 h-5 text-gold-400" />
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gold-400">
+                Direct Developer Contact & Support
+              </h3>
+              <button
+                type="button"
+                onClick={handleNextDev}
+                className="text-[11px] text-gold-400 hover:text-gold-300 font-medium flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-gold-400/10"
+                title="Switch to another developer line if busy"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>Switch Developer Line</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Developer Direct Call */}
+              <a
+                href={`tel:+91${activeDev.phone}`}
+                className="flex items-center p-3.5 rounded-xl bg-earth-card border border-earth-border/40 hover:border-gold-400/50 transition-colors group"
+              >
+                <div className="h-10 w-10 rounded-full bg-gold-400/10 flex items-center justify-center mr-3 group-hover:bg-gold-400/20 flex-shrink-0">
+                  <PhoneCall className="w-5 h-5 text-gold-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-gold-400 uppercase tracking-wider">
+                    Developer Helpline
+                  </p>
+                  <p className="text-base font-black text-[#f0ece0] truncate">
+                    {activeDev.display}
+                  </p>
+                </div>
+              </a>
+
+              {/* Developer WhatsApp Support */}
+              <a
+                href={`https://wa.me/91${activeDev.phone}?text=${encodeURIComponent("Hello AgriCompass Developer Team, I need assistance with the app.")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center p-3.5 rounded-xl bg-earth-card border border-earth-border/40 hover:border-green-400/50 transition-colors group"
+              >
+                <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center mr-3 group-hover:bg-green-500/20 flex-shrink-0">
+                  <Send className="w-5 h-5 text-green-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-green-400 uppercase tracking-wider">
+                    WhatsApp Developer
+                  </p>
+                  <p className="text-xs font-semibold text-[#f0ece0] truncate">
+                    Chat with Team ({activeDev.phone.slice(-4)})
+                  </p>
+                </div>
+              </a>
+            </div>
+
+            {/* Kisan Call Center */}
+            <a
+              href="tel:18001801551"
+              className="flex items-center p-3 rounded-xl bg-[#141414] border border-earth-border/30 hover:border-gold-400/40 transition-colors"
+            >
+              <div className="h-8 w-8 rounded-full bg-gold-400/10 flex items-center justify-center mr-3 flex-shrink-0">
+                <Smartphone className="w-4 h-4 text-gold-400" />
               </div>
-              <div>
-                <p className="text-xs font-bold text-gold-400 uppercase tracking-wider">Kisan Call Center</p>
-                <p className="text-lg font-black text-[#f0ece0]">1800-180-1551</p>
-              </div>
-            </a>
-            
-            <a href="https://wa.me/911234567890" target="_blank" rel="noreferrer" className="flex items-center p-4 rounded-xl bg-earth-card border border-earth-border/40 hover:border-green-400/50 transition-colors group">
-              <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center mr-4 group-hover:bg-green-500/20">
-                <Send className="w-5 h-5 text-green-400" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-green-400 uppercase tracking-wider">WhatsApp Support</p>
-                <p className="text-sm font-medium text-[#f0ece0]">Chat with KrishiMitra</p>
+              <div className="flex-1 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-gold-400/80 uppercase tracking-wider">
+                    Kisan Call Center (Govt of India)
+                  </p>
+                  <p className="text-sm font-bold text-[#f0ece0]">1800-180-1551</p>
+                </div>
+                <span className="text-[10px] text-gold-100/40 font-medium">Toll-Free</span>
               </div>
             </a>
           </section>
@@ -79,12 +152,17 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
           <section className="bg-gradient-to-r from-gold-400/10 to-transparent p-4 rounded-xl border border-gold-400/20 flex items-center justify-between">
             <div>
               <p className="text-sm font-bold text-[#f0ece0]">Need a refresher?</p>
-              <p className="text-xs text-gold-100/60">Take an interactive tour of the dashboard.</p>
+              <p className="text-xs text-gold-100/60">Take an interactive tour of the platform features.</p>
             </div>
-            <Button variant="outline" size="sm" className="border-gold-400/30 text-gold-400 hover:bg-gold-400/10" onClick={() => {
-              toast({ title: "Tour Starting", description: "Interactive tour initialized..." });
-              onClose();
-            }}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gold-400/30 text-gold-400 hover:bg-gold-400/10"
+              onClick={() => {
+                onClose();
+                startTour();
+              }}
+            >
               Restart Tour
             </Button>
           </section>
@@ -116,7 +194,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
               <AccordionItem value="item-4" className="border-earth-border/40">
                 <AccordionTrigger className="text-sm text-[#f0ece0] hover:text-gold-200">How does the translate feature work?</AccordionTrigger>
                 <AccordionContent className="text-xs text-gold-100/70">
-                  Clicking the Language toggle will translate the entire application between English and Kannada using Google Translate. Some dynamic content might take a moment to reflect the change.
+                  Clicking the Language toggle will translate the entire application between English and Kannada. Some dynamic content might take a moment to reflect the change.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-5" className="border-earth-border/40">
@@ -138,39 +216,6 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-          </section>
-
-          {/* Feedback Section */}
-          <section>
-            <h3 className="text-sm font-bold text-gold-400 uppercase tracking-wider mb-4 border-b border-earth-border/40 pb-2">
-              Send Feedback
-            </h3>
-            <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-              <div>
-                <input
-                  type="text"
-                  placeholder="Subject"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  className="w-full bg-[#1a1a14]/60 border border-earth-border/40 rounded-lg p-3 text-sm text-[#f0ece0] placeholder:text-gold-100/30 focus:outline-none focus:border-gold-400/50"
-                  required
-                />
-              </div>
-              <div>
-                <textarea
-                  placeholder="How can we improve Agri-Compass?"
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  rows={4}
-                  className="w-full bg-[#1a1a14]/60 border border-earth-border/40 rounded-lg p-3 text-sm text-[#f0ece0] placeholder:text-gold-100/30 focus:outline-none focus:border-gold-400/50 resize-none"
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full bg-gold-400 hover:bg-gold-500 text-[#0A0A0A] font-bold text-xs uppercase tracking-widest">
-                <Send className="w-4 h-4 mr-2" />
-                Submit Feedback
-              </Button>
-            </form>
           </section>
         </div>
       </DialogContent>

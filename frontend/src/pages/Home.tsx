@@ -4,7 +4,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { translateToKannada, containsKannada } from '@/lib/ai/translator';
 import { cropRecommender, DetailedCropData } from '@/lib/ai/cropRecommender';
 import { PostsAPI, Post } from '@/lib/api/posts';
-import Onboarding from '@/components/Onboarding';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -29,16 +28,8 @@ export default function Home() {
   const [translating, setTranslating] = useState(false);
   const [detailedCrops, setDetailedCrops] = useState<DetailedCropData[]>([]);
   const [cropsLoading, setCropsLoading] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
 
   useEffect(() => {
-    // Check if onboarding should be shown
-    const onboardingCompleted = localStorage.getItem('onboarding_completed');
-    if (!onboardingCompleted) {
-      setShowOnboarding(true);
-    }
-
     loadPosts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     loadDetailedCrops();
@@ -186,10 +177,6 @@ export default function Home() {
     }
   };
 
-  const handleOnboardingComplete = () => {
-    setShowOnboarding(false);
-  };
-
   const clearFilters = () => {
     setSearchTerm('');
     setCropFilter('');
@@ -244,7 +231,6 @@ export default function Home() {
 
   return (
     <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12 max-w-7xl mx-auto animate-fade-in">
-      {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
 
       <div className="space-y-6">
         <ScrollReveal>
