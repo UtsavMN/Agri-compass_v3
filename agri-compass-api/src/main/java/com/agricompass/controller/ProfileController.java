@@ -29,6 +29,27 @@ public class ProfileController {
         return ResponseEntity.ok(userService.syncUserProfile(null));
     }
 
+    // PUT /api/profile/me - update own profile, preferences and district
+    @PutMapping("/profile/me")
+    public ResponseEntity<UserProfile> updateMyProfile(@RequestBody Map<String, Object> body) {
+        UserProfile current = userService.syncUserProfile(null);
+        if (current == null) {
+            return ResponseEntity.status(401).build();
+        }
+        if (body.containsKey("preferences")) {
+            Object prefs = body.get("preferences");
+            current.setPreferences(prefs != null ? prefs.toString() : "{}");
+        }
+        if (body.containsKey("district") && body.get("district") != null) {
+            current.setDistrict((String) body.get("district"));
+        }
+        if (body.containsKey("language") && body.get("language") != null) {
+            current.setLanguage((String) body.get("language"));
+        }
+        UserProfile saved = userService.updateProfile(current);
+        return ResponseEntity.ok(saved);
+    }
+
     // GET /api/profiles/{id} - get profile by ID
     @GetMapping("/profiles/{id}")
     public ResponseEntity<UserProfile> getProfileById(@PathVariable String id) {

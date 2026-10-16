@@ -1,6 +1,6 @@
 import { apiGet } from '../httpClient'
 import { FarmsAPI } from '@/lib/api/farms'
-import { WeatherAdvisor, WeatherData, WeatherAdvice } from '@/lib/ai/weatherAdvisor'
+import { WeatherAdvisor, WeatherData, WeatherAdvice, findNearestDistrict } from '@/lib/ai/weatherAdvisor'
 import { WeatherCache, NetworkUtils } from '@/lib/cache'
 
 export interface WeatherResponse {
@@ -26,6 +26,55 @@ export interface WeatherLog {
 
 export class WeatherAPI {
   private static weatherAdvisor = new WeatherAdvisor()
+
+  // Get microclimate weather directly for exact GPS coordinates
+  static async getWeatherForCoordinates(lat: number, lon: number, districtName?: string): Promise<WeatherResponse | null> {
+    const nearest = districtName || findNearestDistrict(lat, lon).district;
+    const cacheKey = `weather_coords_${lat.toFixed(3)}_${lon.toFixed(3)}`;
+
+    // Try cache first
+    const cached = WeatherCache.getWeather(cacheKey);
+    if (cached) {
+      return { ...cached, cached: true };
+    }
+
+    if (!NetworkUtils.isOnline()) {
+      console.warn('No internet connection, cannot fetch weather data');
+      return null;
+    }
+
+    // 1. Attempt API server coordinates route if available
+    try {
+      const data = await apiGet(`/api/weather/coordinates?lat=${lat}&lon=${lon}`);
+      if (data && data.weather) {
+        WeatherCache.setWeather(cacheKey, data);
+        return data;
+      }
+    } catch {
+      // Continue to high-precision direct client engine
+    }
+
+    // 2. High-precision microclimate query with exact coordinates via Open-Meteo
+    try {
+      const weatherData = await this.weatherAdvisor.getWeatherData(nearest, { lat, lon });
+      if (weatherData) {
+        const advisory = await this.weatherAdvisor.getFarmingAdvice(weatherData, nearest);
+        const result: WeatherResponse = {
+          district: nearest,
+          weather: weatherData,
+          advisory,
+          timestamp: new Date().toISOString(),
+          fallback: true
+        };
+        WeatherCache.setWeather(cacheKey, result);
+        return result;
+      }
+    } catch (fallbackError) {
+      console.error('Weather coordinates client error:', fallbackError);
+    }
+
+    return this.getWeatherForDistrict(nearest);
+  }
 
   // GET /api/weather/:district - Get current weather and advisory with caching
   static async getWeatherForDistrict(district: string): Promise<WeatherResponse | null> {

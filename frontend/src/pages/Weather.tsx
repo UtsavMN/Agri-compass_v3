@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { ScrollReveal } from '@/components/ui/animations';
 import { WeatherAPI } from '@/lib/api/weather';
-import { WeatherData, WeatherAdvice } from '@/lib/ai/weatherAdvisor';
+import { WeatherData, WeatherAdvice, findNearestDistrict } from '@/lib/ai/weatherAdvisor';
 import {
   Cloud,
   CloudRain,
@@ -89,6 +89,8 @@ export default function Weather() {
   const [districtDetails, setDistrictDetails] = useState<Record<string, any>>({});
   const [weatherInfo, setWeatherInfo] = useState<{ weather: WeatherData; advisory: WeatherAdvice; timestamp?: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [gpsActive, setGpsActive] = useState<{ lat: number; lon: number; distanceKm: number } | null>(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
 
   useEffect(() => {
     loadDistricts();
@@ -98,20 +100,80 @@ export default function Weather() {
     if (!localDistrict) {
       if (globalDistrict) {
         setLocalDistrict(globalDistrict);
-      } else if (profile?.location) {
+      } else if (profile?.district && profile.district !== 'Unknown') {
+        setLocalDistrict(profile.district);
+      } else if (profile?.location && profile.location !== 'Unknown') {
         setLocalDistrict(profile.location);
       } else if (districts.length > 0) {
         setLocalDistrict('Bengaluru Urban');
       }
     }
-  }, [profile?.location, globalDistrict, localDistrict, districts]);
+  }, [profile?.district, profile?.location, globalDistrict, localDistrict, districts]);
 
   useEffect(() => {
-    if (localDistrict) {
+    if (localDistrict && !gpsActive) {
       loadWeatherData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localDistrict]);
+
+  const handleUseGps = () => {
+    if (!('geolocation' in navigator)) {
+      toast({
+        title: "Not Supported",
+        description: "Geolocation is not supported by your browser.",
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = Number(pos.coords.latitude.toFixed(4));
+        const lon = Number(pos.coords.longitude.toFixed(4));
+        const nearest = findNearestDistrict(lat, lon);
+
+        setLocalDistrict(nearest.district);
+        setGpsActive({ lat, lon, distanceKm: nearest.distanceKm });
+
+        try {
+          setLoading(true);
+          const result = await WeatherAPI.getWeatherForCoordinates(lat, lon, nearest.district);
+          if (result) {
+            setWeatherInfo({
+              weather: result.weather,
+              advisory: result.advisory,
+              timestamp: result.timestamp
+            });
+            toast({
+              title: "Hyper-Local Weather Loaded",
+              description: `Coordinates (${lat}° N, ${lon}° E) locked to ${nearest.district} (${nearest.distanceKm} km away).`,
+            });
+          }
+        } catch (e) {
+          console.error("Failed to load GPS weather", e);
+          toast({
+            title: "Weather Error",
+            description: "Failed to load weather for GPS coordinates.",
+            variant: "destructive"
+          });
+        } finally {
+          setLoading(false);
+          setGpsLoading(false);
+        }
+      },
+      (err) => {
+        setGpsLoading(false);
+        toast({
+          title: "GPS Access Denied",
+          description: err.message || "Please allow location access to fetch hyper-local weather.",
+          variant: "destructive"
+        });
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  };
 
   const loadDistricts = async () => {
     try {
@@ -252,11 +314,17 @@ export default function Weather() {
               </p>
             </div>
 
-            {/* Location Selector & Sync Indicator */}
+            {/* Location Selector, GPS Button & Sync Indicator */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
               <div className="relative w-full sm:w-64">
                 <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gold-400 z-10 pointer-events-none" />
-                <Select value={localDistrict} onValueChange={setLocalDistrict}>
+                <Select
+                  value={localDistrict}
+                  onValueChange={(val) => {
+                    setLocalDistrict(val);
+                    setGpsActive(null);
+                  }}
+                >
                   <SelectTrigger className="pl-11 bg-earth-elevated/80 border-earth-border !text-white font-medium focus:border-gold-400 h-12 rounded-xl text-sm shadow-sm relative z-0">
                     <SelectValue placeholder="Select Karnataka District..." />
                   </SelectTrigger>
@@ -270,12 +338,24 @@ export default function Weather() {
                 </Select>
               </div>
 
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-earth-elevated/40 border border-earth-border/50 text-xs text-gold-100/70">
+              {/* Hyper-Local GPS Auto-Detect Button */}
+              <button
+                type="button"
+                onClick={handleUseGps}
+                disabled={gpsLoading}
+                className="h-12 px-4 rounded-xl bg-earth-elevated/80 hover:bg-earth-border/50 border border-earth-border text-gold-200 hover:text-gold-100 font-bold text-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-sm whitespace-nowrap"
+                title="Fetch hyper-local weather directly for your exact farm GPS coordinates"
+              >
+                <Compass className={`w-4 h-4 text-gold-400 ${gpsLoading ? 'animate-spin' : ''}`} />
+                <span>{gpsLoading ? 'Detecting GPS...' : 'Use My Farm GPS'}</span>
+              </button>
+
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-earth-elevated/40 border border-earth-border/50 text-xs text-gold-100/70 whitespace-nowrap">
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                 </span>
-                <span className="font-semibold">Live Station Sync</span>
+                <span className="font-semibold">{gpsActive ? 'GPS Microclimate' : 'Live Station Sync'}</span>
               </div>
             </div>
           </div>
@@ -296,8 +376,8 @@ export default function Weather() {
               </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-              {[...Array(7)].map((_, i) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {[...Array(3)].map((_, i) => (
                 <Card key={i} className="card-premium h-44 animate-pulse bg-earth-elevated/20 border-earth-border/40">
                   <CardContent className="h-full flex flex-col justify-center items-center gap-3 p-4">
                     <div className="h-3 w-16 bg-earth-border/60 rounded" />
@@ -323,10 +403,16 @@ export default function Weather() {
 
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
                       <span className="text-[11px] font-bold text-gold-400 uppercase tracking-widest bg-gold-400/10 px-2.5 py-0.5 rounded-full border border-gold-400/30">
                         {localDistrict}, Karnataka
                       </span>
+                      {gpsActive && (
+                        <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                          <Compass className="w-3 h-3 text-emerald-400" />
+                          GPS: {gpsActive.lat}° N, {gpsActive.lon}° E ({gpsActive.distanceKm} km)
+                        </span>
+                      )}
                       {weatherInfo.timestamp && (
                         <span className="text-[11px] text-gold-100/40">
                           Updated {new Date(weatherInfo.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

@@ -58,9 +58,42 @@ public class WeatherController {
         put("Yadgir", new double[]{16.77, 77.14});
     }};
 
+    public static String findNearestDistrict(double lat, double lon) {
+        String closest = "Bengaluru Urban";
+        double minDistance = Double.MAX_VALUE;
+        for (Map.Entry<String, double[]> entry : DISTRICT_COORDS.entrySet()) {
+            double dLat = Math.toRadians(entry.getValue()[0] - lat);
+            double dLon = Math.toRadians(entry.getValue()[1] - lon);
+            double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                    + Math.cos(Math.toRadians(lat)) * Math.cos(Math.toRadians(entry.getValue()[0]))
+                    * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            double distKm = 6371.0 * c;
+            if (distKm < minDistance) {
+                minDistance = distKm;
+                closest = entry.getKey();
+            }
+        }
+        return closest;
+    }
+
+    @GetMapping("/coordinates")
+    public ResponseEntity<?> getWeatherByCoordinates(
+            @RequestParam(name = "lat") double lat,
+            @RequestParam(name = "lon") double lon) {
+        String nearest = findNearestDistrict(lat, lon);
+        return fetchWeatherData(nearest, new double[]{lat, lon});
+    }
+
     @GetMapping("/current")
-    public ResponseEntity<?> getCurrentWeather(@RequestParam(name = "district") String district) {
-        return getWeather(district);
+    public ResponseEntity<?> getCurrentWeather(
+            @RequestParam(name = "district", required = false) String district,
+            @RequestParam(name = "lat", required = false) Double lat,
+            @RequestParam(name = "lon", required = false) Double lon) {
+        if (lat != null && lon != null) {
+            return getWeatherByCoordinates(lat, lon);
+        }
+        return getWeather(district != null ? district : "Bengaluru Urban");
     }
 
     @GetMapping("/{district}")
@@ -80,8 +113,10 @@ public class WeatherController {
             }
         }
 
-        final String targetDistrict = officialDistrictName;
-        final double[] targetCoords = coords;
+        return fetchWeatherData(officialDistrictName, coords);
+    }
+
+    private ResponseEntity<?> fetchWeatherData(final String targetDistrict, final double[] targetCoords) {
 
         try {
             // 1. Fetch Open-Meteo High-Resolution 7-Day Agricultural Forecast

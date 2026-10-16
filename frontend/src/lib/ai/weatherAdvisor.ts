@@ -54,43 +54,73 @@ export interface WeatherAdvice {
   };
 }
 
+export const KARNATAKA_DISTRICT_COORDINATES: Record<string, { lat: number; lon: number }> = {
+  'Bagalkot': { lat: 16.1850, lon: 75.6961 },
+  'Ballari': { lat: 15.1394, lon: 76.9214 },
+  'Belagavi': { lat: 15.8497, lon: 74.4977 },
+  'Bengaluru Rural': { lat: 13.2300, lon: 77.7100 },
+  'Bengaluru Urban': { lat: 12.9716, lon: 77.5946 },
+  'Bidar': { lat: 17.9133, lon: 77.5300 },
+  'Chamarajanagar': { lat: 11.9261, lon: 76.9437 },
+  'Chikkaballapur': { lat: 13.4355, lon: 77.7314 },
+  'Chikkamagaluru': { lat: 13.3153, lon: 75.7754 },
+  'Chitradurga': { lat: 14.2265, lon: 76.3980 },
+  'Dakshina Kannada': { lat: 12.9141, lon: 74.8560 },
+  'Davanagere': { lat: 14.4644, lon: 75.9218 },
+  'Dharwad': { lat: 15.4589, lon: 75.0078 },
+  'Gadag': { lat: 15.4325, lon: 75.6381 },
+  'Hassan': { lat: 13.0068, lon: 76.0996 },
+  'Haveri': { lat: 14.7950, lon: 75.4003 },
+  'Kalaburagi': { lat: 17.3297, lon: 76.8343 },
+  'Kodagu': { lat: 12.3375, lon: 75.8069 },
+  'Kolar': { lat: 13.1367, lon: 78.1292 },
+  'Koppal': { lat: 15.3500, lon: 76.1500 },
+  'Mandya': { lat: 12.5223, lon: 76.8951 },
+  'Mysuru': { lat: 12.2958, lon: 76.6394 },
+  'Raichur': { lat: 16.2076, lon: 77.3463 },
+  'Ramanagara': { lat: 12.7203, lon: 77.2800 },
+  'Shivamogga': { lat: 13.9299, lon: 75.5681 },
+  'Tumakuru': { lat: 13.3409, lon: 77.1011 },
+  'Udupi': { lat: 13.3409, lon: 74.7421 },
+  'Uttara Kannada': { lat: 14.6667, lon: 74.5000 },
+  'Vijayanagara': { lat: 15.3196, lon: 76.4600 },
+  'Vijayapura': { lat: 16.8302, lon: 75.7100 },
+  'Yadgir': { lat: 16.7667, lon: 77.1333 }
+};
+
+/**
+ * Calculates the exact nearest Karnataka district to any (latitude, longitude) coordinate
+ * using the Haversine great-circle distance formula.
+ */
+export function findNearestDistrict(lat: number, lon: number): { district: string; distanceKm: number } {
+  let closest = 'Bengaluru Urban';
+  let minDistance = Infinity;
+
+  for (const [dist, coords] of Object.entries(KARNATAKA_DISTRICT_COORDINATES)) {
+    const dLat = (coords.lat - lat) * (Math.PI / 180);
+    const dLon = (coords.lon - lon) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat * (Math.PI / 180)) * Math.cos(coords.lat * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distKm = 6371 * c;
+
+    if (distKm < minDistance) {
+      minDistance = distKm;
+      closest = dist;
+    }
+  }
+
+  return { district: closest, distanceKm: Math.round(minDistance * 10) / 10 };
+}
+
 export class WeatherAdvisor {
   private readonly WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY || '9445b4364af44639b9875034262207';
   private readonly WEATHER_BASE_URL = 'https://api.weatherapi.com/v1';
 
-  private static readonly DISTRICT_COORDINATES: Record<string, { lat: number; lon: number }> = {
-    'Bagalkot': { lat: 16.1850, lon: 75.6961 },
-    'Ballari': { lat: 15.1394, lon: 76.9214 },
-    'Belagavi': { lat: 15.8497, lon: 74.4977 },
-    'Bengaluru Rural': { lat: 13.2300, lon: 77.7100 },
-    'Bengaluru Urban': { lat: 12.9716, lon: 77.5946 },
-    'Bidar': { lat: 17.9133, lon: 77.5300 },
-    'Chamarajanagar': { lat: 11.9261, lon: 76.9437 },
-    'Chikkaballapur': { lat: 13.4355, lon: 77.7314 },
-    'Chikkamagaluru': { lat: 13.3153, lon: 75.7754 },
-    'Chitradurga': { lat: 14.2265, lon: 76.3980 },
-    'Dakshina Kannada': { lat: 12.9141, lon: 74.8560 },
-    'Davanagere': { lat: 14.4644, lon: 75.9218 },
-    'Dharwad': { lat: 15.4589, lon: 75.0078 },
-    'Gadag': { lat: 15.4325, lon: 75.6381 },
-    'Hassan': { lat: 13.0068, lon: 76.0996 },
-    'Haveri': { lat: 14.7950, lon: 75.4003 },
-    'Kalaburagi': { lat: 17.3297, lon: 76.8343 },
-    'Kodagu': { lat: 12.3375, lon: 75.8069 },
-    'Kolar': { lat: 13.1367, lon: 78.1292 },
-    'Koppal': { lat: 15.3500, lon: 76.1500 },
-    'Mandya': { lat: 12.5223, lon: 76.8951 },
-    'Mysuru': { lat: 12.2958, lon: 76.6394 },
-    'Raichur': { lat: 16.2076, lon: 77.3463 },
-    'Ramanagara': { lat: 12.7203, lon: 77.2800 },
-    'Shivamogga': { lat: 13.9299, lon: 75.5681 },
-    'Tumakuru': { lat: 13.3409, lon: 77.1011 },
-    'Udupi': { lat: 13.3409, lon: 74.7421 },
-    'Uttara Kannada': { lat: 14.6667, lon: 74.5000 },
-    'Vijayanagara': { lat: 15.3196, lon: 76.4600 },
-    'Vijayapura': { lat: 16.8302, lon: 75.7100 },
-    'Yadgir': { lat: 16.7667, lon: 77.1333 }
-  };
+  public static readonly DISTRICT_COORDINATES = KARNATAKA_DISTRICT_COORDINATES;
+  public static readonly findNearestDistrict = findNearestDistrict;
 
   private static degreesToCardinal(deg: number): string {
     const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
@@ -157,8 +187,8 @@ export class WeatherAdvisor {
     };
   }
 
-  async getWeatherData(district: string): Promise<WeatherData | null> {
-    const coords = this.getDistrictCoordinates(district);
+  async getWeatherData(district?: string, customCoords?: { lat: number; lon: number }): Promise<WeatherData | null> {
+    const coords = customCoords || this.getDistrictCoordinates(district || 'Bengaluru Urban');
     if (!coords) return null;
 
     try {

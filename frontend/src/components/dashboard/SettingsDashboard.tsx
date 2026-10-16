@@ -3,7 +3,6 @@ import Papa from 'papaparse';
 import {
   Sun,
   Bell,
-  Shield,
   MapPin,
   Database,
   Ruler,
@@ -14,28 +13,18 @@ import {
   Volume2,
   Globe,
   Sliders,
-  Sprout,
   Compass,
-  Layers,
-  Activity
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useDistrict } from '@/store';
+import { useDistrict, useUser } from '@/store';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { KARNATAKA_DISTRICT_COORDINATES, findNearestDistrict } from '@/lib/ai/weatherAdvisor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export interface QuietHours {
   enabled: boolean;
   start: string;
   end: string;
-}
-
-export interface FarmProfileSettings {
-  farmName: string;
-  primaryCrop: string;
-  soilType: string;
-  irrigationType: 'Drip' | 'Sprinkler' | 'Flood' | 'Rainfed';
-  farmSize: number;
 }
 
 export interface SettingsData {
@@ -54,8 +43,9 @@ export interface SettingsData {
     district: string;
     lat: number;
     lng: number;
+    distanceKm?: number;
+    gpsAcquired?: boolean;
   };
-  farmProfile: FarmProfileSettings;
 }
 
 const DEFAULT_SETTINGS: SettingsData = {
@@ -79,37 +69,60 @@ const DEFAULT_SETTINGS: SettingsData = {
     lat: 12.9716,
     lng: 77.5946,
   },
-  farmProfile: {
-    farmName: 'My Farm',
-    primaryCrop: 'Ragi',
-    soilType: 'Red Loam',
-    irrigationType: 'Drip',
-    farmSize: 5,
-  },
 };
 
 export function SettingsDashboard() {
   const { selectedDistrict, setSelectedDistrict } = useDistrict();
+  const { profile } = useUser();
   const { language, setLanguage } = useLanguage();
   const { toast } = useToast();
-
-  const [settings, setSettings] = useState<SettingsData>(() => {
-    // Immediate hydrate from localStorage to prevent any blank screen or hang
-    try {
-      const saved = localStorage.getItem('agri_compass_settings');
-      if (saved) {
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
-      }
-    } catch (e) {
-      console.warn('Could not read cached settings', e);
-    }
-    return DEFAULT_SETTINGS;
-  });
 
   const [districts, setDistricts] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Derive initial district candidate from profile (onboarding) -> store -> fallback
+  const onboardingDistrict = (profile?.district && profile.district !== 'Unknown')
+    ? profile.district
+    : (profile?.location && profile.location !== 'Unknown' ? profile.location : (selectedDistrict || 'Bengaluru Urban'));
+
+  const [settings, setSettings] = useState<SettingsData>(() => {
+    try {
+      const saved = localStorage.getItem('agri_compass_settings');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const resolvedDistrict = (parsed.location?.district && parsed.location.district !== 'Bengaluru Urban')
+          ? parsed.location.district
+          : onboardingDistrict;
+        const coords = KARNATAKA_DISTRICT_COORDINATES[resolvedDistrict] || { lat: 12.9716, lon: 77.5946 };
+        return {
+          ...DEFAULT_SETTINGS,
+          ...parsed,
+          location: {
+            ...DEFAULT_SETTINGS.location,
+            ...(parsed.location || {}),
+            district: resolvedDistrict,
+            lat: parsed.location?.lat ?? coords.lat,
+            lng: parsed.location?.lng ?? coords.lon,
+          }
+        };
+      }
+    } catch (e) {
+      console.warn('Could not read cached settings', e);
+    }
+
+    const coords = KARNATAKA_DISTRICT_COORDINATES[onboardingDistrict] || { lat: 12.9716, lon: 77.5946 };
+    return {
+      ...DEFAULT_SETTINGS,
+      location: {
+        district: onboardingDistrict,
+        lat: coords.lat,
+        lng: coords.lon,
+      }
+    };
+  });
 
   useEffect(() => {
     loadDistricts();
@@ -144,35 +157,47 @@ export function SettingsDashboard() {
       const { apiGet } = await import('@/lib/httpClient');
       const res = await apiGet('/api/profile/me');
 
-      if (res && res.preferences) {
-        try {
-          const remoteData = JSON.parse(res.preferences);
-          setSettings(prev => ({
+      if (res) {
+        const profileDistrict = (res.district && res.district !== 'Unknown')
+          ? res.district
+          : (res.location && res.location !== 'Unknown' ? res.location : '');
+
+        let remoteData: any = {};
+        if (res.preferences) {
+          try {
+            remoteData = typeof res.preferences === 'string' ? JSON.parse(res.preferences) : res.preferences;
+          } catch (pe) {
+            console.warn('Could not parse remote preferences, using defaults', pe);
+          }
+        }
+
+        setSettings(prev => {
+          // Priority for district: remote preferences district -> onboarding profile district -> prev.location.district -> fallback
+          const targetDistrict = remoteData.location?.district || profileDistrict || prev.location.district || 'Bengaluru Urban';
+          const coords = KARNATAKA_DISTRICT_COORDINATES[targetDistrict] || { lat: 12.9716, lon: 77.5946 };
+
+          return {
             ...DEFAULT_SETTINGS,
             ...prev,
             ...remoteData,
+            language: remoteData.language || res.language || prev.language || 'en',
             location: {
               ...DEFAULT_SETTINGS.location,
               ...(prev?.location || {}),
-              ...(remoteData?.location || {})
-            },
-            farmProfile: {
-              ...DEFAULT_SETTINGS.farmProfile,
-              ...(prev?.farmProfile || {}),
-              ...(remoteData?.farmProfile || {})
+              ...(remoteData?.location || {}),
+              district: targetDistrict,
+              lat: remoteData.location?.lat ?? prev.location.lat ?? coords.lat,
+              lng: remoteData.location?.lng ?? prev.location.lng ?? coords.lon,
             },
             quietHours: {
               ...DEFAULT_SETTINGS.quietHours,
               ...(prev?.quietHours || {}),
               ...(remoteData?.quietHours || {})
             }
-          }));
-        } catch (parseError) {
-          console.warn('Could not parse remote preferences, using defaults', parseError);
-        }
+          };
+        });
       }
     } catch (err) {
-      // Backend is optional/fallback: do not display error toast on load failure
       console.info('Operating in client/offline settings mode');
     } finally {
       setLoading(false);
@@ -181,16 +206,7 @@ export function SettingsDashboard() {
 
   const updateSetting = <K extends keyof SettingsData>(key: K, value: SettingsData[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }));
-  };
-
-  const updateFarmProfile = <K extends keyof FarmProfileSettings>(key: K, value: FarmProfileSettings[K]) => {
-    setSettings(prev => ({
-      ...prev,
-      farmProfile: {
-        ...prev.farmProfile,
-        [key]: value
-      }
-    }));
+    setHasUnsavedChanges(true);
   };
 
   const handleSave = async () => {
@@ -204,7 +220,7 @@ export function SettingsDashboard() {
       localStorage.setItem('agri_compass_weight_unit', settings.weightUnit);
       localStorage.setItem('agri_compass_offline_saver', String(settings.offlineDataSaver));
 
-      // 2. Apply theme & language side effects
+      // 2. Apply theme & language side effects ONLY ON SAVE
       if (settings.highContrastMode) {
         document.body.classList.add('outdoor-mode-active');
       } else {
@@ -222,18 +238,24 @@ export function SettingsDashboard() {
       // 3. Sync to backend API if available
       try {
         const { apiPut } = await import('@/lib/httpClient');
-        await apiPut('/api/profile/me', { preferences: JSON.stringify(settings) });
+        await apiPut('/api/profile/me', {
+          district: settings.location.district,
+          language: settings.language,
+          preferences: JSON.stringify(settings)
+        });
         toast({
           title: "Settings Saved",
-          description: "Your preferences have been synced across cloud and device.",
+          description: `Preferences and district (${settings.location.district}) have been synced across cloud and device.`,
         });
       } catch (backendError) {
         console.warn('Backend sync failed, saved locally:', backendError);
         toast({
           title: "Settings Saved (Offline)",
-          description: "Your preferences have been saved to this device.",
+          description: `Preferences saved locally to this device with ${settings.location.district}.`,
         });
       }
+
+      setHasUnsavedChanges(false);
 
     } catch (err) {
       console.error('Save settings error:', err);
@@ -259,36 +281,27 @@ export function SettingsDashboard() {
 
     setGpsLoading(true);
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
+      (position) => {
         const lat = Number(position.coords.latitude.toFixed(4));
         const lng = Number(position.coords.longitude.toFixed(4));
 
-        let detectedDistrict = settings.location.district || 'Bengaluru Urban';
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-          if (res.ok) {
-            const data = await res.json();
-            const rawDistrict = data.address?.state_district || data.address?.county || data.address?.city || '';
-            // Match with Karnataka districts if possible
-            const matched = districts.find(d => rawDistrict.toLowerCase().includes(d.toLowerCase()) || d.toLowerCase().includes(rawDistrict.toLowerCase()));
-            if (matched) {
-              detectedDistrict = matched;
-            }
-          }
-        } catch (e) {
-          console.warn('Reverse geocoding error:', e);
-        }
+        // Haversine exact nearest district calculation against all 31 Karnataka headquarters
+        const nearest = findNearestDistrict(lat, lng);
 
-        setSettings(prev => ({
-          ...prev,
-          location: { district: detectedDistrict, lat, lng }
-        }));
-        setSelectedDistrict(detectedDistrict);
+        // Update local draft ONLY — do NOT mutate global store until user clicks Save Changes
+        updateSetting('location', {
+          district: nearest.district,
+          lat,
+          lng,
+          distanceKm: nearest.distanceKm,
+          gpsAcquired: true,
+        });
+
         setGpsLoading(false);
 
         toast({
           title: "GPS Location Detected",
-          description: `Coordinates locked (${lat}, ${lng}) · District: ${detectedDistrict}`,
+          description: `Coordinates locked (${lat}° N, ${lng}° E) · Nearest District: ${nearest.district} (${nearest.distanceKm} km away). Click "Save Changes" to apply.`,
         });
       },
       (error) => {
@@ -319,14 +332,21 @@ export function SettingsDashboard() {
           </p>
         </div>
 
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="bg-gold-400 hover:bg-gold-300 text-earth-main font-black py-2.5 px-6 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:shadow-gold-400/20 active:scale-95 disabled:opacity-50 text-sm"
-        >
-          <Save className="w-4 h-4" />
-          {saving ? 'Saving Preferences...' : 'Save Changes'}
-        </button>
+        <div className="flex items-center gap-3">
+          {hasUnsavedChanges && (
+            <span className="text-xs font-bold text-amber-400 bg-amber-400/10 px-3 py-1.5 rounded-xl border border-amber-400/30 flex items-center gap-1.5 animate-pulse">
+              <AlertTriangle className="w-3.5 h-3.5" /> Unsaved Changes
+            </span>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-gold-400 hover:bg-gold-300 text-earth-main font-black py-2.5 px-6 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:shadow-gold-400/20 active:scale-95 disabled:opacity-50 text-sm"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? 'Saving Preferences...' : 'Save Changes'}
+          </button>
+        </div>
       </div>
 
       <div className="space-y-8">
@@ -347,8 +367,16 @@ export function SettingsDashboard() {
               <Select
                 value={settings.location.district}
                 onValueChange={(val) => {
-                  updateSetting('location', { ...settings.location, district: val });
-                  setSelectedDistrict(val);
+                  const coords = KARNATAKA_DISTRICT_COORDINATES[val] || { lat: 12.9716, lon: 77.5946 };
+                  updateSetting('location', {
+                    ...settings.location,
+                    district: val,
+                    lat: coords.lat,
+                    lng: coords.lon,
+                    gpsAcquired: false,
+                    distanceKm: undefined
+                  });
+                  // NOTE: Does NOT call setSelectedDistrict until user clicks "Save Changes"
                 }}
               >
                 <SelectTrigger className="bg-earth-main border-earth-border text-white h-12 rounded-xl text-sm font-semibold focus:border-gold-400">
@@ -377,10 +405,21 @@ export function SettingsDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-gold-100/60 pt-1">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-gold-100/60 pt-1">
             <span>Coordinates: <strong className="text-gold-300">{settings.location.lat}° N, {settings.location.lng}° E</strong></span>
             <span>·</span>
-            <span>Sync Status: <strong className="text-emerald-400">Active</strong></span>
+            <span>District: <strong className="text-gold-200">{settings.location.district}</strong></span>
+            {settings.location.distanceKm !== undefined && (
+              <>
+                <span>·</span>
+                <span>Offset: <strong className="text-sky-300">{settings.location.distanceKm} km from HQ</strong></span>
+              </>
+            )}
+            {settings.location.gpsAcquired && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                <CheckCircle2 className="w-3 h-3" /> GPS Pinpoint
+              </span>
+            )}
           </div>
         </section>
 
@@ -437,7 +476,7 @@ export function SettingsDashboard() {
                 onChange={(e) => {
                   const val = e.target.value as 'en' | 'kn';
                   updateSetting('language', val);
-                  setLanguage(val);
+                  // NOTE: Does NOT call setLanguage until user clicks "Save Changes"
                 }}
                 className="w-full bg-earth-elevated border border-earth-border/60 rounded-xl py-2 px-3 text-xs font-bold text-gold-100 focus:border-gold-400 outline-none"
               >
@@ -469,72 +508,7 @@ export function SettingsDashboard() {
           </div>
         </section>
 
-        {/* Section 3: Farm Profile Details */}
-        <section className="bg-earth-elevated/40 border border-earth-border/60 rounded-3xl p-6 backdrop-blur-sm space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-earth-border/30">
-            <h3 className="text-sm font-black text-gold-400 uppercase tracking-widest flex items-center gap-2">
-              <Sprout className="w-4 h-4" /> Farm Profile & Agronomy Defaults
-            </h3>
-            <span className="text-[11px] text-gold-100/50">Used to prefill recommendation forms</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gold-200 uppercase tracking-wider">Farm Name</label>
-              <input
-                type="text"
-                value={settings.farmProfile?.farmName || ''}
-                onChange={(e) => updateFarmProfile('farmName', e.target.value)}
-                placeholder="e.g. Green Meadows"
-                className="w-full bg-earth-main border border-earth-border/60 rounded-xl py-2 px-3 text-xs font-semibold text-gold-100 focus:border-gold-400 outline-none"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gold-200 uppercase tracking-wider">Primary Crop</label>
-              <input
-                type="text"
-                value={settings.farmProfile?.primaryCrop || ''}
-                onChange={(e) => updateFarmProfile('primaryCrop', e.target.value)}
-                placeholder="e.g. Ragi, Paddy, Maize"
-                className="w-full bg-earth-main border border-earth-border/60 rounded-xl py-2 px-3 text-xs font-semibold text-gold-100 focus:border-gold-400 outline-none"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gold-200 uppercase tracking-wider">Irrigation Setup</label>
-              <select
-                value={settings.farmProfile?.irrigationType || 'Drip'}
-                onChange={(e) => updateFarmProfile('irrigationType', e.target.value as any)}
-                className="w-full bg-earth-main border border-earth-border/60 rounded-xl py-2 px-3 text-xs font-semibold text-gold-100 focus:border-gold-400 outline-none"
-              >
-                <option value="Drip">Drip Irrigation (ಹನಿ ನೀರಾವರಿ)</option>
-                <option value="Sprinkler">Sprinkler (ತುಂತುರು)</option>
-                <option value="Flood">Canal / Flood (ಕಾಲುವೆ)</option>
-                <option value="Rainfed">Rainfed / Dryland (ಮಳೆಯಾಶ್ರಿತ)</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gold-200 uppercase tracking-wider">Total Farm Size</label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  min="0.1"
-                  step="0.1"
-                  value={settings.farmProfile?.farmSize || 5}
-                  onChange={(e) => updateFarmProfile('farmSize', Number(e.target.value))}
-                  className="w-full bg-earth-main border border-earth-border/60 rounded-xl py-2 px-3 text-xs font-semibold text-gold-100 focus:border-gold-400 outline-none"
-                />
-                <span className="flex items-center px-3 rounded-xl bg-earth-main border border-earth-border text-xs text-gold-100/60 font-bold">
-                  {settings.landUnit}
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Section 4: Notifications & Audio Assistance */}
+        {/* Section 3: Notifications & Audio Assistance */}
         <section className="bg-earth-elevated/40 border border-earth-border/60 rounded-3xl p-6 backdrop-blur-sm space-y-5">
           <div className="flex items-center justify-between pb-3 border-b border-earth-border/30">
             <h3 className="text-sm font-black text-gold-400 uppercase tracking-widest flex items-center gap-2">
@@ -637,4 +611,5 @@ export function SettingsDashboard() {
     </div>
   );
 }
+
 export default SettingsDashboard;
