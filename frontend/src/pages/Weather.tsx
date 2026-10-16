@@ -99,7 +99,7 @@ export default function Weather() {
   const [districtDetails, setDistrictDetails] = useState<Record<string, any>>({});
   const [weatherInfo, setWeatherInfo] = useState<{ weather: WeatherData; advisory: WeatherAdvice; timestamp?: string } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [gpsActive, setGpsActive] = useState<{ lat: number; lon: number; distanceKm: number } | null>(null);
+  const [gpsActive, setGpsActive] = useState<{ lat: number; lon: number; distanceKm?: number; accuracy?: number } | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsAnomaly, setGpsAnomaly] = useState<{ rawLat: number; rawLng: number; distanceKm: number } | null>(null);
 
@@ -383,7 +383,7 @@ export default function Weather() {
                 Weather & Agronomic Advisory
               </h1>
               <p className="text-gold-100/60 text-sm mt-1 max-w-2xl leading-relaxed">
-                7-day precision microclimate forecasting, FAO-56 Penman-Monteith evapotranspiration, and operational farming directives.
+                3-day precision microclimate forecasting, FAO-56 Penman-Monteith evapotranspiration, and operational farming directives.
               </p>
             </div>
 
@@ -568,7 +568,7 @@ export default function Weather() {
                   <div className="bg-earth-main/60 border border-gold-400/20 backdrop-blur-md p-4 rounded-2xl flex flex-col gap-2 min-w-[220px]">
                     <div className="flex items-center justify-between text-xs text-gold-100/60">
                       <span>Today's ET₀ Evaporation</span>
-                      <strong className="text-gold-300">{weatherInfo.weather.et0 ?? 3.5} mm/day</strong>
+                      <strong className="text-gold-300">{weatherInfo.weather.et0 !== undefined ? `${weatherInfo.weather.et0} mm/day` : 'N/A'}</strong>
                     </div>
                     <div className="flex items-center justify-between text-xs text-gold-100/60">
                       <span>Rain Probability</span>
@@ -623,7 +623,7 @@ export default function Weather() {
                       <span className="text-[10px] text-gold-100/50 font-bold uppercase tracking-wider">FAO-56 ET₀</span>
                       <Waves className="h-4 w-4 text-emerald-400" />
                     </div>
-                    <div className="text-base font-black text-gold-100">{weatherInfo.weather.et0 ?? 3.5} mm</div>
+                    <div className="text-base font-black text-gold-100">{weatherInfo.weather.et0 !== undefined ? `${weatherInfo.weather.et0} mm` : '—'}</div>
                     <div className="text-[10px] text-gold-100/40">Water Demand</div>
                   </div>
 
@@ -633,7 +633,7 @@ export default function Weather() {
                       <span className="text-[10px] text-gold-100/50 font-bold uppercase tracking-wider">Pressure</span>
                       <Gauge className="h-4 w-4 text-sky-400" />
                     </div>
-                    <div className="text-base font-black text-gold-100">{weatherInfo.weather.pressure ?? 1013} mb</div>
+                    <div className="text-base font-black text-gold-100">{weatherInfo.weather.pressure !== undefined ? `${weatherInfo.weather.pressure} mb` : '—'}</div>
                     <div className="text-[10px] text-gold-100/40">Barometric</div>
                   </div>
 
@@ -643,9 +643,9 @@ export default function Weather() {
                       <span className="text-[10px] text-gold-100/50 font-bold uppercase tracking-wider">UV Index</span>
                       <Sun className="h-4 w-4 text-orange-400" />
                     </div>
-                    <div className="text-base font-black text-gold-100">{weatherInfo.weather.uv ?? 5}</div>
+                    <div className="text-base font-black text-gold-100">{weatherInfo.weather.uv !== undefined ? weatherInfo.weather.uv : '—'}</div>
                     <div className="text-[10px] text-gold-100/40">
-                      {(weatherInfo.weather.uv ?? 5) > 8 ? 'Very High' : (weatherInfo.weather.uv ?? 5) > 5 ? 'Moderate' : 'Low'}
+                      {weatherInfo.weather.uv !== undefined ? ((weatherInfo.weather.uv > 8) ? 'Very High' : (weatherInfo.weather.uv > 5) ? 'Moderate' : 'Low') : 'Index'}
                     </div>
                   </div>
 
@@ -655,7 +655,7 @@ export default function Weather() {
                       <span className="text-[10px] text-gold-100/50 font-bold uppercase tracking-wider">Visibility</span>
                       <Eye className="h-4 w-4 text-teal-400" />
                     </div>
-                    <div className="text-base font-black text-gold-100">{weatherInfo.weather.visibility ?? 10} km</div>
+                    <div className="text-base font-black text-gold-100">{weatherInfo.weather.visibility !== undefined ? `${weatherInfo.weather.visibility} km` : '—'}</div>
                     <div className="text-[10px] text-gold-100/40">Clear Horizon</div>
                   </div>
 

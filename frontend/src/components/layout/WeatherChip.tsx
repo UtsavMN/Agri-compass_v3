@@ -29,9 +29,9 @@ export const WeatherChip = ({ district }: { district?: string }) => {
     return () => { mounted = false }
   }, [activeDistrict])
 
-  const temp = Math.round(data?.weather.temperature || 32)
+  const temp = data?.weather?.temperature !== undefined ? Math.round(data.weather.temperature) : null
   const isRaining = data?.weather?.description?.toLowerCase().includes('rain')
-  const WeatherIcon = isRaining ? CloudRain : (temp > 30 ? Sun : Cloud)
+  const WeatherIcon = isRaining ? CloudRain : (temp !== null && temp > 30 ? Sun : Cloud)
 
   return (
     <motion.button 
@@ -42,7 +42,7 @@ export const WeatherChip = ({ district }: { district?: string }) => {
     >
       <WeatherIcon className="h-4 w-4 text-gold-400 group-hover:text-gold-300 transition-colors" />
       <span className="text-[11px] font-black font-mono text-gold-100/90 tracking-wider">
-        {loading ? '--°' : `${temp}°`}
+        {loading || temp === null ? '--°' : `${temp}°`}
       </span>
     </motion.button>
   )

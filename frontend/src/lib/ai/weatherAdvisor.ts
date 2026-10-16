@@ -253,10 +253,9 @@ export class WeatherAdvisor {
         const currentWindDeg = omData.current?.wind_direction_10m ?? 0;
         const currentDesc = waData?.current?.condition?.text || WeatherAdvisor.wmoCodeToDescription(omData.current?.weather_code ?? 0);
         const feelsLike = omData.current?.apparent_temperature !== undefined ? Math.round(omData.current.apparent_temperature) : (waData?.current?.feelslike_c ? Math.round(waData.current.feelslike_c) : currentTemp);
-        const precip = omData.current?.precipitation !== undefined ? Number(omData.current.precipitation.toFixed(1)) : (waData?.current?.precip_mm ?? 0);
-        const pressure = omData.current?.surface_pressure ? Math.round(omData.current.surface_pressure) : (waData?.current?.pressure_mb ?? 1013);
-        const uv = waData?.current?.uv ?? (omData.daily?.uv_index_max?.[0] ? Number(omData.daily.uv_index_max[0].toFixed(1)) : 5);
-        const visibility = waData?.current?.vis_km ?? 10;
+        const pressure = omData.current?.surface_pressure ? Math.round(omData.current.surface_pressure) : (waData?.current?.pressure_mb ? Math.round(waData.current.pressure_mb) : undefined);
+        const uv = waData?.current?.uv ?? (omData.daily?.uv_index_max?.[0] ? Number(omData.daily.uv_index_max[0].toFixed(1)) : undefined);
+        const visibility = waData?.current?.vis_km !== undefined ? waData.current.vis_km : undefined;
         const todayEt0 = omData.daily?.et0_fao_evapotranspiration?.[0] ? Number(omData.daily.et0_fao_evapotranspiration[0].toFixed(2)) : undefined;
 
         return {
