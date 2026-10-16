@@ -42,7 +42,6 @@ import {
   MoreVertical,
   HelpCircle,
   Info,
-  Sparkles,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NotificationDropdown } from '@/components/ui/NotificationDropdown';
@@ -289,10 +288,6 @@ export default function Layout({
                 <DropdownMenuItem className="hover:bg-earth-elevated/20 cursor-pointer focus:bg-earth-elevated/20" onSelect={() => navigate('/settings')}>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-earth-elevated/20 cursor-pointer focus:bg-earth-elevated/20" onSelect={() => startTour()}>
-                  <Sparkles className="mr-2 h-4 w-4 text-gold-400" />
-                  <span>Feature Tour</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="hover:bg-earth-elevated/20 cursor-pointer focus:bg-earth-elevated/20" onSelect={() => setIsHelpOpen(true)}>
                   <HelpCircle className="mr-2 h-4 w-4" />
