@@ -786,7 +786,7 @@ export default function Weather() {
                             Localized Agronomic Advisory Suite
                           </CardTitle>
                           <CardDescription className="text-gold-100/60 text-xs mt-1">
-                            Compiled against ICAR & IMD Agromet Advisory Service standards for {localDistrict}
+                            Operational field directives computed from real-time microclimate sensors and weather models for {localPlaceName || localTaluk || localDistrict}
                           </CardDescription>
                         </div>
 
@@ -910,7 +910,7 @@ export default function Weather() {
                             <div>
                               <div className="flex items-center justify-between mb-3">
                                 <span className="text-xs font-bold uppercase text-gold-300 flex items-center gap-1.5">
-                                  <ShieldAlert className="w-4 h-4 text-rose-400" /> Pathogen Risk
+                                  <ShieldAlert className="w-4 h-4 text-rose-400" /> Canopy Moisture & Foliar Risk
                                 </span>
                                 {getStatusBadge(
                                   weatherInfo.advisory.domains.diseaseRisk.status,

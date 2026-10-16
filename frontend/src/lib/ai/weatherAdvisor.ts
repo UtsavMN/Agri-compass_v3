@@ -424,27 +424,27 @@ export class WeatherAdvisor {
       fertActions.push('Foliar micronutrient feeding (Zinc, Boron, 19-19-19) is recommended under moderate temperatures.');
     }
 
-    // 4. Disease & Fungal Pathogen Warning Domain
+    // 4. Canopy Microclimate & Foliar Moisture (Strictly grounded in physical humidity & temperature measurements)
     let disStatus: 'favorable' | 'caution' | 'critical' = 'favorable';
-    let disLabel = 'Low Pathogen Pressure';
-    let disDesc = 'Atmospheric conditions do not present immediate elevated fungal or bacterial sporulation risks.';
+    let disLabel = 'Balanced Canopy Moisture';
+    let disDesc = `Atmospheric relative humidity (${humidity}%) and temperature (${temp}°C) are within normal daytime ranges.`;
     const disActions: string[] = [];
 
-    if (humidity > 78 && temp >= 20 && temp <= 30) {
-      disStatus = 'critical';
-      disLabel = 'High Fungal Pathogen Risk';
-      disDesc = `Warm temperatures (${temp}°C) combined with high humidity (${humidity}%) create ideal incubation conditions for foliar pathogens.`;
-      disActions.push('High vulnerability for Rice Blast, Downy Mildew, Sheath Blight, and Cercospora leaf spots.');
-      disActions.push('Conduct intensive canopy scouting in low-lying and densely planted plots.');
-      disActions.push('Prepare preventative bio-fungicides (Trichoderma viride or Pseudomonas fluorescens) once leaves dry.');
-    } else if (temp > 34 && humidity < 50) {
+    if (humidity > 80 && temp >= 20 && temp <= 32) {
       disStatus = 'caution';
-      disLabel = 'Sucking Pest Risk (Thrips & Mites)';
-      disDesc = 'Hot, dry conditions accelerate reproductive cycles of sap-sucking arthropods.';
-      disActions.push('Scout undersides of leaves for yellowing or leaf curling caused by thrips, aphids, and red spider mites.');
-      disActions.push('Deploy yellow and blue sticky traps in field margins.');
+      disLabel = 'High Foliar Wetness';
+      disDesc = `Elevated relative humidity (${humidity}%) paired with warm temperatures (${temp}°C) prolongs leaf wetness, creating favorable conditions for foliar fungal development across susceptible crop canopies.`;
+      disActions.push('Scout dense canopies, lower leaves, and low-lying plots for early signs of fungal lesions or moisture mold.');
+      disActions.push('Avoid overhead sprinkler irrigation during late evening hours to prevent extending overnight leaf wetness.');
+    } else if (temp > 35 && humidity < 40) {
+      disStatus = 'caution';
+      disLabel = 'High Vapor Pressure Deficit (VPD)';
+      disDesc = `High ambient temperature (${temp}°C) paired with low humidity (${humidity}%) accelerates moisture loss from crop leaves.`;
+      disActions.push('Monitor sensitive vegetables and young orchard trees for midday canopy wilting or leaf edge scorching.');
+      disActions.push('Maintain soil cover through organic mulching or light timely irrigation to reduce root-zone stress.');
     } else {
-      disActions.push('Maintain regular field scouting routine; remove diseased weeds from field bunds.');
+      disActions.push('Foliar humidity conditions are balanced; conduct standard routine crop scouting.');
+      disActions.push('Ensure farm bunds and natural drainage paths are free of weed blockages.');
     }
 
     // 5. Harvest & Field Operations Domain
@@ -459,10 +459,10 @@ export class WeatherAdvisor {
       harvDesc = 'Wet weather impairs mechanical field access and poses grain spoilage risks.';
       harvActions.push('Suspend open-air sun drying of harvested grains and pulses; move to elevated covered storage.');
       harvActions.push('Delay combine harvester entry until soil dries to avoid severe rutting and compaction.');
-      harvActions.push('Ensure stored grain moisture is kept below 12% to prevent aflatoxin contamination.');
+      harvActions.push('Ensure stored grain moisture is kept below 12% to prevent mold contamination.');
     } else {
       harvActions.push('Favorable window for threshing, seed cleaning, and solar drying.');
-      harvActions.push('Safe to proceed with land preparation, deep summer plowing, or bed forming.');
+      harvActions.push('Dry soil allows field tillage and mechanical inter-cultivation.');
     }
 
     // Executive Summary Statement
@@ -474,7 +474,7 @@ export class WeatherAdvisor {
     } else if (maxWind48h > 20) {
       summary = `Gusty wind conditions in ${district} (up to ${maxWind48h} km/h). Avoid foliar spraying and inspect tall crops (maize, banana, sugarcane) for lodging support.`;
     } else {
-      summary = `Favorable agro-climatic conditions prevailing across ${district}. Safe operational window for field operations, pest scouting, and precision nutrient application.`;
+      summary = `Favorable agro-climatic conditions prevailing across ${district}. Safe operational window for field operations and crop scouting.`;
     }
 
     // Actionable Checklist
@@ -488,10 +488,10 @@ export class WeatherAdvisor {
 
     // Risk alerts
     const riskAlerts: string[] = [];
-    if (precip48h > 25) riskAlerts.push(`Heavy Rainfall Warning: ${precip48h.toFixed(1)}mm expected. Risk of localized flooding and root rot.`);
-    if (temp > 36) riskAlerts.push(`Extreme Heat Stress: Temperatures approaching ${temp}°C. Protect nursery beds and sensitive blossoms.`);
-    if (maxWind48h > 25) riskAlerts.push(`High Wind Gusts: Speeds up to ${maxWind48h} km/h may cause lodging in sugarcane and banana.`);
-    if (humidity > 85 && temp > 22) riskAlerts.push(`Severe Fungal Incubation Alert: Relative humidity ${humidity}%. High risk for blast and mildew.`);
+    if (precip48h > 25) riskAlerts.push(`Heavy Rainfall Warning: ${precip48h.toFixed(1)}mm expected. Risk of localized surface waterlogging.`);
+    if (temp > 36) riskAlerts.push(`Extreme Heat Stress: Temperatures approaching ${temp}°C. Protect sensitive blossoms and nurseries.`);
+    if (maxWind48h > 25) riskAlerts.push(`High Wind Gusts: Speeds up to ${maxWind48h} km/h may cause physical damage to tall crops.`);
+    if (humidity > 85 && temp > 20) riskAlerts.push(`Extended Foliar Wetness Alert: Relative humidity at ${humidity}%. Prolonged moisture favors fungal sporulation in dense canopies.`);
 
     return {
       summary,
@@ -533,14 +533,14 @@ export class WeatherAdvisor {
           ]
         },
         diseaseRisk: {
-          title: 'Crop Pathogen & Pest Alert',
+          title: 'Canopy Moisture & Disease Risk',
           status: disStatus,
           statusLabel: disLabel,
           description: disDesc,
           actionItems: disActions,
           metrics: [
             { label: 'Relative Humidity', value: `${humidity}%` },
-            { label: 'Canopy Disease Risk', value: disStatus === 'critical' ? 'High' : disStatus === 'caution' ? 'Moderate' : 'Low' }
+            { label: 'Moisture Risk', value: disStatus === 'critical' ? 'High' : disStatus === 'caution' ? 'Elevated' : 'Normal' }
           ]
         },
         harvestField: {
