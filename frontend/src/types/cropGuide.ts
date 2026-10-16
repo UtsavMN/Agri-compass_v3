@@ -245,9 +245,44 @@ export interface CropDetail extends CropCard {
   aiFeatures?: string[];
   iotParameters?: string[];
 
-  // Formatting strings that we can add to ease UI
+  // Formatting strings and rich matrices
   displaySoilType?: string;
   displayRainfallMm?: string;
+  seedDetails?: {
+    seed_rate?: string;
+    seed_treatment?: string;
+    germination_days?: string;
+    sowing_method?: string;
+    spacing_cm?: string;
+    depth_cm?: string;
+    best_time?: string;
+    tips?: string;
+  };
+  npkSchedule?: Array<{
+    stage: string;
+    days_after_sowing?: string;
+    N_kg_ha?: number;
+    P_kg_ha?: number;
+    K_kg_ha?: number;
+    fertilizers?: string;
+    method?: string;
+  }>;
+  growthTimeline?: Array<{
+    stage: string;
+    days: string;
+  }>;
+  harvestDetails?: {
+    maturity_days?: string;
+    yield_per_ha?: string;
+    post_harvest?: string;
+  };
+  profitabilityDetails?: {
+    input_cost_per_ha?: string;
+    net_profit?: string;
+    market_demand?: string;
+  };
+  pdfFileName?: string;
+  rawDataset?: any;
 }
 
 // ─── API RESPONSE ─────────────────────────────────────────────────────────────
