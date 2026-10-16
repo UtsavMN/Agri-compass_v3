@@ -402,11 +402,33 @@ export const mapToCropDetail = (dto: any): CropDetail => {
       tips: sowing.tips || "Maintain adequate soil moisture prior to sowing"
     },
     npkSchedule: Array.isArray(guide.npk_schedule) ? guide.npk_schedule : [],
-    growthTimeline: Array.isArray(guide.growth_timeline) ? guide.growth_timeline : [],
+    growthTimeline: (Array.isArray(guide.growth_timeline) && guide.growth_timeline.length > 0)
+      ? guide.growth_timeline
+      : (raw.slug === "rice-paddy" || card.slug === "rice-paddy" || card.nameEnglish.toLowerCase().includes("rice"))
+        ? [
+            { stage: "Nursery & Seedling", days: "0–25" },
+            { stage: "Tillering & Vegetative", days: "25–55" },
+            { stage: "Panicle Initiation", days: "55–75" },
+            { stage: "Flowering & Anthesis", days: "75–90" },
+            { stage: "Grain Filling (Milk/Dough)", days: "90–115" },
+            { stage: "Physiological Maturity", days: "115–135" }
+          ]
+        : [
+            { stage: "Germination & Emergence", days: "0–10" },
+            { stage: "Vegetative Canopy Growth", days: "10–40" },
+            { stage: "Flowering & Setting", days: "40–70" },
+            { stage: "Pod / Grain Filling", days: "70–95" },
+            { stage: "Physiological Maturity", days: `95–${card.durationDays || 120}` }
+          ],
     harvestDetails: {
       maturity_days: harvest.maturity_days || String(card.durationDays),
       yield_per_ha: harvest.yield_per_ha || "Standard regional yield",
       post_harvest: harvest.post_harvest || "Sun dry and store in moisture-proof containers"
+    },
+    irrigationDetails: {
+      total_water_mm: irrigation.total_water_mm || "500–800 mm",
+      critical_stages: Array.isArray(irrigation.critical_stages) ? irrigation.critical_stages : ["Flowering", "Grain/Pod Filling"],
+      schedule: Array.isArray(irrigation.schedule) ? irrigation.schedule : []
     },
     profitabilityDetails: {
       input_cost_per_ha: profitability.input_cost_per_ha || "₹25,000–35,000",

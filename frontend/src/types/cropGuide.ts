@@ -281,6 +281,17 @@ export interface CropDetail extends CropCard {
     net_profit?: string;
     market_demand?: string;
   };
+  irrigationDetails?: {
+    total_water_mm?: string;
+    critical_stages?: string[];
+    schedule?: Array<{
+      stage?: string;
+      days_after_sowing?: string;
+      depth_cm?: string;
+      instruction?: string;
+      frequency?: string;
+    }>;
+  };
   pdfFileName?: string;
   rawDataset?: any;
 }

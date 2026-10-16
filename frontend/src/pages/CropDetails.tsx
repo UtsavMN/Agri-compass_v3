@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ArrowLeft, Droplets, MapPin, Sprout, AlertTriangle,
   Beaker, Calendar, Shield, BarChart3, Settings,
-  Activity, Brain, Layers, Clock, CheckCircle2,
+  Brain, Layers, Clock, CheckCircle2,
   Bug, FlaskConical, Sparkles
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -234,13 +234,10 @@ export default function CropDetails() {
                 <Shield className="h-4 w-4 mr-2" /> Pests & Weeds
               </TabsTrigger>
               <TabsTrigger value="timeline" className="rounded-xl px-5 py-2.5 data-[state=active]:bg-gold-400 data-[state=active]:text-earth-main font-black text-xs uppercase tracking-wider transition-all">
-                <Clock className="h-4 w-4 mr-2" /> Growth Stages
+                <Clock className="h-4 w-4 mr-2" /> Growth Stages & Steps
               </TabsTrigger>
               <TabsTrigger value="economics" className="rounded-xl px-5 py-2.5 data-[state=active]:bg-gold-400 data-[state=active]:text-earth-main font-black text-xs uppercase tracking-wider transition-all">
                 <BarChart3 className="h-4 w-4 mr-2" /> Financials & Market
-              </TabsTrigger>
-              <TabsTrigger value="intelligence" className="rounded-xl px-5 py-2.5 data-[state=active]:bg-gold-400 data-[state=active]:text-earth-main font-black text-xs uppercase tracking-wider transition-all">
-                <Activity className="h-4 w-4 mr-2" /> AI & IoT Specs
               </TabsTrigger>
             </TabsList>
 
@@ -548,6 +545,230 @@ export default function CropDetails() {
                 </div>
               )}
 
+              {/* Detailed Steps to Grow */}
+              <div className="bg-[#111008] border border-[#2A2720] rounded-2xl p-6 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#2A2720] gap-2">
+                  <div>
+                    <h3 className="text-sm font-mono uppercase tracking-wider text-[#C9A84C] flex items-center gap-2">
+                      <Sprout className="w-4 h-4 text-emerald-400" /> Detailed Steps to Grow (Complete Lifecycle)
+                    </h3>
+                    <p className="text-xs text-[#F5F0E8]/60 mt-1">
+                      Sequential agronomic standard operating procedures from field preparation to maturity and harvest.
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] font-mono border-emerald-500/30 text-emerald-400 w-fit">
+                    Full Agronomic Protocols
+                  </Badge>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Step 1: Land Preparation */}
+                  <div className="p-4 rounded-xl bg-[#191610] border border-[#2A2720] transition-all hover:border-[#C9A84C]/30">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-black shrink-0">
+                        01
+                      </span>
+                      <h4 className="text-xs font-bold text-gold-200 uppercase tracking-wider flex items-center gap-2">
+                        <Layers className="w-3.5 h-3.5 text-gold-400" /> Step 1: Land Preparation & Seedbed Conditioning
+                      </h4>
+                    </div>
+                    <div className="pl-10 space-y-2 text-xs text-[#F5F0E8]/85">
+                      <p className="leading-relaxed">
+                        Thorough land preparation ensures a pulverized seedbed, facilitates root aeration, and destroys weed rootstocks:
+                      </p>
+                      {crop.soil?.land_prep_steps && crop.soil.land_prep_steps.length > 0 ? (
+                        <ul className="space-y-1.5 pt-1">
+                          {crop.soil.land_prep_steps.map((st: string, idx: number) => (
+                            <li key={idx} className="flex items-start gap-2 text-xs text-[#F5F0E8]/80">
+                              <span className="text-[#C9A84C] font-mono font-bold shrink-0">{idx + 1}.</span>
+                              <span>{st}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs text-[#F5F0E8]/60">
+                          Plough the land 2–3 times to 20–25 cm depth. Incorporate 10 tonnes well-decomposed FYM or compost per hectare and level the field.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Step 2: Seed Selection & Treatment */}
+                  <div className="p-4 rounded-xl bg-[#191610] border border-[#2A2720] transition-all hover:border-[#C9A84C]/30">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-black shrink-0">
+                        02
+                      </span>
+                      <h4 className="text-xs font-bold text-gold-200 uppercase tracking-wider flex items-center gap-2">
+                        <Sprout className="w-3.5 h-3.5 text-gold-400" /> Step 2: Seed Selection, Rate & Protective Treatment
+                      </h4>
+                    </div>
+                    <div className="pl-10 space-y-2 text-xs text-[#F5F0E8]/85">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-1">
+                        <div className="p-2.5 bg-[#111008] rounded-lg border border-[#2A2720]">
+                          <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-0.5">Recommended Seed Rate</span>
+                          <span className="font-semibold text-gold-300">{crop.seedDetails?.seed_rate || "Recommended certified seed quantity as per UAS"}</span>
+                        </div>
+                        <div className="p-2.5 bg-[#111008] rounded-lg border border-[#2A2720]">
+                          <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-0.5">Germination Window</span>
+                          <span className="font-semibold text-gold-300">{crop.seedDetails?.germination_days || "3–7 Days"}</span>
+                        </div>
+                      </div>
+                      <p className="leading-relaxed">
+                        <strong className="text-gold-400 font-semibold">Seed Treatment: </strong>
+                        {crop.seedDetails?.seed_treatment || crop.seed?.treatment_chemical || "Treat seeds with Carbendazim @ 2g/kg or Trichoderma viride @ 4g/kg seed"} to prevent seed-borne damping-off, root rot, and vascular wilt.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Step 3: Precision Sowing & Spacing */}
+                  <div className="p-4 rounded-xl bg-[#191610] border border-[#2A2720] transition-all hover:border-[#C9A84C]/30">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-black shrink-0">
+                        03
+                      </span>
+                      <h4 className="text-xs font-bold text-gold-200 uppercase tracking-wider flex items-center gap-2">
+                        <Calendar className="w-3.5 h-3.5 text-gold-400" /> Step 3: Sowing Technique, Geometry & Season
+                      </h4>
+                    </div>
+                    <div className="pl-10 space-y-2 text-xs text-[#F5F0E8]/85">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-1">
+                        <div className="p-2.5 bg-[#111008] rounded-lg border border-[#2A2720]">
+                          <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-0.5">Sowing Method</span>
+                          <span className="font-semibold text-gold-300">{crop.seedDetails?.sowing_method || crop.seed?.sowing_method || "Line sowing / Nursery Transplanting"}</span>
+                        </div>
+                        <div className="p-2.5 bg-[#111008] rounded-lg border border-[#2A2720]">
+                          <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-0.5">Spacing (Row x Plant)</span>
+                          <span className="font-semibold text-gold-300">{crop.seedDetails?.spacing_cm || `${crop.seed?.row_spacing_cm || 0} x ${crop.seed?.plant_spacing_cm || 0} cm`}</span>
+                        </div>
+                        <div className="p-2.5 bg-[#111008] rounded-lg border border-[#2A2720]">
+                          <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-0.5">Sowing Depth</span>
+                          <span className="font-semibold text-gold-300">{crop.seedDetails?.depth_cm || "2–4 cm"}</span>
+                        </div>
+                      </div>
+                      <p className="leading-relaxed">
+                        <strong className="text-gold-400 font-semibold">Optimal Season: </strong>
+                        {crop.seedDetails?.best_time || crop.overview?.season || "Kharif / Rabi season"}
+                      </p>
+                      <p className="leading-relaxed">
+                        <strong className="text-gold-400 font-semibold">Agronomic Tip: </strong>
+                        {crop.seedDetails?.tips || "Maintain adequate soil moisture prior to sowing and ensure uniform seed depth."}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Step 4: Water Management & Irrigation */}
+                  <div className="p-4 rounded-xl bg-[#191610] border border-[#2A2720] transition-all hover:border-[#C9A84C]/30">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-black shrink-0">
+                        04
+                      </span>
+                      <h4 className="text-xs font-bold text-gold-200 uppercase tracking-wider flex items-center gap-2">
+                        <Droplets className="w-3.5 h-3.5 text-gold-400" /> Step 4: Water Management & Irrigation Schedule
+                      </h4>
+                    </div>
+                    <div className="pl-10 space-y-2 text-xs text-[#F5F0E8]/85">
+                      <p className="leading-relaxed">
+                        Total crop water requirement: <span className="font-mono text-gold-300 font-bold">{crop.irrigationDetails?.total_water_mm || crop.irrigation?.water_requirement || "500–800 mm"}</span>.
+                        Recommended method: <span className="text-gold-300 font-semibold">{crop.irrigation?.recommended_method || "Drip / Furrow irrigation"}</span>.
+                      </p>
+                      <p className="leading-relaxed">
+                        <strong className="text-gold-400 font-semibold">Critical Moisture Sensitivity: </strong>
+                        {crop.irrigation?.critical_stage || "Flowering and Pod/Grain formation"}. Severe stress at this stage causes flower abortion and drastic yield drops.
+                      </p>
+                      {crop.irrigation?.schedule && crop.irrigation.schedule.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
+                          {crop.irrigation.schedule.map((ir: any, idx: number) => (
+                            <div key={idx} className="p-2.5 bg-[#111008] rounded-lg border border-[#2A2720] text-[11px]">
+                              <span className="font-bold text-gold-300 block mb-0.5">{ir.stage}</span>
+                              <span className="text-[#F5F0E8]/70 block">{ir.frequency || ir.amount}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Step 5: Nutrient Management */}
+                  <div className="p-4 rounded-xl bg-[#191610] border border-[#2A2720] transition-all hover:border-[#C9A84C]/30">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-black shrink-0">
+                        05
+                      </span>
+                      <h4 className="text-xs font-bold text-gold-200 uppercase tracking-wider flex items-center gap-2">
+                        <Beaker className="w-3.5 h-3.5 text-gold-400" /> Step 5: Fertilizer Application & NPK Scheduling
+                      </h4>
+                    </div>
+                    <div className="pl-10 space-y-2 text-xs text-[#F5F0E8]/85">
+                      <p className="leading-relaxed">
+                        Apply basal and split top-dressings synchronized with crop phenological demand to maximize nutrient-use efficiency:
+                      </p>
+                      {crop.npkSchedule && crop.npkSchedule.length > 0 ? (
+                        <div className="space-y-1.5 pt-1">
+                          {crop.npkSchedule.map((n: any, idx: number) => (
+                            <div key={idx} className="p-2.5 bg-[#111008] rounded-lg border border-[#2A2720] flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1">
+                              <div>
+                                <span className="font-bold text-gold-200">{n.stage}</span>
+                                {n.days_after_sowing && <span className="text-[#F5F0E8]/40 font-mono ml-2">(DAS: {n.days_after_sowing})</span>}
+                                {n.method && <span className="text-[#F5F0E8]/50 block text-[10px] mt-0.5">Method: {n.method}</span>}
+                              </div>
+                              <div className="font-mono text-[11px] text-emerald-400 font-bold">
+                                {n.fertilizers || `N: ${n.N_kg_ha || 0} | P: ${n.P_kg_ha || 0} | K: ${n.K_kg_ha || 0} kg/ha`}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-2.5 bg-[#111008] rounded-lg border border-[#2A2720] font-mono text-xs text-gold-300">
+                          Recommended N: {crop.nKgAcre || 40} kg | P: {crop.pKgAcre || 20} kg | K: {crop.kKgAcre || 20} kg per acre.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Step 6: Weed Control & Canopy Management */}
+                  <div className="p-4 rounded-xl bg-[#191610] border border-[#2A2720] transition-all hover:border-[#C9A84C]/30">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-black shrink-0">
+                        06
+                      </span>
+                      <h4 className="text-xs font-bold text-gold-200 uppercase tracking-wider flex items-center gap-2">
+                        <Shield className="w-3.5 h-3.5 text-gold-400" /> Step 6: Weed Management & Inter-Cultivation
+                      </h4>
+                    </div>
+                    <div className="pl-10 space-y-2 text-xs text-[#F5F0E8]/85">
+                      <p className="leading-relaxed">
+                        <strong className="text-gold-400 font-semibold">Critical Weed-Free Window: </strong>
+                        {crop.weed?.critical_period || "First 30–45 days after sowing/planting"}.
+                        Perform {crop.weed?.manual_frequency || "two hand weedings at 20 and 40 DAS"} to prevent weed competition for moisture, light, and nutrients.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Step 7: Maturity & Harvesting */}
+                  <div className="p-4 rounded-xl bg-[#191610] border border-[#2A2720] transition-all hover:border-[#C9A84C]/30">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-black shrink-0">
+                        07
+                      </span>
+                      <h4 className="text-xs font-bold text-gold-200 uppercase tracking-wider flex items-center gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-gold-400" /> Step 7: Harvesting & Post-Harvest Storage
+                      </h4>
+                    </div>
+                    <div className="pl-10 space-y-2 text-xs text-[#F5F0E8]/85">
+                      <p className="leading-relaxed">
+                        Harvest when {crop.harvestDetails?.maturity_days ? `${crop.harvestDetails.maturity_days} days are reached` : "crop attains physiological maturity"}.
+                        Signs: {crop.harvest?.maturity_signs?.join("; ") || "Grains/pods harden, leaves turn golden yellow"}.
+                      </p>
+                      <p className="leading-relaxed">
+                        <strong className="text-gold-400 font-semibold">Post-Harvest Care: </strong>
+                        {crop.harvestDetails?.post_harvest || crop.postHarvest?.storage_conditions || "Sun dry produce to <12% moisture and store in clean, elevated hermetic or gunny bags."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Cultivation Calendar Tasks */}
               <div className="bg-[#111008] border border-[#2A2720] rounded-2xl p-6">
                 <h3 className="text-sm font-mono uppercase tracking-wider text-[#C9A84C] mb-4 flex items-center gap-2">
@@ -671,47 +892,6 @@ export default function CropDetails() {
                     <div>
                       <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-1">Post-Harvest Selling Strategy</span>
                       <p className="text-[#F5F0E8]/70">Grade into uniform sizes and check live Agmarknet prices before dispatching consignments.</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            {/* TAB 6: AI & IOT SPECIFICATIONS */}
-            <TabsContent value="intelligence" className="space-y-8 mt-0 outline-none">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="card-premium bg-[#111008] border-[#2A2720]">
-                  <CardHeader className="border-b border-[#2A2720] pb-3">
-                    <CardTitle className="text-xs text-[#C9A84C] font-mono uppercase tracking-widest flex items-center gap-2">
-                      <Brain className="w-4 h-4" /> AI Models & Predictive Capabilities
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-5 space-y-4">
-                    <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-2">Supported Feature Workflows</span>
-                    <div className="flex flex-wrap gap-2">
-                      {crop.aiFeatures?.map((feature: string, i: number) => (
-                        <Badge key={i} className="bg-[#191610] text-[#C9A84C] border border-[#2A2720] text-xs">
-                          {feature.replace(/_/g, ' ')}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="card-premium bg-[#111008] border-[#2A2720]">
-                  <CardHeader className="border-b border-[#2A2720] pb-3">
-                    <CardTitle className="text-xs text-[#C9A84C] font-mono uppercase tracking-widest flex items-center gap-2">
-                      <Activity className="w-4 h-4" /> IoT Sensor Telemetry Parameters
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-5 space-y-4">
-                    <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-2">Target Sensor Probes</span>
-                    <div className="flex flex-wrap gap-2">
-                      {crop.iotParameters?.map((param: string, i: number) => (
-                        <Badge key={i} variant="outline" className="border-[#C9A84C]/30 text-[#F5F0E8]/80 text-xs">
-                          {param.replace(/_/g, ' ')}
-                        </Badge>
-                      ))}
                     </div>
                   </CardContent>
                 </Card>
