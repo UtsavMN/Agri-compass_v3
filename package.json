@@ -2,7 +2,8 @@
   "name": "agri-compass-root",
   "private": true,
   "scripts": {
-    "install:all": "npm install --prefix frontend && npm install --prefix weather-alert-service && echo 'Backend uses Maven, no npm install needed'",
+    "build": "npm --prefix frontend run build",
+    "install:all": "npm install --prefix frontend && npm install --prefix weather-alert-service",
     "install:weather": "npm install --prefix weather-alert-service",
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:backend": "cd agri-compass-api && mvnw.cmd spring-boot:run",

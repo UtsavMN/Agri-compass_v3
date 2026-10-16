@@ -53,7 +53,7 @@ import { RouteGuard } from '@/components/auth/RouteGuard';
 import { ClerkTokenManager } from '@/components/auth/ClerkTokenManager';
 import { dark } from '@clerk/themes';
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || 'pk_test_ZGVsaWNhdGUtbW90aC01LmNsZXJrLmFjY291bnRzLmRldiQ=';
 
 if (!PUBLISHABLE_KEY) {
   console.error("Missing Publishable Key");

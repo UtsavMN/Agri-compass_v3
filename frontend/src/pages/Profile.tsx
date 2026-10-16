@@ -6,7 +6,7 @@ import { staggerContainer, fadeUpVariants } from "@/lib/animations";
 import { useUser } from "@/store";
 import { apiGet } from "@/lib/httpClient";
 import { FarmIntelligenceCard } from "@/components/FarmIntelligenceCard";
-import { MoreVertical, Settings, LogOut, User, MessageSquare, Sprout } from "lucide-react";
+import { MoreVertical, Settings, LogOut, User, MessageSquare, Sprout, Sliders } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -142,6 +142,10 @@ export default function Profile() {
                 <DropdownMenuItem onClick={() => setEditOpen(true)} className="text-[#F5F0E8] hover:bg-[#1E1E1E] cursor-pointer rounded-lg py-2.5 px-3">
                   <Settings className="w-4 h-4 mr-3 text-[#C9A84C]" />
                   Edit Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/settings')} className="text-[#F5F0E8] hover:bg-[#1E1E1E] cursor-pointer rounded-lg py-2.5 px-3">
+                  <Sliders className="w-4 h-4 mr-3 text-[#C9A84C]" />
+                  Farm & App Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => openUserProfile()} 

@@ -374,7 +374,16 @@ export default function Layout({
                     }}
                     className="min-h-[44px] w-full bg-[#1a1a14] border border-earth-border/60 hover:bg-earth-card text-gold-100 text-xs font-black uppercase tracking-widest py-3 rounded-xl"
                   >
-                    Profile Settings
+                    My Profile
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      navigate('/settings');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="min-h-[44px] w-full bg-[#1a1a14] border border-earth-border/60 hover:bg-earth-card text-gold-100 text-xs font-black uppercase tracking-widest py-3 rounded-xl"
+                  >
+                    App & Farm Settings
                   </Button>
                   <Button
                     onClick={() => {
