@@ -202,6 +202,7 @@ export default function Weather() {
       async (pos) => {
         const lat = Number(pos.coords.latitude.toFixed(4));
         const lon = Number(pos.coords.longitude.toFixed(4));
+        const accuracyM = Math.round(pos.coords.accuracy || 0);
         const nearest = findNearestTaluk(lat, lon);
 
         // Check for laptop Wi-Fi anomaly (e.g. Bangladesh at 1,400+ km away)
@@ -235,7 +236,7 @@ export default function Weather() {
         setLocalTaluk(nearest.taluk.name);
         setLocalPlaceName(detectedPlace);
         setLocalCoords({ lat, lon });
-        setGpsActive({ lat, lon, distanceKm: nearest.distanceKm });
+        setGpsActive({ lat, lon, distanceKm: nearest.distanceKm, accuracy: accuracyM });
         setGpsAnomaly(null);
 
         try {
@@ -247,9 +248,10 @@ export default function Weather() {
               advisory: result.advisory,
               timestamp: result.timestamp
             });
+            const isWifiEstimate = accuracyM > 2500;
             toast({
-              title: "Nearby Place Weather Loaded",
-              description: `📍 ${detectedPlace} (${nearest.taluk.district} District) · ${lat}° N, ${lon}° E.`,
+              title: isWifiEstimate ? "Wi-Fi Location Estimate" : "Satellite GPS Acquired",
+              description: `📍 ${detectedPlace} (${nearest.taluk.district}) · ${lat}° N, ${lon}° E ${isWifiEstimate ? `(Wi-Fi ±${Math.round(accuracyM / 1000)} km; you can also select your town manually)` : `(±${accuracyM}m)`}`,
             });
           }
         } catch (e) {
@@ -535,7 +537,7 @@ export default function Weather() {
                       {localCoords && (
                         <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
                           <Compass className="w-3 h-3 text-emerald-400" />
-                          {gpsActive ? 'GPS' : 'Microclimate'}: {localCoords.lat}° N, {localCoords.lon}° E
+                          {gpsActive ? (gpsActive.accuracy && gpsActive.accuracy > 2500 ? `Wi-Fi Est (±${Math.round(gpsActive.accuracy / 1000)} km)` : 'GPS') : 'Microclimate'}: {localCoords.lat}° N, {localCoords.lon}° E
                         </span>
                       )}
                       {weatherInfo.timestamp && (

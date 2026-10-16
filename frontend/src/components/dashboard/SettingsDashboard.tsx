@@ -376,9 +376,12 @@ export function SettingsDashboard() {
         setGpsAnomaly(null);
         setGpsLoading(false);
 
+        const accuracyM = Math.round(position.coords.accuracy || 0);
+        const isWifiEstimate = accuracyM > 2500;
+
         toast({
-          title: "Nearby Place Detected",
-          description: `📍 ${detectedPlace} (${nearest.taluk.district} District) · ${lat}° N, ${lng}° E (${nearest.distanceKm} km). Click "Save Changes" to apply.`,
+          title: isWifiEstimate ? "Wi-Fi Location Detected" : "Nearby Place Detected",
+          description: `📍 ${detectedPlace} (${nearest.taluk.district} District) · ${lat}° N, ${lng}° E ${isWifiEstimate ? `(Wi-Fi estimate ±${Math.round(accuracyM / 1000)} km; you can select your town manually below)` : `(±${accuracyM}m)`}. Click "Save Changes" to apply.`,
         });
       },
       (error) => {
