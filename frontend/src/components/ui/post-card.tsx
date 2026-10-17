@@ -154,7 +154,7 @@ export const PostCard = React.memo(function PostCard({
                 <img
                   src={image}
                   alt={`Transmission Visual ${index + 1}`}
-                  className="max-h-96 w-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                  className="max-h-96 w-full object-cover"
                 />
               </div>
             ))}

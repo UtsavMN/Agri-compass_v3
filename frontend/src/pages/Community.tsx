@@ -214,11 +214,6 @@ export default function Community() {
                   >
                     <IconComponent size={14} />
                     <span>{tab.label}</span>
-                    {tab.id === 'marketplace' && (
-                      <span className="ml-2 px-2 py-0.5 bg-yellow-500/20 text-yellow-500 text-[9px] rounded-full">
-                        Coming Soon
-                      </span>
-                    )}
                   </button>
                 );
               })}
