@@ -20,8 +20,27 @@ import { History, Sparkles,
   Info,
   MapPin,
   Calendar,
+  X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const safeGetAmendmentRecommendations = (report: any): string => {
+  if (!report) return "No detailed report.";
+  try {
+    const parsed = typeof report === "string" ? JSON.parse(report) : report;
+    if (typeof parsed === "string") return parsed;
+    const rec = parsed?.soil_health_report?.soil_amendment_recommendations 
+      || parsed?.soil_amendment_recommendations 
+      || parsed?.recommendations 
+      || parsed?.summary;
+    if (typeof rec === "string") return rec;
+    if (Array.isArray(rec)) return rec.join(", ");
+    if (rec && typeof rec === "object") return JSON.stringify(rec);
+    return "Diagnostic recorded successfully.";
+  } catch {
+    return typeof report === "string" ? report : "Diagnostic recorded successfully.";
+  }
+};
 
 interface SoilData {
   nitrogen: number;
@@ -306,9 +325,15 @@ export function SoilAnalysisContent() {
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-xs text-[var(--text-secondary)] uppercase font-semibold tracking-wider">Farm Snapshot</span>
                             <button onClick={async () => {
-                              const data = await apiGet(`/api/farms/${selectedFarmId}/diagnostics`);
-                              setHistory(data || []);
-                              setShowHistory(true);
+                              try {
+                                const data = await apiGet(`/api/farms/${selectedFarmId}/diagnostics`);
+                                setHistory(Array.isArray(data) ? data : []);
+                              } catch (err) {
+                                console.error('Failed to load diagnostics history:', err);
+                                setHistory([]);
+                              } finally {
+                                setShowHistory(true);
+                              }
                             }} className="text-xs text-[var(--accent)] hover:underline flex items-center gap-1">
                               <History size={12} /> History
                             </button>
@@ -910,7 +935,13 @@ export function SoilAnalysisContent() {
                 <h2 className="text-xl font-bold text-[#f0ece0] flex items-center gap-2">
                   <History className="text-[#c49a2a]" /> Soil Diagnostics History
                 </h2>
-                <button onClick={() => setShowHistory(false)} className="text-[#a09880] hover:text-white">?</button>
+                <button 
+                  onClick={() => setShowHistory(false)} 
+                  className="text-[#a09880] hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
               <div className="space-y-4">
                 {history.length === 0 ? (
@@ -926,7 +957,7 @@ export function SoilAnalysisContent() {
                         <div>N: {h.nitrogen}</div><div>P: {h.phosphorus}</div><div>K: {h.potassium}</div><div>pH: {h.ph}</div>
                       </div>
                       <p className="text-xs text-[#f0ece0] line-clamp-3 bg-black/20 p-2 rounded italic">
-                        {h.aiReport ? JSON.parse(h.aiReport).soil_health_report?.soil_amendment_recommendations : "No detailed report."}
+                        {safeGetAmendmentRecommendations(h.aiReport)}
                       </p>
                     </div>
                   ))

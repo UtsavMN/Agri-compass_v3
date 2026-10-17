@@ -59,6 +59,16 @@ interface AnalysisResult {
   stage_weights: Record<string, number>;
 }
 
+const parseResultJson = (resultJson: any) => {
+  if (!resultJson) return {};
+  if (typeof resultJson === 'object') return resultJson;
+  try {
+    return JSON.parse(resultJson);
+  } catch {
+    return {};
+  }
+};
+
 export default function FertilizerAnalysisModule({ 
   farmId, 
   initialCrop, 
@@ -214,36 +224,38 @@ export default function FertilizerAnalysisModule({
                 <h6 className="text-[10px] font-black uppercase tracking-widest text-gold-100/40 mb-4">Historical Data Ledger</h6>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {history.map((h, i) => {
-                    const res = JSON.parse(h.resultJson);
+                    const res = parseResultJson(h.resultJson);
                     return (
                       <div 
                         key={i} 
                         className="p-4 bg-earth-main/50 rounded-2xl border border-earth-border cursor-pointer hover:border-gold-400/30 transition-all"
                         onClick={() => {
-                          setResult(res);
+                          if (res && Object.keys(res).length > 0) {
+                            setResult(res);
+                          }
                           setFormData({
-                            crop: h.crop,
-                            soil_n: h.soilN,
-                            soil_p: h.soilP,
-                            soil_k: h.soilK,
-                            soil_level: h.soilLevel,
-                            soil_ph: h.soilPh,
-                            growth_stage: h.growthStage
+                            crop: h.crop || 'rice',
+                            soil_n: h.soilN ?? 20,
+                            soil_p: h.soilP ?? 15,
+                            soil_k: h.soilK ?? 15,
+                            soil_level: h.soilLevel || 'medium',
+                            soil_ph: h.soilPh || 'neutral',
+                            growth_stage: h.growthStage || 'basal'
                           });
                           setShowHistory(false);
                         }}
                       >
                         <div className="flex justify-between items-start mb-2">
                           <span className="text-xs font-black text-gold-100 uppercase tracking-tight">{h.crop}</span>
-                          <span className="text-[8px] font-bold text-gold-100/30 uppercase">{formatDate(h.createdAt)}</span>
+                          <span className="text-[8px] font-bold text-gold-100/30 uppercase">{formatDate(h.createdAt || Date.now())}</span>
                         </div>
                         <div className="flex gap-4">
                            <div className="text-center flex-1">
-                              <div className="text-sm font-black text-gold-400">{res.soil_health_score}</div>
+                              <div className="text-sm font-black text-gold-400">{res?.soil_health_score ?? '--'}</div>
                               <div className="text-[8px] font-black text-gold-100/20 uppercase">Score</div>
                            </div>
                            <div className="text-center flex-1">
-                              <div className="text-sm font-black text-gold-100">{h.soilPh}</div>
+                              <div className="text-sm font-black text-gold-100">{h.soilPh || '--'}</div>
                               <div className="text-[8px] font-black text-gold-100/20 uppercase">pH</div>
                            </div>
                         </div>

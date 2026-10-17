@@ -62,7 +62,9 @@ public class FertilizerController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<FertilizerAnalysis> saveAnalysis(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<FertilizerAnalysis> saveAnalysis(
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            @RequestBody Map<String, Object> body) {
         try {
             FertilizerAnalysis analysis = fertilizerService.saveAnalysis(body);
             return ResponseEntity.ok(analysis);
@@ -72,8 +74,13 @@ public class FertilizerController {
     }
 
     @GetMapping("/history/{farmId}")
-    public ResponseEntity<List<FertilizerAnalysis>> getHistory(@PathVariable String farmId) {
+    public ResponseEntity<List<FertilizerAnalysis>> getHistory(
+            @PathVariable String farmId,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        if (farmId == null || farmId.isBlank() || "undefined".equalsIgnoreCase(farmId) || "null".equalsIgnoreCase(farmId)) {
+            return ResponseEntity.ok(List.of());
+        }
         List<FertilizerAnalysis> history = fertilizerService.getAnalysisHistory(farmId);
-        return ResponseEntity.ok(history);
+        return ResponseEntity.ok(history != null ? history : List.of());
     }
 }

@@ -299,7 +299,7 @@ public class FertilizerService {
         String soilLevel = (String) body.get("soil_level");
         String soilPh = (String) body.get("soil_ph");
         String growthStage = (String) body.get("growth_stage");
-        Map<String, Object> result = (Map<String, Object>) body.get("result");
+        Object resObj = body.get("result");
 
         FertilizerAnalysis analysis = new FertilizerAnalysis();
         analysis.setFarmId(farmId);
@@ -310,7 +310,14 @@ public class FertilizerService {
         analysis.setSoilLevel(soilLevel);
         analysis.setSoilPh(soilPh);
         analysis.setGrowthStage(growthStage);
-        analysis.setResultJson(objectMapper.writeValueAsString(result));
+
+        if (resObj instanceof String str) {
+            analysis.setResultJson(str);
+        } else if (resObj != null) {
+            analysis.setResultJson(objectMapper.writeValueAsString(resObj));
+        } else {
+            analysis.setResultJson("{}");
+        }
 
         return analysisRepository.save(analysis);
     }

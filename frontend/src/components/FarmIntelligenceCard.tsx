@@ -2,8 +2,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/httpClient";
-import { History } from "lucide-react";
+import { History, X } from "lucide-react";
 import { formatDate } from "@/lib/dateUtils";
+
+const safeGetAmendmentRecommendations = (report: any): string => {
+  if (!report) return "No detailed report.";
+  try {
+    const parsed = typeof report === "string" ? JSON.parse(report) : report;
+    if (typeof parsed === "string") return parsed;
+    const rec = parsed?.soil_health_report?.soil_amendment_recommendations 
+      || parsed?.soil_amendment_recommendations 
+      || parsed?.recommendations 
+      || parsed?.summary;
+    if (typeof rec === "string") return rec;
+    if (Array.isArray(rec)) return rec.join(", ");
+    if (rec && typeof rec === "object") return JSON.stringify(rec);
+    return "Diagnostic recorded successfully.";
+  } catch {
+    return typeof report === "string" ? report : "Diagnostic recorded successfully.";
+  }
+};
 
 interface FarmIntelligenceProps {
   farmId?: string;
@@ -38,13 +56,9 @@ export const FarmIntelligenceCard = ({ farmId, farmName, acres, district, crop, 
       if (farmId) {
         apiGet(`/api/farms/${farmId}/diagnostics`)
           .then((d: any) => {
-            if (d && d.length > 0) {
-              try {
-                const report = JSON.parse(d[0].aiReport);
-                setAdvisory(report.soil_health_report?.soil_amendment_recommendations || `Keep soil moisture optimal for ${crop}.`);
-              } catch (e) {
-                setAdvisory(`Keep soil moisture optimal for ${crop}.`);
-              }
+            if (Array.isArray(d) && d.length > 0) {
+              const rec = safeGetAmendmentRecommendations(d[0].aiReport);
+              setAdvisory(rec !== "No detailed report." ? rec : `Keep soil moisture optimal for ${crop}.`);
             } else {
               setAdvisory(`Consider taking a soil test for ${crop} to get AI recommendations.`);
             }
@@ -67,9 +81,15 @@ export const FarmIntelligenceCard = ({ farmId, farmName, acres, district, crop, 
 
   const openHistory = async () => {
     if (!farmId) return;
-    const data = await apiGet(`/api/farms/${farmId}/diagnostics`);
-    setHistory(data || []);
-    setShowHistory(true);
+    try {
+      const data = await apiGet(`/api/farms/${farmId}/diagnostics`);
+      setHistory(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to load diagnostics history:", err);
+      setHistory([]);
+    } finally {
+      setShowHistory(true);
+    }
   };
 
   return (
@@ -144,7 +164,13 @@ export const FarmIntelligenceCard = ({ farmId, farmName, acres, district, crop, 
               <h2 className="text-xl font-bold text-[#f0ece0] flex items-center gap-2">
                 <History className="text-[#c49a2a]" /> Soil Diagnostics History
               </h2>
-              <button onClick={() => setShowHistory(false)} className="text-[#a09880] hover:text-white">?</button>
+              <button 
+                onClick={() => setShowHistory(false)} 
+                className="text-[#a09880] hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
             <div className="space-y-4">
               {history.length === 0 ? (
@@ -160,7 +186,7 @@ export const FarmIntelligenceCard = ({ farmId, farmName, acres, district, crop, 
                       <div>N: {h.nitrogen}</div><div>P: {h.phosphorus}</div><div>K: {h.potassium}</div><div>pH: {h.ph}</div>
                     </div>
                     <p className="text-xs text-[#f0ece0] line-clamp-3 bg-black/20 p-2 rounded italic">
-                      {h.aiReport ? JSON.parse(h.aiReport).soil_health_report?.soil_amendment_recommendations : "No detailed report."}
+                      {safeGetAmendmentRecommendations(h.aiReport)}
                     </p>
                   </div>
                 ))
