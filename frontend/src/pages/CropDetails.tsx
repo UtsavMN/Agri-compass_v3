@@ -795,11 +795,11 @@ export default function CropDetails() {
                   <CardContent className="pt-4 space-y-3 text-xs text-[#F5F0E8]">
                     <div>
                       <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-1">Maturity Days</span>
-                      <p className="font-mono text-sm text-[#C9A84C] font-bold">{crop.harvestDetails?.maturity_days || crop.durationDays} Days</p>
+                      <p className="font-mono text-sm text-[#C9A84C] font-bold">{(crop as any).harvestDetails?.maturity_days || crop.durationDays} Days</p>
                     </div>
                     <div>
                       <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-1">Expected Yield Potential</span>
-                      <p>{crop.harvestDetails?.yield_per_ha || `${crop.yieldInfo?.averageQuintals || 18} Quintals / Acre`}</p>
+                      <p>{(crop as any).harvestDetails?.yield_per_ha || (crop.harvest?.yield_avg_quintal_per_acre ? `${crop.harvest.yield_avg_quintal_per_acre} Quintals / Acre` : `${(crop as any).yieldInfo?.averageQuintals || 18} Quintals / Acre`)}</p>
                     </div>
                   </CardContent>
                 </Card>

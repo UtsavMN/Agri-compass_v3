@@ -257,6 +257,7 @@ export class WeatherAdvisor {
         const uv = waData?.current?.uv ?? (omData.daily?.uv_index_max?.[0] ? Number(omData.daily.uv_index_max[0].toFixed(1)) : undefined);
         const visibility = waData?.current?.vis_km !== undefined ? waData.current.vis_km : undefined;
         const todayEt0 = omData.daily?.et0_fao_evapotranspiration?.[0] ? Number(omData.daily.et0_fao_evapotranspiration[0].toFixed(2)) : undefined;
+        const precip = omData.current?.precipitation !== undefined ? omData.current.precipitation : (waData?.current?.precip_mm ?? 0);
 
         return {
           temperature: currentTemp,
@@ -428,7 +429,13 @@ export class WeatherAdvisor {
     let disDesc = `Atmospheric relative humidity (${humidity}%) and temperature (${temp}°C) are within normal daytime ranges.`;
     const disActions: string[] = [];
 
-    if (humidity > 80 && temp >= 20 && temp <= 32) {
+    if (humidity > 88 && temp >= 20 && temp <= 32) {
+      disStatus = 'critical';
+      disLabel = 'Severe Foliar Moisture & Disease Threat';
+      disDesc = `Sustained high humidity (${humidity}%) paired with warm temperatures (${temp}°C) creates severe foliar moisture. High probability of rapid spore germination.`;
+      disActions.push('Inspect lower leaves and dense canopies immediately for fungal or bacterial lesions.');
+      disActions.push('Ensure optimal row drainage and avoid late-evening irrigation to restrict leaf wetness.');
+    } else if (humidity > 80 && temp >= 20 && temp <= 32) {
       disStatus = 'caution';
       disLabel = 'High Foliar Wetness';
       disDesc = `Elevated relative humidity (${humidity}%) paired with warm temperatures (${temp}°C) prolongs leaf wetness, creating favorable conditions for foliar fungal development across susceptible crop canopies.`;

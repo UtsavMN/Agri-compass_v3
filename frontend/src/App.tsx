@@ -10,32 +10,34 @@ import { PageTransition } from '@/components/layout/PageTransition';
 import Layout from '@/components/Layout';
 import { Outlet } from 'react-router-dom';
 
-// Lazy loaded routes
-const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
-const CropDetails = React.lazy(() => import('@/pages/CropDetails'));
-const MyFarm = React.lazy(() => import('@/pages/MyFarm'));
-const MarketPrices = React.lazy(() => import('@/pages/MarketPrices'));
-const GovSchemes = React.lazy(() => import('@/pages/GovSchemes'));
-const AirAgent = React.lazy(() => import('@/pages/AirAgent'));
-const Community = React.lazy(() => import('@/pages/Community'));
-const Profile = React.lazy(() => import('@/pages/Profile'));
-const Weather = React.lazy(() => import('@/pages/Weather'));
-const Auth = React.lazy(() => import('@/pages/Auth'));
-const ForgotPassword = React.lazy(() => import('@/pages/ForgotPassword'));
-const ResetPassword = React.lazy(() => import('@/pages/ResetPassword'));
-const Home = React.lazy(() => import('@/pages/Home'));
-const PostDetail = React.lazy(() => import('./pages/PostDetail'));
-const NotFound = React.lazy(() => import('@/pages/NotFound'));
-const Settings = React.lazy(() => import('@/pages/Settings'));
-const Crops = React.lazy(() => import('@/pages/Crops'));
-const SoilAnalysis = React.lazy(() => import('@/pages/SoilAnalysis'));
-const Onboarding = React.lazy(() => import('@/pages/Onboarding'));
-const OnboardingCheck = React.lazy(() => import('@/pages/OnboardingCheck'));
-const MessagesPage = React.lazy(() => import('@/pages/MessagesPage'));
-const ChatPage = React.lazy(() => import('@/pages/ChatPage'));
-const PublicProfile = React.lazy(() => import('@/pages/PublicProfile'));
-const FollowersPage = React.lazy(() => import('@/pages/FollowersPage'));
-const FollowingPage = React.lazy(() => import('@/pages/FollowingPage'));
+import { lazyWithRetry } from '@/lib/lazyWithRetry';
+
+// Lazy loaded routes with automatic chunk reload retry
+const Dashboard = lazyWithRetry(() => import('@/pages/Dashboard'));
+const CropDetails = lazyWithRetry(() => import('@/pages/CropDetails'));
+const MyFarm = lazyWithRetry(() => import('@/pages/MyFarm'));
+const MarketPrices = lazyWithRetry(() => import('@/pages/MarketPrices'));
+const GovSchemes = lazyWithRetry(() => import('@/pages/GovSchemes'));
+const AirAgent = lazyWithRetry(() => import('@/pages/AirAgent'));
+const Community = lazyWithRetry(() => import('@/pages/Community'));
+const Profile = lazyWithRetry(() => import('@/pages/Profile'));
+const Weather = lazyWithRetry(() => import('@/pages/Weather'));
+const Auth = lazyWithRetry(() => import('@/pages/Auth'));
+const ForgotPassword = lazyWithRetry(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazyWithRetry(() => import('@/pages/ResetPassword'));
+const Home = lazyWithRetry(() => import('@/pages/Home'));
+const PostDetail = lazyWithRetry(() => import('./pages/PostDetail'));
+const NotFound = lazyWithRetry(() => import('@/pages/NotFound'));
+const Settings = lazyWithRetry(() => import('@/pages/Settings'));
+const Crops = lazyWithRetry(() => import('@/pages/Crops'));
+const SoilAnalysis = lazyWithRetry(() => import('@/pages/SoilAnalysis'));
+const Onboarding = lazyWithRetry(() => import('@/pages/Onboarding'));
+const OnboardingCheck = lazyWithRetry(() => import('@/pages/OnboardingCheck'));
+const MessagesPage = lazyWithRetry(() => import('@/pages/MessagesPage'));
+const ChatPage = lazyWithRetry(() => import('@/pages/ChatPage'));
+const PublicProfile = lazyWithRetry(() => import('@/pages/PublicProfile'));
+const FollowersPage = lazyWithRetry(() => import('@/pages/FollowersPage'));
+const FollowingPage = lazyWithRetry(() => import('@/pages/FollowingPage'));
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const MainLayout = () => {

@@ -34,9 +34,15 @@ export class ErrorBoundary extends Component<Props, State> {
       error.message.includes('Failed to load module script') ||
       error.message.includes('application/octet-stream')
     ) {
-      // Force a hard reload from server
-      window.location.reload();
-      return;
+      const lastReload = typeof window !== 'undefined' ? sessionStorage.getItem('last_chunk_reload') : null;
+      const now = Date.now();
+      if (!lastReload || now - parseInt(lastReload, 10) > 5000) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('last_chunk_reload', String(now));
+          window.location.reload();
+        }
+        return;
+      }
     }
 
     this.setState({
@@ -59,6 +65,24 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback;
+      }
+
+      const isChunkLoad =
+        this.state.error?.name === 'ChunkLoadError' ||
+        this.state.error?.message?.includes('Failed to fetch dynamically imported module') ||
+        this.state.error?.message?.includes('dynamically imported module') ||
+        this.state.error?.message?.includes('Failed to load module script') ||
+        this.state.error?.message?.includes('application/octet-stream');
+
+      if (isChunkLoad) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A]">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-8 h-8 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
+              <p className="text-[#C9A84C] text-xs font-semibold tracking-wider uppercase">Loading latest version...</p>
+            </div>
+          </div>
+        );
       }
 
     return (

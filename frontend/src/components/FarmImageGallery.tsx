@@ -184,7 +184,7 @@ export default function FarmImageGallery({
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
                       <div className="opacity-0 group-hover:opacity-100 text-white text-center p-2">
                         <p className="text-xs">
-                          {format(new Date(image.created_at), 'dd MMM yyyy, hh:mm a')}
+                          {formatDateTime(image.created_at)}
                         </p>
                         {image.caption && (
                           <p className="text-xs mt-1 line-clamp-2">{image.caption}</p>
