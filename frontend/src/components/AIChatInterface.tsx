@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { Send, RefreshCw, Sparkles, MessageSquare, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { formatTime as formatISTTime } from '@/lib/dateUtils'
 
 interface ChatMessage {
   id: string
@@ -186,11 +187,7 @@ export default function AIChatInterface({ selectedFarmId, onFarmSelect }: AIChat
   }
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    })
+    return formatISTTime(date);
   }
 
   return (

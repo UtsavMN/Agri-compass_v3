@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { format } from 'date-fns';
+import { formatDateTime } from '@/lib/dateUtils';
 import { useToast } from '@/hooks/use-toast';
 import { PostsAPI, Post } from '@/lib/api/posts';
 
@@ -53,7 +53,7 @@ export default function PostDetail() {
           <Card className="overflow-hidden">
             <CardHeader className="bg-leaf-600 text-white">
               <CardTitle>{post.user?.full_name || post.user?.username || 'Farmer'}</CardTitle>
-              <CardDescription>{post.created_at ? format(new Date(post.created_at), 'dd MMM yyyy, hh:mm a') : ''}</CardDescription>
+              <CardDescription>{post.created_at ? formatDateTime(post.created_at) : ''}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-3">

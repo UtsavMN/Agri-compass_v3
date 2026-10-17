@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, X, Clock, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { formatTime } from '@/lib/dateUtils';
 
 interface WeatherAlertBannerProps {
   lat?: number;
@@ -89,9 +90,6 @@ export const WeatherAlertBanner: React.FC<WeatherAlertBannerProps> = ({ lat = 19
 
   const isUpcoming = Math.floor(Date.now() / 1000) < alert.start;
 
-  const formatTime = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
 
   return (
     <div className="relative animate-fade-in z-40 px-4 py-3 sm:px-6 lg:px-8 max-w-7xl mx-auto my-4 cursor-pointer" onClick={handleBannerClick}>

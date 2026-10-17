@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiGet } from "../lib/httpClient";
+import { parseSafeDate } from "@/lib/dateUtils";
 
 interface MandiPrice {
   commodity: string;
@@ -24,22 +25,25 @@ export const useMarketPrices = (district: string) => {
       try {
         const data = await apiGet(`/api/market/prices?district=${encodeURIComponent(district)}&limit=20`);
 
-        setPrices(data.prices);
-        setLastUpdated(new Date());
+        const serverDate = parseSafeDate(data?.fetchedAt) || new Date();
+        setPrices(data?.prices || []);
+        setLastUpdated(serverDate);
 
         // Cache in localStorage as fallback
         localStorage.setItem(`market_prices_${district}`, JSON.stringify({
-          prices: data.prices,
-          timestamp: Date.now()
+          prices: data?.prices || [],
+          timestamp: serverDate.getTime()
         }));
       } catch (_err) {
         // Load from cache if API fails
         const cached = localStorage.getItem(`market_prices_${district}`);
         if (cached) {
           const { prices: cachedPrices, timestamp } = JSON.parse(cached);
+          const serverDate = parseSafeDate(timestamp) || new Date();
           setPrices(cachedPrices);
-          setLastUpdated(new Date(timestamp));
-          setError(`Using cached data from ${Math.round((Date.now() - timestamp) / 3600000)}h ago`);
+          setLastUpdated(serverDate);
+          const hoursAgo = Math.max(1, Math.round((Date.now() - serverDate.getTime()) / 3600000));
+          setError(`Using cached data from ${hoursAgo}h ago`);
         } else {
           setError("Unable to load market prices");
         }

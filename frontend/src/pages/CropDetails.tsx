@@ -121,7 +121,7 @@ export default function CropDetails() {
               <p className="text-xs uppercase tracking-widest font-semibold text-gray-600">Standardized Crop Cultivation & Input Specification Sheet</p>
             </div>
             <div className="text-right text-xs text-gray-500 font-mono">
-              Published: {new Date().toLocaleDateString()}
+              Published: {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}
             </div>
           </div>
         </div>

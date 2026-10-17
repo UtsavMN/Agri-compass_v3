@@ -79,7 +79,7 @@ public class NewsController {
                 "title", "Karnataka Government Announces New Subsidies for Drip Irrigation",
                 "description", "To combat changing climate patterns, new subsidies aim to help farmers adopt water-efficient technologies.",
                 "url", "https://agricoop.nic.in/",
-                "publishedAt", java.time.LocalDateTime.now().minusDays(1).toString() + "Z",
+                "publishedAt", java.time.Instant.now().minus(1, java.time.temporal.ChronoUnit.DAYS).toString(),
                 "urlToImage", "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?q=80&w=600&auto=format&fit=crop",
                 "source", Map.of("name", "Agri News")
             ),
@@ -87,7 +87,7 @@ public class NewsController {
                 "title", "Areca Nut Prices Hit Record Highs in Shivamogga Markets",
                 "description", "High demand and recent weather conditions have pushed Areca nut prices to new highs this week.",
                 "url", "https://krishimaratavahini.kar.nic.in/",
-                "publishedAt", java.time.LocalDateTime.now().minusDays(2).toString() + "Z",
+                "publishedAt", java.time.Instant.now().minus(2, java.time.temporal.ChronoUnit.DAYS).toString(),
                 "urlToImage", "https://images.unsplash.com/photo-1599839619722-39751411ea63?q=80&w=600&auto=format&fit=crop",
                 "source", Map.of("name", "Agri News")
             )

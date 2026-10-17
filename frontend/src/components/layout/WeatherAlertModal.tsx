@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AlertTriangle, Clock, MapPin, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { formatDateTime } from '@/lib/dateUtils';
 
 interface Alert {
   alert_id: string;
@@ -61,10 +62,7 @@ export function WeatherAlertModal({ isOpen, onClose, alertId }: WeatherAlertModa
   const isExpired = Math.floor(Date.now() / 1000) > alert.end;
 
   const formatTime = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleString([], { 
-      weekday: 'short', month: 'short', day: 'numeric', 
-      hour: '2-digit', minute: '2-digit' 
-    });
+    return formatDateTime(timestamp);
   };
 
   return (

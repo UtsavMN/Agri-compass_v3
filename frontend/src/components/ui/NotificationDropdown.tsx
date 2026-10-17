@@ -3,6 +3,7 @@ import { Bell, CloudLightning, FileText, Sprout, ShoppingCart } from 'lucide-rea
 import { useNavigate } from 'react-router-dom';
 import { apiGet } from '@/lib/httpClient';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
+import { formatDateTime } from '@/lib/dateUtils';
 
 interface Notification {
   id: string;
@@ -165,7 +166,7 @@ export const NotificationDropdown: React.FC = () => {
                       {notif.type === 'WEATHER_ALERT' ? notif.message : `posted: ${notif.message.substring(0, 50)}${notif.message.length > 50 ? '...' : ''}`}
                     </p>
                     <span className="text-[10px] text-gold-100/40 mt-1 block">
-                      {new Date(notif.timestamp).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                      {formatDateTime(notif.timestamp)}
                     </span>
                   </div>
                 </div>

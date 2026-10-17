@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from './avatar'
 import { Button } from './button'
 import { Card } from './card'
 import { Textarea } from './textarea'
-import { format } from 'date-fns'
+import { formatDateTime } from '@/lib/dateUtils'
 import { Heart, MessageCircle, Share2, MoreVertical, Loader2, MapPin } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -118,7 +118,7 @@ export const PostCard = React.memo(function PostCard({
                  )}
               </div>
               <p className="text-[10px] font-bold text-gold-100/40 uppercase tracking-widest mt-0.5">
-                {post.created_at ? format(new Date(post.created_at), 'dd MMM yyyy, hh:mm a') : ''}
+                {post.created_at ? formatDateTime(post.created_at) : ''}
               </p>
             </div>
           </button>

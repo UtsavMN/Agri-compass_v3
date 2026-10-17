@@ -61,7 +61,7 @@ public class MessageController {
                 .filter(m -> m.getReadAt() == null && !m.getSenderId().equals(currentUserId))
                 .collect(Collectors.toList());
         
-        String now = LocalDateTime.now().toString();
+        String now = java.time.Instant.now().toString();
         unread.forEach(m -> {
             m.setReadAt(now);
             messageRepository.save(m);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatDate } from '@/lib/dateUtils';
 import { 
   Beaker, 
   Droplets, 
@@ -234,7 +235,7 @@ export default function FertilizerAnalysisModule({
                       >
                         <div className="flex justify-between items-start mb-2">
                           <span className="text-xs font-black text-gold-100 uppercase tracking-tight">{h.crop}</span>
-                          <span className="text-[8px] font-bold text-gold-100/30 uppercase">{new Date(h.createdAt).toLocaleDateString()}</span>
+                          <span className="text-[8px] font-bold text-gold-100/30 uppercase">{formatDate(h.createdAt)}</span>
                         </div>
                         <div className="flex gap-4">
                            <div className="text-center flex-1">

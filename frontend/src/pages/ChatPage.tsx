@@ -5,6 +5,7 @@ import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { motion } from "framer-motion";
 import { buildUrl, apiGet, apiPost } from "../lib/httpClient";
+import { parseSafeDate, formatTime as formatISTTime, formatDate } from "@/lib/dateUtils";
 
 interface Message {
   id: string;
@@ -143,16 +144,14 @@ export const ChatPage = () => {
   const groupByDate = (msgs: Message[]) => {
     const groups: Record<string, Message[]> = {};
     msgs.forEach(msg => {
-      // Fix for iOS Safari date parsing if backend returns space instead of T
-      const safeDateStr = msg.createdAt ? msg.createdAt.replace(' ', 'T') : new Date().toISOString();
-      const d = new Date(safeDateStr);
+      const d = parseSafeDate(msg.createdAt) || new Date();
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       let label: string;
       if (d.toDateString() === today.toDateString()) label = "Today";
       else if (d.toDateString() === yesterday.toDateString()) label = "Yesterday";
-      else label = d.toLocaleDateString("en-IN", { day: "numeric", month: "long" });
+      else label = formatDate(d);
       if (!groups[label]) groups[label] = [];
       groups[label].push(msg);
     });
@@ -160,8 +159,7 @@ export const ChatPage = () => {
   };
 
   const formatTime = (iso: string) => {
-    const safeDateStr = iso ? iso.replace(' ', 'T') : new Date().toISOString();
-    return new Date(safeDateStr).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    return formatISTTime(iso);
   };
 
   return (

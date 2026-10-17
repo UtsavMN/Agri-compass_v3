@@ -1,3 +1,5 @@
+import { formatForecastDay } from '@/lib/dateUtils';
+
 export interface WeatherForecastDay {
   date: string;
   day_name?: string;
@@ -224,9 +226,7 @@ export class WeatherAdvisor {
           const uv = omData.daily.uv_index_max?.[i] ? Number(omData.daily.uv_index_max[i].toFixed(1)) : undefined;
 
           const spray = WeatherAdvisor.evaluateSprayingCondition(windMax, precipProb, precip);
-
-          const d = new Date(dateStr);
-          const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', { weekday: 'short' });
+          const dayName = formatForecastDay(dateStr, i);
 
           return {
             date: dateStr,
@@ -278,8 +278,7 @@ export class WeatherAdvisor {
       // Fallback: If only WeatherAPI responded
       if (waData?.forecast?.forecastday) {
         const forecast: WeatherForecastDay[] = waData.forecast.forecastday.map((item: any, i: number) => {
-          const d = new Date(item.date);
-          const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', { weekday: 'short' });
+          const dayName = formatForecastDay(item.date, i);
           const windKph = item.day.maxwind_kph || 10;
           const precipMm = item.day.totalprecip_mm || 0;
           const rainProb = item.day.daily_chance_of_rain || 0;

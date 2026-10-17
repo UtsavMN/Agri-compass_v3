@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { useToast } from '@/hooks/use-toast'
 import { MessageCircle, Send } from 'lucide-react'
-import { format } from 'date-fns'
+import { formatDateTime } from '@/lib/dateUtils'
 
 interface CommentSectionProps {
   postId: string
@@ -123,7 +123,7 @@ export default function CommentSection({ postId, commentsCount, onCommentsCountC
                         {comment.user.full_name || comment.user.username}
                       </span>
                       <span className="text-xs text-gray-500">
-                        {format(new Date(comment.created_at), 'dd MMM yyyy, hh:mm a')}
+                        {formatDateTime(comment.created_at)}
                       </span>
                     </div>
                     <p className="text-sm text-gray-800 whitespace-pre-wrap">

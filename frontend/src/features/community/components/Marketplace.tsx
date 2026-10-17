@@ -3,6 +3,7 @@ import { apiGet, apiPost, apiDelete } from '@/lib/httpClient';
 import { UploadAPI } from '@/lib/api/upload';
 import { useUser } from '@/store';
 import { LISTING_CATEGORIES } from '@/data/marketplaceCategories';
+import { formatDateTime } from '@/lib/dateUtils';
 import { 
   Plus, 
   MapPin, 
@@ -65,25 +66,11 @@ export const formatCurrency = (value: number) => {
 };
 
 export const formatExactDateTime = (dateStr?: string) => {
-  if (!dateStr) return '';
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return '';
-    return d.toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  } catch {
-    return '';
-  }
+  return formatDateTime(dateStr);
 };
 
 export const timeAgo = (dateStr: string) => {
-  return formatExactDateTime(dateStr);
+  return formatDateTime(dateStr);
 };
 
 export function Marketplace() {

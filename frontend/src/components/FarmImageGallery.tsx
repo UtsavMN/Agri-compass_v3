@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import { Camera, Upload, ImageIcon } from 'lucide-react'
-import { format } from 'date-fns'
+import { formatDateTime } from '@/lib/dateUtils'
 
 interface FarmImageGalleryProps {
   farmId: string
@@ -206,7 +206,7 @@ export default function FarmImageGallery({
             <DialogHeader>
               <DialogTitle>Farm Image</DialogTitle>
               <DialogDescription>
-                {format(new Date(selectedImage.created_at), 'dd MMM yyyy, hh:mm a')}
+                {formatDateTime(selectedImage.created_at)}
               </DialogDescription>
             </DialogHeader>
 

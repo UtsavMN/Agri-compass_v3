@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ScrollReveal } from '@/components/ui/animations';
 import { WeatherAPI } from '@/lib/api/weather';
 import { WeatherData, WeatherAdvice } from '@/lib/ai/weatherAdvisor';
+import { formatTime, formatForecastDate, formatForecastDay } from '@/lib/dateUtils';
 import {
   findNearestTaluk,
   getTaluksByDistrict,
@@ -307,15 +308,6 @@ export default function Weather() {
     }
   };
 
-  const formatForecastDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    } catch {
-      return dateStr;
-    }
-  };
-
   const getSpraySuitabilityPill = (suitability?: string) => {
     if (suitability === 'Favorable') {
       return (
@@ -542,7 +534,7 @@ export default function Weather() {
                       )}
                       {weatherInfo.timestamp && (
                         <span className="text-[11px] text-gold-100/40">
-                          Updated {new Date(weatherInfo.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          Updated {formatTime(weatherInfo.timestamp)}
                         </span>
                       )}
                     </div>
@@ -685,7 +677,7 @@ export default function Weather() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     {weatherInfo.weather.forecast.slice(0, 3).map((day, idx) => {
-                      const dayTitle = idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' });
+                      const dayTitle = formatForecastDay(day.date, idx);
                       return (
                         <div
                           key={idx}

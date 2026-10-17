@@ -24,3 +24,5 @@ export function formatNumber(value: number | string): string {
     maximumFractionDigits: 2,
   }).format(num);
 }
+
+export * from './dateUtils';

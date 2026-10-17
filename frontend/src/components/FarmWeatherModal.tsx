@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import { Cloud, Thermometer, Droplets, Calendar } from 'lucide-react'
-import { format } from 'date-fns'
+import { formatDateTime } from '@/lib/dateUtils'
 
 interface FarmWeatherModalProps {
   farmId: string
@@ -206,7 +206,7 @@ export default function FarmWeatherModal({ farmId, farmName, isOpen, onClose }: 
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2 text-sm text-gold-100/70">
                         <Calendar className="h-4 w-4" />
-                        {format(new Date(log.created_at), 'dd MMM yyyy, hh:mm a')}
+                        {formatDateTime(log.created_at)}
                       </div>
                       {log.conditions && (
                         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">

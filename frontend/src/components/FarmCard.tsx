@@ -175,7 +175,7 @@ export default function FarmCard({ farm, onDelete, onUpdate }: FarmCardProps) {
             <div className="border-t pt-4">
               <h4 className="text-sm font-medium text-gold-100 mb-2 flex items-center">
                 <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                Next Steps for {new Date().toLocaleString('default', { month: 'long' })}
+                Next Steps for {new Date().toLocaleString('en-IN', { month: 'long', timeZone: 'Asia/Kolkata' })}
               </h4>
               <ul className="space-y-1">
                 {nextSteps.slice(0, 3).map((step, index) => (

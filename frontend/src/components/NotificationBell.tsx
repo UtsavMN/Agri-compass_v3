@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { Bell, Heart, MessageCircle, UserPlus, AtSign } from 'lucide-react'
-import { format } from 'date-fns'
+import { formatDateTime } from '@/lib/dateUtils'
 
 export default function NotificationBell() {
   const { user } = useUser()
@@ -136,7 +136,7 @@ export default function NotificationBell() {
                     Someone {getNotificationText(notification)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {format(new Date(notification.created_at), 'dd MMM yyyy, hh:mm a')}
+                    {formatDateTime(notification.created_at)}
                   </p>
                 </div>
                 {!notification.read && (

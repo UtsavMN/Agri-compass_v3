@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
-import { format } from 'date-fns';
+import { formatDateTime } from '@/lib/dateUtils';
 import { MessageSquare, Edit2, Image as ImageIcon, Loader2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -50,7 +50,7 @@ export function FarmUpdateCard({ update, onUpdate }: FarmUpdateCardProps) {
   const handleReply = () => {
     const text = update.post_text || '';
     const preview = text.substring(0, 50) + (text.length > 50 ? '...' : '');
-    const date = update.created_at ? format(new Date(update.created_at), 'dd MMM yyyy, hh:mm a') : format(new Date(), 'dd MMM yyyy, hh:mm a');
+    const date = formatDateTime(update.created_at || new Date());
     const prefill = `> Re: Farm Update (${date}): "${preview}"\n\n`;
     navigate(`/messages/${update.clerk_user_id}`, { state: { prefill } });
   };
@@ -59,7 +59,7 @@ export function FarmUpdateCard({ update, onUpdate }: FarmUpdateCardProps) {
     <div className="p-5 bg-earth-main/30 rounded-[1.5rem] border border-earth-border shadow-sm mb-4">
       <div className="flex justify-between items-start mb-3">
         <div className="text-[10px] text-gold-100/40 uppercase tracking-widest font-bold">
-          {update.created_at && format(new Date(update.created_at), 'dd MMM yyyy, hh:mm a')}
+          {update.created_at && formatDateTime(update.created_at)}
         </div>
         {isOwner && !isEditing && (
           <button onClick={() => setIsEditing(true)} className="text-gold-100/40 hover:text-gold-400 transition-colors">

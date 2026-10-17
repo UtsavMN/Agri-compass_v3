@@ -41,7 +41,7 @@ public class Post {
             this.id = java.util.UUID.randomUUID().toString();
         }
         if (this.createdAt == null) {
-            this.createdAt = java.time.LocalDateTime.now().toString();
+            this.createdAt = java.time.Instant.now().toString();
         }
     }
 
@@ -121,7 +121,13 @@ public class Post {
 
     public java.time.LocalDateTime getUpdatedAt() {
         if (createdAt != null) {
-            try { return java.time.LocalDateTime.parse(createdAt.replace(" ", "T")); }
+            try {
+                String clean = createdAt.replace(" ", "T");
+                if (clean.endsWith("Z")) {
+                    return java.time.Instant.parse(clean).atZone(java.time.ZoneId.of("Asia/Kolkata")).toLocalDateTime();
+                }
+                return java.time.LocalDateTime.parse(clean);
+            }
             catch (Exception e) { 
                 log.error("Failed to parse createdAt date ({}): {}", createdAt, e.getMessage());
                 return java.time.LocalDateTime.now(); 

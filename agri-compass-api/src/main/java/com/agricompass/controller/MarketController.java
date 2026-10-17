@@ -33,7 +33,7 @@ public class MarketController {
             return ResponseEntity.ok(Map.of(
                 "prices", List.of(),
                 "district", district,
-                "fetchedAt", LocalDateTime.now(),
+                "fetchedAt", java.time.Instant.now().toString(),
                 "message", "Market API key not configured"
             ));
         }
@@ -80,7 +80,7 @@ public class MarketController {
         return ResponseEntity.ok(Map.of(
             "prices", allParsedPrices,
             "district", district,
-            "fetchedAt", LocalDateTime.now()
+            "fetchedAt", java.time.Instant.now().toString()
         ));
     }
 

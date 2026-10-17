@@ -3,6 +3,7 @@ import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/httpClient";
 import { History } from "lucide-react";
+import { formatDate } from "@/lib/dateUtils";
 
 interface FarmIntelligenceProps {
   farmId?: string;
@@ -152,7 +153,7 @@ export const FarmIntelligenceCard = ({ farmId, farmName, acres, district, crop, 
                 history.map((h, i) => (
                   <div key={i} className="bg-[#12120e] p-4 rounded-xl border border-[rgba(255,255,255,0.05)]">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-bold text-[#c49a2a]">{new Date(h.createdAt || Date.now()).toLocaleDateString()}</span>
+                      <span className="text-sm font-bold text-[#c49a2a]">{formatDate(h.createdAt || Date.now())}</span>
                       <span className="text-xs px-2 py-1 rounded bg-[#222] font-semibold">{h.healthStatus || "Unknown"}</span>
                     </div>
                     <div className="grid grid-cols-4 gap-2 text-xs text-[#a09880] mb-3">

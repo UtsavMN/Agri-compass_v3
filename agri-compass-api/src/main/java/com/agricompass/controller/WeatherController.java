@@ -363,7 +363,7 @@ public class WeatherController {
             weatherResponse.put("weather", weather);
             weatherResponse.put("advisory", advisory);
             weatherResponse.put("alerts", alertList);
-            weatherResponse.put("timestamp", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
+            weatherResponse.put("timestamp", java.time.Instant.now().toString());
 
             return ResponseEntity.ok(weatherResponse);
 

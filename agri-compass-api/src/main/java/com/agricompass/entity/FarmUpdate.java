@@ -38,14 +38,14 @@ public class FarmUpdate {
             this.id = UUID.randomUUID().toString();
         }
         if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            this.createdAt = java.time.Instant.now().toString();
         }
         this.updatedAt = this.createdAt;
     }
 
     @PreUpdate
     public void preUpdate() {
-        this.updatedAt = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        this.updatedAt = java.time.Instant.now().toString();
     }
 
     public String getId() { return id; }

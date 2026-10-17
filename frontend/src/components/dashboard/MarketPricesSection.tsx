@@ -4,6 +4,7 @@ import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { useMarketPrices } from "@/hooks/useMarketPrices";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUpVariants } from "@/lib/animations";
+import { formatTime } from "@/lib/dateUtils";
 
 const PriceSkeleton = () => (
   <div className="animate-pulse bg-[#111] border border-[#1E1E1E] rounded-xl p-5 h-24" />
@@ -18,7 +19,7 @@ export const MarketPricesSection = ({ district }: { district: string }) => {
         <h2 className="text-2xl font-serif text-[#F5F0E8]">Market Prices</h2>
         {lastUpdated && (
           <span className="text-xs text-[#F5F0E8]/40">
-            {error ? `⚠ ${error}` : `Updated ${lastUpdated.toLocaleTimeString()}`}
+            {error ? `⚠ ${error}` : `Updated ${formatTime(lastUpdated)}`}
           </span>
         )}
       </div>
