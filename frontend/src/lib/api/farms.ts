@@ -39,7 +39,7 @@ function normalizeFarm(farm: any): Farm {
   return {
     ...farm,
     user_id: farm.user_id ?? farm.userId,
-    area_acres: Number(farm.area_acres ?? farm.areaAcres ?? 0),
+    area_acres: Number(farm.area_acres ?? farm.areaAcres ?? farm.acres ?? 0),
     soil_type: farm.soil_type ?? farm.soilType ?? null,
     irrigation_type: farm.irrigation_type ?? farm.irrigationType ?? null,
     current_crop: farm.current_crop ?? farm.currentCrop ?? null,

@@ -314,7 +314,11 @@ export default function Layout({
                 onClick={() => navigate('/profile')}
                 className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:h-8 sm:w-8 flex items-center justify-center rounded-full overflow-hidden border border-earth-border/60 hover:border-gold-400/50 transition-colors focus:outline-none"
               >
-                <img src={user.imageUrl} alt="Profile" className="h-8 w-8 rounded-full object-cover" />
+                <img 
+                  src={profile?.avatar_url || profile?.profile_picture_url || (profile as any)?.avatarUrl || user.imageUrl} 
+                  alt="Profile" 
+                  className="h-8 w-8 rounded-full object-cover" 
+                />
               </button>
             )}
 

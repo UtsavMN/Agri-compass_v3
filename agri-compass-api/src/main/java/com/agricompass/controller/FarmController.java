@@ -2,6 +2,7 @@ package com.agricompass.controller;
 
 import com.agricompass.entity.Farm;
 import com.agricompass.entity.FarmImage;
+import com.agricompass.entity.UserProfile;
 import com.agricompass.entity.WeatherLog;
 import com.agricompass.repository.FarmImageRepository;
 import com.agricompass.repository.FarmRepository;
@@ -35,9 +36,43 @@ public class FarmController {
         this.farmDiagnosticRepository = farmDiagnosticRepository;
     }
 
+    private String resolveUserId(String headerUserId, String candidateUserId) {
+        if (candidateUserId != null && !candidateUserId.isBlank() && !"anonymousUser".equalsIgnoreCase(candidateUserId)) {
+            return candidateUserId.trim();
+        }
+        try {
+            var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null) {
+                if (auth.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
+                    String sub = jwt.getSubject();
+                    if (sub != null && !sub.isBlank() && !"anonymousUser".equalsIgnoreCase(sub)) {
+                        return sub.trim();
+                    }
+                } else if (auth.getName() != null && !auth.getName().isBlank() && !"anonymousUser".equalsIgnoreCase(auth.getName())) {
+                    return auth.getName().trim();
+                }
+            }
+        } catch (Exception ignored) {}
+
+        if (headerUserId != null && !headerUserId.isBlank() && !"anonymousUser".equalsIgnoreCase(headerUserId)) {
+            return headerUserId.trim();
+        }
+
+        try {
+            UserProfile user = userService.syncUser(null);
+            if (user != null && user.getId() != null && !"anonymousUser".equalsIgnoreCase(user.getId())) {
+                return user.getId();
+            }
+        } catch (Exception ignored) {}
+
+        return "mock_user_1";
+    }
+
     @GetMapping
-    public ResponseEntity<List<Map<String, Object>>> getFarms() {
-        String userId = userService.syncUser(null).getId();
+    public ResponseEntity<List<Map<String, Object>>> getFarms(
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            @RequestParam(value = "userId", required = false) String queryUserId) {
+        String userId = resolveUserId(headerUserId, queryUserId);
         return getFarmsResponse(farmRepository.findByClerkUserId(userId));
     }
 
@@ -69,12 +104,27 @@ public class FarmController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createFarm(@RequestBody Map<String, Object> body) {
-        String userId = userService.syncUser(null).getId();
+    public ResponseEntity<Map<String, Object>> createFarm(
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            @RequestBody Map<String, Object> body) {
+        String bodyUserId = (String) body.get("user_id");
+        if (bodyUserId == null) bodyUserId = (String) body.get("userId");
+        String userId = resolveUserId(headerUserId, bodyUserId);
         
         Double areaAcres = null;
         if (body.containsKey("area_acres") && body.get("area_acres") != null) {
             Object val = body.get("area_acres");
+            if (val instanceof Number) {
+                areaAcres = ((Number) val).doubleValue();
+            } else {
+                try {
+                    areaAcres = Double.parseDouble(val.toString());
+                } catch (NumberFormatException e) {
+                    // Ignore invalid format
+                }
+            }
+        } else if (body.containsKey("acres") && body.get("acres") != null) {
+            Object val = body.get("acres");
             if (val instanceof Number) {
                 areaAcres = ((Number) val).doubleValue();
             } else {
@@ -312,6 +362,8 @@ public class FarmController {
         dto.put("name", farm.getName());
         dto.put("location", farm.getLocation());
         dto.put("area_acres", farm.getAreaAcres());
+        dto.put("acres", farm.getAreaAcres());
+        dto.put("areaAcres", farm.getAreaAcres());
         dto.put("soil_type", farm.getSoilType());
         dto.put("irrigation_type", farm.getIrrigationType());
         dto.put("current_crop", farm.getCurrentCrop());

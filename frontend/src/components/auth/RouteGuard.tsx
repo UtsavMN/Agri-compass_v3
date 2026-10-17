@@ -24,16 +24,15 @@ export const RouteGuard = ({ children }: { children: React.ReactNode }) => {
             const backendName = profile.fullName || profile.full_name || '';
             const backendImage = profile.profilePictureUrl || profile.avatar_url || '';
 
-            // ONLY seed from Clerk if backend profile is completely missing name or picture
+            // ONLY seed from Clerk if backend profile is completely brand new with no existing profile info
             // Never overwrite user-customized profile pictures or names!
-            const isBackendNameMissing = !backendName || backendName === 'New User' || backendName === 'Anonymous Farmer';
-            const isBackendImageMissing = !backendImage;
+            const isBrandNewProfile = (!backendName || backendName === 'New User' || backendName === 'Anonymous Farmer') && !backendImage;
 
-            if ((isBackendNameMissing && clerkName) || (isBackendImageMissing && clerkImage)) {
+            if (isBrandNewProfile && (clerkName || clerkImage)) {
                try {
                   const updatedProfile = await apiPut('/api/profiles', {
-                     fullName: isBackendNameMissing && clerkName ? clerkName : backendName,
-                     avatarUrl: isBackendImageMissing && clerkImage ? clerkImage : backendImage
+                     fullName: clerkName || backendName || 'Farmer',
+                     avatarUrl: clerkImage || ''
                   });
                   setClerkUserAndProfile(clerkUser, updatedProfile);
                   return;

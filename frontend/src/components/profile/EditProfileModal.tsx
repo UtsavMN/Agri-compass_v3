@@ -61,14 +61,14 @@ export function EditProfileModal({ onClose }: { onClose: () => void }) {
     setLoading(true);
     try {
       const payload = {
-        fullName: formData.fullName,
-        full_name: formData.fullName,
-        usernameHandle: formData.usernameHandle,
-        username: formData.usernameHandle,
-        phone: formData.phone,
+        fullName: formData.fullName.trim(),
+        full_name: formData.fullName.trim(),
+        usernameHandle: formData.usernameHandle.trim().replace(/^@/, ''),
+        username: formData.usernameHandle.trim().replace(/^@/, ''),
+        phone: formData.phone.trim(),
         district: formData.district,
         location: formData.district,
-        bio: formData.bio,
+        bio: formData.bio.trim(),
         languagePreference: formData.languagePreference,
         language: formData.languagePreference,
         avatarUrl: formData.avatarUrl,
@@ -77,26 +77,13 @@ export function EditProfileModal({ onClose }: { onClose: () => void }) {
         profilePictureUrl: formData.avatarUrl,
       };
 
-      const updated = await apiPut('/api/profiles', payload);
-      await updateProfile(updated || payload);
+      await updateProfile(payload);
       if (formData.district && formData.district !== selectedDistrict) {
         setSelectedDistrict(formData.district);
       }
       onClose();
     } catch (e) {
-      console.error("Failed to update profile on server, applying locally:", e);
-      await updateProfile({
-        full_name: formData.fullName,
-        fullName: formData.fullName,
-        username: formData.usernameHandle,
-        phone: formData.phone,
-        district: formData.district,
-        bio: formData.bio,
-        avatar_url: formData.avatarUrl,
-        avatarUrl: formData.avatarUrl,
-        profile_picture_url: formData.avatarUrl,
-        profilePictureUrl: formData.avatarUrl,
-      });
+      console.error("Failed to update profile:", e);
       onClose();
     } finally {
       setLoading(false);

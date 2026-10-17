@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
 import { GoldCard } from "@/components/ui/GoldCard";
 import { staggerContainer, fadeUpVariants } from "@/lib/animations";
-import { useUser } from "@/store";
+import { useUser, useStore } from "@/store";
 import { apiGet } from "@/lib/httpClient";
 import { FarmIntelligenceCard } from "@/components/FarmIntelligenceCard";
 import { MoreVertical, Settings, LogOut, User, MessageSquare, Sprout, Sliders } from "lucide-react";
@@ -33,6 +33,22 @@ export default function Profile() {
   const [posts, setPosts] = useState<any[]>([]);
   const [farms, setFarms] = useState<any[]>([]);
   const [savedSchemes, setSavedSchemes] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Fetch latest profile from server on mount
+    apiGet('/api/profile/me').then(fresh => {
+      if (fresh) {
+        useStore.getState().setClerkUserAndProfile(authUser, fresh);
+      }
+    }).catch(() => {});
+
+    const handleProfileUpdate = () => {
+      loadUserFarms();
+      loadUserPosts();
+    };
+    window.addEventListener('agri_profile_updated', handleProfileUpdate);
+    return () => window.removeEventListener('agri_profile_updated', handleProfileUpdate);
+  }, [authUser]);
 
   useEffect(() => {
     if (authUser?.id) {
@@ -92,7 +108,7 @@ export default function Profile() {
   }
 
   const totalAcres = farms.reduce((sum, f) => {
-    const raw = f.area_acres !== undefined && f.area_acres !== null ? f.area_acres : f.areaAcres;
+    const raw = f.area_acres ?? f.areaAcres ?? f.acres ?? f.size ?? f.field_size_acres ?? 0;
     const parsed = Number(raw || 0);
     return sum + (isNaN(parsed) ? 0 : parsed);
   }, 0);
@@ -106,7 +122,7 @@ export default function Profile() {
     totalPosts: posts.length,
   };
 
-  const avatarUrl = profile.avatar_url || profile.profile_picture_url || (profile as any).avatarUrl || (profile as any).profilePictureUrl;
+  const avatarUrl = profile?.avatar_url || profile?.profile_picture_url || (profile as any)?.avatarUrl || (profile as any)?.profilePictureUrl || authUser?.imageUrl;
   const fullName = profile.full_name || (profile as any).fullName || profile.username || (profile as any).usernameHandle || 'Anonymous Farmer';
   const username = profile.username || (profile as any).usernameHandle || 'farmer';
   const initial = fullName.charAt(0).toUpperCase();

@@ -25,9 +25,10 @@ public class UserProfile {
     @Column(nullable = false)
     private String state = "Karnataka";
 
-    @Column(name = "profile_picture_url")
+    @Column(name = "profile_picture_url", columnDefinition = "TEXT")
     private String profilePictureUrl;
 
+    @Column(columnDefinition = "TEXT")
     private String bio;
 
     @Column(columnDefinition = "TEXT")

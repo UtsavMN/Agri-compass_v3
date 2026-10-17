@@ -98,12 +98,28 @@ export const useStore = create<StoreState>()(
         loading: false,
         switchUser: (_userId: string) => {},
         updateProfile: async (data: Partial<Profile>) => {
-          const { user, profile } = get();
+          const { user, profile, activeUserId } = get();
           const nextProfile = normalizeProfile({ ...profile, ...data }) as Profile;
           set({ profile: nextProfile });
-          if (!user?.id) return;
+
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('agri_profile_updated', { detail: nextProfile }));
+          }
+
+          const targetUserId = user?.id || activeUserId || profile?.id;
           try {
-            await apiPut(`/api/profiles`, data);
+            const res = await apiPut(`/api/profiles`, {
+              ...data,
+              userId: targetUserId,
+              clerkUserId: targetUserId,
+            });
+            if (res) {
+              const fresh = normalizeProfile(res);
+              set({ profile: fresh });
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('agri_profile_updated', { detail: fresh }));
+              }
+            }
           } catch (error) {
             console.warn('Profile saved locally but backend sync failed:', error);
           }
@@ -114,11 +130,14 @@ export const useStore = create<StoreState>()(
         setClerkUserAndProfile: (clerkUser: any, profile: any) => {
           const norm = normalizeProfile(profile);
           set({
-            activeUserId: clerkUser?.id || '',
+            activeUserId: clerkUser?.id || profile?.clerkUserId || profile?.id || '',
             user: clerkUser,
             profile: norm,
             selectedDistrict: norm?.district && norm.district !== 'Unknown' ? norm.district : get().selectedDistrict || ''
           });
+          if (typeof window !== 'undefined' && norm) {
+            window.dispatchEvent(new CustomEvent('agri_profile_updated', { detail: norm }));
+          }
         },
 
         // District Slice
