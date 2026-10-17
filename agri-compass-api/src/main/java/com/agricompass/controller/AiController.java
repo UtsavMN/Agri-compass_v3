@@ -462,6 +462,7 @@ public class AiController {
             return "For effective pest and disease management: 1) Practice crop rotation to break pest cycles. 2) Use pheromone traps to monitor pest activity. 3) For fungal diseases (like blast in rice), apply recommended fungicides like Tricyclazole. Always use organic methods like Neem oil spray first if the infestation is minor.";
         }
         
+        return "I am KrishiMitra, here to support your farming journey. You can ask me about soil health, crop varieties like Paddy, Cotton, Ragi, or Maize, pest management, weather alerts, or government schemes like PM-KISAN!";
     }
 
     @SuppressWarnings("unchecked")

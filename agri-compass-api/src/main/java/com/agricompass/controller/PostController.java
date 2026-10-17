@@ -1,10 +1,12 @@
 package com.agricompass.controller;
 
 import com.agricompass.entity.Comment;
+import com.agricompass.entity.Notification;
 import com.agricompass.entity.Post;
 import com.agricompass.entity.PostLike;
 import com.agricompass.repository.CommentRepository;
 import com.agricompass.repository.FollowRepository;
+import com.agricompass.repository.NotificationRepository;
 import com.agricompass.repository.PostLikeRepository;
 import com.agricompass.repository.PostRepository;
 import com.agricompass.repository.UserProfileRepository;
@@ -12,6 +14,7 @@ import com.agricompass.service.UserService;
 import com.agricompass.dto.CommentResponseDTO;
 import com.agricompass.dto.UserSummaryDTO;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -28,14 +31,37 @@ public class PostController {
     private final UserProfileRepository profileRepository;
     private final UserService userService;
     private final FollowRepository followRepository;
+    private final NotificationRepository notificationRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public PostController(PostRepository postRepository, PostLikeRepository postLikeRepository, CommentRepository commentRepository, UserProfileRepository profileRepository, UserService userService, FollowRepository followRepository) {
+    public PostController(
+            PostRepository postRepository,
+            PostLikeRepository postLikeRepository,
+            CommentRepository commentRepository,
+            UserProfileRepository profileRepository,
+            UserService userService,
+            FollowRepository followRepository,
+            NotificationRepository notificationRepository,
+            SimpMessagingTemplate messagingTemplate) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.commentRepository = commentRepository;
         this.profileRepository = profileRepository;
         this.userService = userService;
         this.followRepository = followRepository;
+        this.notificationRepository = notificationRepository;
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    private String resolveUserId(String headerUserId) {
+        try {
+            com.agricompass.entity.UserProfile p = userService.syncUser(null);
+            if (p != null && p.getId() != null) return p.getId();
+        } catch (Exception ignored) {}
+        if (headerUserId != null && !headerUserId.trim().isEmpty()) {
+            return headerUserId.trim();
+        }
+        return null;
     }
 
     @GetMapping
@@ -45,18 +71,22 @@ public class PostController {
             @RequestParam(required = false) String user,
             @RequestParam(required = false) String userId,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int limit) {
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
 
         String query = (q != null && !q.trim().isEmpty()) ? q : "";
         String loc = (location != null && !location.trim().isEmpty()) ? location : "";
         String requestedUser = userId != null ? userId : user;
         String userIdFilter = (requestedUser != null && !requestedUser.trim().isEmpty()) ? requestedUser : "";
 
-        String currentUserId = userService.syncUser(null).getId();
-        List<String> followedIds = followRepository.findByFollowerId(currentUserId)
-                .stream().map(f -> f.getFollowingId()).toList();
-        if (followedIds.isEmpty()) {
-            followedIds = List.of("dummy_id_no_match");
+        String currentUserId = resolveUserId(headerUserId);
+        List<String> followedIds = List.of("dummy_id_no_match");
+        if (currentUserId != null) {
+            List<String> userFollowed = followRepository.findByFollowerId(currentUserId)
+                    .stream().map(f -> f.getFollowingId()).toList();
+            if (!userFollowed.isEmpty()) {
+                followedIds = userFollowed;
+            }
         }
         
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page - 1), limit);
@@ -182,8 +212,10 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getPost(@PathVariable String id) {
-        String currentUserId = userService.syncUser(null).getId();
+    public ResponseEntity<Map<String, Object>> getPost(
+            @PathVariable String id,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String currentUserId = resolveUserId(headerUserId);
         Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
         
         Map<String, Object> dto = new HashMap<>();
@@ -223,8 +255,13 @@ public class PostController {
     }
 
     @PostMapping("/{id}/like")
-    public ResponseEntity<Map<String, Object>> toggleLike(@PathVariable String id) {
-        String userId = userService.syncUser(null).getId();
+    public ResponseEntity<Map<String, Object>> toggleLike(
+            @PathVariable String id,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String userId = resolveUserId(headerUserId);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
         Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
         
         Optional<PostLike> existing = postLikeRepository.findByPostIdAndClerkUserId(id, userId);
@@ -233,6 +270,42 @@ public class PostController {
             return ResponseEntity.ok(Map.of("liked", false, "count", postLikeRepository.countByPostId(id)));
         } else {
             postLikeRepository.save(new PostLike(id, userId));
+
+            // Notify post author if not self-like
+            if (post.getUserId() != null && !post.getUserId().equals(userId)) {
+                try {
+                    com.agricompass.entity.UserProfile liker = profileRepository.findById(userId).orElse(null);
+                    String likerName = liker != null && liker.getFullName() != null ? liker.getFullName() : (liker != null ? liker.getUsername() : "A farmer");
+                    String likerAvatar = liker != null ? liker.getAvatarUrl() : null;
+                    String preview = post.getBody() != null ? (post.getBody().length() > 50 ? post.getBody().substring(0, 47) + "..." : post.getBody()) : "your post";
+
+                    Notification n = new Notification();
+                    n.setRecipientUserId(post.getUserId());
+                    n.setSenderUserId(userId);
+                    n.setAuthorName(likerName);
+                    n.setAuthorAvatar(likerAvatar);
+                    n.setType("LIKE");
+                    n.setMessage(likerName + " liked your post: \"" + preview + "\"");
+                    n.setLink("/community?postId=" + post.getId());
+                    n.setIsRead(false);
+                    notificationRepository.save(n);
+
+                    if (messagingTemplate != null) {
+                        Map<String, Object> payload = new HashMap<>();
+                        payload.put("id", n.getId());
+                        payload.put("type", n.getType());
+                        payload.put("message", n.getMessage());
+                        payload.put("timestamp", n.getCreatedAt());
+                        payload.put("link", n.getLink());
+                        payload.put("authorName", n.getAuthorName());
+                        payload.put("authorAvatar", n.getAuthorAvatar());
+                        payload.put("senderUserId", n.getSenderUserId());
+                        payload.put("isRead", false);
+                        messagingTemplate.convertAndSend("/topic/notifications." + post.getUserId(), payload);
+                    }
+                } catch (Exception ignored) {}
+            }
+
             return ResponseEntity.ok(Map.of("liked", true, "count", postLikeRepository.countByPostId(id)));
         }
     }
@@ -266,14 +339,21 @@ public class PostController {
     }
 
     @PostMapping("/{id}/comments")
-    public ResponseEntity<CommentResponseDTO> addComment(@PathVariable String id, @RequestBody Map<String, String> body) {
-        String userId = userService.syncUser(null).getId();
+    public ResponseEntity<CommentResponseDTO> addComment(
+            @PathVariable String id, 
+            @RequestBody Map<String, String> body,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String userId = resolveUserId(headerUserId);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
         Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
         
         Comment comment = new Comment();
         comment.setPostId(post.getId());
         comment.setUserId(userId);
-        comment.setContent(body.get("content"));
+        String commentContent = body.get("content");
+        comment.setContent(commentContent);
         comment = commentRepository.save(comment);
 
         // Fetch user profile properly for response
@@ -284,6 +364,40 @@ public class PostController {
             (String) userMap.get("username"),
             (String) userMap.get("avatar_url")
         );
+
+        // Notify post author if not self-comment
+        if (post.getUserId() != null && !post.getUserId().equals(userId)) {
+            try {
+                String commenterName = (String) userMap.get("fullName");
+                String commenterAvatar = (String) userMap.get("avatar_url");
+                String preview = commentContent != null ? (commentContent.length() > 50 ? commentContent.substring(0, 47) + "..." : commentContent) : "";
+
+                Notification n = new Notification();
+                n.setRecipientUserId(post.getUserId());
+                n.setSenderUserId(userId);
+                n.setAuthorName(commenterName);
+                n.setAuthorAvatar(commenterAvatar);
+                n.setType("COMMENT");
+                n.setMessage(commenterName + " commented: \"" + preview + "\"");
+                n.setLink("/community?postId=" + post.getId());
+                n.setIsRead(false);
+                notificationRepository.save(n);
+
+                if (messagingTemplate != null) {
+                    Map<String, Object> payload = new HashMap<>();
+                    payload.put("id", n.getId());
+                    payload.put("type", n.getType());
+                    payload.put("message", n.getMessage());
+                    payload.put("timestamp", n.getCreatedAt());
+                    payload.put("link", n.getLink());
+                    payload.put("authorName", n.getAuthorName());
+                    payload.put("authorAvatar", n.getAuthorAvatar());
+                    payload.put("senderUserId", n.getSenderUserId());
+                    payload.put("isRead", false);
+                    messagingTemplate.convertAndSend("/topic/notifications." + post.getUserId(), payload);
+                }
+            } catch (Exception ignored) {}
+        }
         
         CommentResponseDTO response = new CommentResponseDTO(
             comment.getId(),
@@ -297,8 +411,11 @@ public class PostController {
 
     @DeleteMapping("/{id}")
     @org.springframework.transaction.annotation.Transactional
-    public ResponseEntity<Void> deletePost(@PathVariable String id) {
-        String currentUserId = userService.syncUser(null).getId();
+    public ResponseEntity<Void> deletePost(
+            @PathVariable String id,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String currentUserId = resolveUserId(headerUserId);
+        if (currentUserId == null) return ResponseEntity.status(401).build();
         Post post = postRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Post not found"));
         if (!post.getUserId().equals(currentUserId)) {

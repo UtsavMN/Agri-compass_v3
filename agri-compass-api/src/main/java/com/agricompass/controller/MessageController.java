@@ -2,14 +2,14 @@ package com.agricompass.controller;
 
 import com.agricompass.entity.Conversation;
 import com.agricompass.entity.Message;
+import com.agricompass.entity.UserProfile;
 import com.agricompass.repository.ConversationRepository;
 import com.agricompass.repository.MessageRepository;
 import com.agricompass.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,16 +24,36 @@ public class MessageController {
     private final UserService userService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public MessageController(MessageRepository messageRepository, ConversationRepository conversationRepository, UserService userService, SimpMessagingTemplate messagingTemplate) {
+    public MessageController(
+            MessageRepository messageRepository,
+            ConversationRepository conversationRepository,
+            UserService userService,
+            SimpMessagingTemplate messagingTemplate) {
         this.messageRepository = messageRepository;
         this.conversationRepository = conversationRepository;
         this.userService = userService;
         this.messagingTemplate = messagingTemplate;
     }
 
+    private String resolveUserId(String headerUserId) {
+        try {
+            UserProfile p = userService.syncUser(null);
+            if (p != null && p.getId() != null) return p.getId();
+        } catch (Exception ignored) {}
+        if (headerUserId != null && !headerUserId.trim().isEmpty()) {
+            return headerUserId.trim();
+        }
+        return null;
+    }
+
     @GetMapping("/{convId}")
-    public ResponseEntity<List<Map<String, Object>>> getMessages(@PathVariable String convId) {
-        String currentUserId = userService.syncUser(null).getId();
+    public ResponseEntity<List<Map<String, Object>>> getMessages(
+            @PathVariable String convId,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String currentUserId = resolveUserId(headerUserId);
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).build();
+        }
         
         Conversation c = conversationRepository.findById(convId).orElse(null);
         if (c == null || (!c.getParticipantOne().equals(currentUserId) && !c.getParticipantTwo().equals(currentUserId))) {
@@ -55,8 +75,14 @@ public class MessageController {
     }
 
     @PostMapping("/{convId}/read")
-    public ResponseEntity<Void> markAsRead(@PathVariable String convId) {
-        String currentUserId = userService.syncUser(null).getId();
+    public ResponseEntity<Map<String, Object>> markAsRead(
+            @PathVariable String convId,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String currentUserId = resolveUserId(headerUserId);
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
         List<Message> unread = messageRepository.findByConversationIdOrderByCreatedAtAsc(convId).stream()
                 .filter(m -> m.getReadAt() == null && !m.getSenderId().equals(currentUserId))
                 .collect(Collectors.toList());
@@ -67,12 +93,25 @@ public class MessageController {
             messageRepository.save(m);
         });
 
-        return ResponseEntity.ok().build();
+        // Compute new total unread count for current user
+        List<Conversation> conversations = conversationRepository.findByParticipant(currentUserId);
+        int totalUnread = 0;
+        for (Conversation c : conversations) {
+            totalUnread += messageRepository.countByConversationIdAndReadAtIsNullAndSenderIdNot(c.getId(), currentUserId);
+        }
+
+        return ResponseEntity.ok(Map.of("success", true, "count", totalUnread));
     }
 
     @PostMapping("/{convId}")
-    public ResponseEntity<Map<String, Object>> sendMessage(@PathVariable String convId, @RequestBody Map<String, String> body) {
-        String currentUserId = userService.syncUser(null).getId();
+    public ResponseEntity<Map<String, Object>> sendMessage(
+            @PathVariable String convId,
+            @RequestBody Map<String, String> body,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String currentUserId = resolveUserId(headerUserId);
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).build();
+        }
         
         Conversation c = conversationRepository.findById(convId).orElseThrow(() -> new RuntimeException("Not found"));
         

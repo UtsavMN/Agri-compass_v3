@@ -60,8 +60,16 @@ export const ChatPage = () => {
         const msgData = await apiGet(`/api/messages/${convId}`, token);
         if (isMounted) setMessages(msgData.messages ?? msgData ?? []);
 
-        // Mark as read
-        apiPost(`/api/messages/${convId}/read`, {}, token).catch(() => {});
+        // Mark as read and synchronize navbar badge immediately
+        apiPost(`/api/messages/${convId}/read`, {}, token)
+          .then((res: any) => {
+            if (res && typeof res.count === 'number') {
+              window.dispatchEvent(new CustomEvent('agri_unread_messages_updated', { detail: { count: res.count } }));
+            } else {
+              window.dispatchEvent(new CustomEvent('agri_unread_messages_updated', { detail: {} }));
+            }
+          })
+          .catch(() => {});
       } catch (err) {
         console.error("Chat setup failed:", err);
       } finally {
@@ -84,7 +92,7 @@ export const ChatPage = () => {
       webSocketFactory: () => new SockJS(buildUrl('/ws')),
       onConnect: () => {
         setConnected(true);
-        client.subscribe(`/topic/messages.${user.id}`, frame => {
+        client.subscribe(`/topic/messages.${user.id}`, async frame => {
           const msg: Message = JSON.parse(frame.body);
           if (msg.conversationId === conversationId) {
             setMessages(prev => {
@@ -92,6 +100,16 @@ export const ChatPage = () => {
               return exists ? prev : [...prev, msg];
             });
             scrollToBottom();
+            try {
+              const token = await getToken();
+              const res = await apiPost(`/api/messages/${conversationId}/read`, {}, token);
+              if (res && typeof res.count === 'number') {
+                window.dispatchEvent(new CustomEvent('agri_unread_messages_updated', { detail: { count: res.count } }));
+              }
+            } catch (ignored) {}
+          } else {
+            // New message from another conversation, notify navbar
+            window.dispatchEvent(new CustomEvent('agri_unread_messages_updated', { detail: {} }));
           }
         });
       },
@@ -103,7 +121,7 @@ export const ChatPage = () => {
     stompRef.current = client;
     // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => { client.deactivate(); };
-  }, [conversationId, user?.id]);
+  }, [conversationId, user?.id, getToken, scrollToBottom]);
 
   const sendMessage = useCallback(() => {
     if (!input.trim() || !conversationId) return;

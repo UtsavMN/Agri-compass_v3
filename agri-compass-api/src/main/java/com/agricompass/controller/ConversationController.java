@@ -24,18 +24,37 @@ public class ConversationController {
     private final UserProfileRepository userProfileRepository;
     private final UserService userService;
 
-    public ConversationController(ConversationRepository conversationRepository, MessageRepository messageRepository, UserProfileRepository userProfileRepository, UserService userService) {
+    public ConversationController(
+            ConversationRepository conversationRepository,
+            MessageRepository messageRepository,
+            UserProfileRepository userProfileRepository,
+            UserService userService) {
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
         this.userProfileRepository = userProfileRepository;
         this.userService = userService;
     }
 
+    private String resolveUserId(String headerUserId) {
+        try {
+            UserProfile p = userService.syncUser(null);
+            if (p != null && p.getId() != null) return p.getId();
+        } catch (Exception ignored) {}
+        if (headerUserId != null && !headerUserId.trim().isEmpty()) {
+            return headerUserId.trim();
+        }
+        return null;
+    }
+
     @GetMapping
-    public ResponseEntity<List<Map<String, Object>>> getConversations() {
-        String currentUserId = userService.syncUser(null).getId();
+    public ResponseEntity<List<Map<String, Object>>> getConversations(
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String currentUserId = resolveUserId(headerUserId);
+        if (currentUserId == null || currentUserId.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+
         List<Conversation> conversations = conversationRepository.findByParticipant(currentUserId);
-        
         List<Map<String, Object>> result = new ArrayList<>();
         
         // Batch fetch all user profiles to prevent N+1 query issue
@@ -54,7 +73,6 @@ public class ConversationController {
             UserProfile otherProfile = profileMap.get(otherUserId);
             
             Message latestMessage = messageRepository.findTopByConversationIdOrderByCreatedAtDesc(c.getId());
-            
             int unreadCount = messageRepository.countByConversationIdAndReadAtIsNullAndSenderIdNot(c.getId(), currentUserId);
             
             Map<String, Object> map = new HashMap<>();
@@ -89,8 +107,14 @@ public class ConversationController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<Map<String, Object>> getOrCreateConversation(@PathVariable String userId) {
-        String currentUserId = userService.syncUser(null).getId();
+    public ResponseEntity<Map<String, Object>> getOrCreateConversation(
+            @PathVariable String userId,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String currentUserId = resolveUserId(headerUserId);
+        if (currentUserId == null || currentUserId.isEmpty()) {
+            return ResponseEntity.status(401).build();
+        }
+
         Conversation c = conversationRepository.findByParticipants(currentUserId, userId).orElseGet(() -> {
             Conversation newConv = new Conversation();
             newConv.setParticipantOne(currentUserId);
@@ -104,8 +128,13 @@ public class ConversationController {
     }
 
     @GetMapping("/unread-count")
-    public ResponseEntity<Map<String, Object>> getUnreadCount() {
-        String currentUserId = userService.syncUser(null).getId();
+    public ResponseEntity<Map<String, Object>> getUnreadCount(
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String currentUserId = resolveUserId(headerUserId);
+        if (currentUserId == null || currentUserId.isEmpty()) {
+            return ResponseEntity.ok(Map.of("count", 0));
+        }
+
         List<Conversation> conversations = conversationRepository.findByParticipant(currentUserId);
         int totalUnread = 0;
         for (Conversation c : conversations) {

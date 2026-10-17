@@ -30,6 +30,9 @@ public class ListingController {
     @Autowired
     private com.agricompass.repository.NotificationRepository notificationRepository;
 
+    @Autowired(required = false)
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
     @GetMapping
     public ResponseEntity<Page<ListingDTO>> getListings(
         @RequestParam(defaultValue = "0") int page,
@@ -296,7 +299,24 @@ public class ListingController {
             notification.setType("MARKETPLACE_INTEREST");
             notification.setMessage(notificationMessage);
             notification.setLink("/community");
-            notificationRepository.save(notification);
+            notification.setIsRead(false);
+            com.agricompass.entity.Notification savedNotif = notificationRepository.save(notification);
+
+            if (messagingTemplate != null) {
+                try {
+                    Map<String, Object> payload = new java.util.HashMap<>();
+                    payload.put("id", savedNotif.getId());
+                    payload.put("type", savedNotif.getType());
+                    payload.put("message", savedNotif.getMessage());
+                    payload.put("timestamp", savedNotif.getCreatedAt());
+                    payload.put("link", savedNotif.getLink());
+                    payload.put("authorName", savedNotif.getAuthorName());
+                    payload.put("authorAvatar", savedNotif.getAuthorAvatar());
+                    payload.put("senderUserId", savedNotif.getSenderUserId());
+                    payload.put("isRead", false);
+                    messagingTemplate.convertAndSend("/topic/notifications." + listing.getUserId(), payload);
+                } catch (Exception ignored) {}
+            }
         }
 
         return ResponseEntity.ok(Map.of(

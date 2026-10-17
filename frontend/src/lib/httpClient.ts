@@ -14,30 +14,41 @@ let globalClerkToken: string | null = null;
 export const setGlobalClerkToken = (token: string | null) => {
   globalClerkToken = token;
 };
+export const getGlobalClerkToken = () => globalClerkToken;
 
+let globalClerkUserId: string | null = null;
+export const setGlobalClerkUserId = (userId: string | null) => {
+  globalClerkUserId = userId;
+};
+export const getGlobalClerkUserId = () => globalClerkUserId;
+
+const getHeaders = (token?: string | null): Record<string, string> => {
+  const actualToken = token || globalClerkToken;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+  };
+  if (actualToken) {
+    headers["Authorization"] = `Bearer ${actualToken}`;
+  }
+  if (globalClerkUserId) {
+    headers["X-User-Id"] = globalClerkUserId;
+  }
+  return headers;
+};
 
 export const apiGet = async (path: string, token?: string | null): Promise<any> => {
-  const actualToken = token || globalClerkToken;
   const res = await fetch(buildUrl(path), {
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
-    },
+    headers: getHeaders(token),
   });
   if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`);
   return res.json();
 };
 
 export const apiPost = async (path: string, body: unknown, token?: string | null): Promise<any> => {
-  const actualToken = token || globalClerkToken;
   const res = await fetch(buildUrl(path), {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
-    },
+    headers: getHeaders(token),
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -54,14 +65,9 @@ export const apiPost = async (path: string, body: unknown, token?: string | null
 };
 
 export const apiDelete = async (path: string, token?: string | null): Promise<any> => {
-  const actualToken = token || globalClerkToken;
   const res = await fetch(buildUrl(path), {
     method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
-    },
+    headers: getHeaders(token),
   });
   if (!res.ok) throw new Error(`DELETE ${path} failed: ${res.status}`);
   if (res.status === 204) return null;
@@ -70,14 +76,9 @@ export const apiDelete = async (path: string, token?: string | null): Promise<an
 };
 
 export const apiPut = async (path: string, body: unknown, token?: string | null): Promise<any> => {
-  const actualToken = token || globalClerkToken;
   const res = await fetch(buildUrl(path), {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
-    },
+    headers: getHeaders(token),
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`PUT ${path} failed: ${res.status}`);
@@ -85,14 +86,9 @@ export const apiPut = async (path: string, body: unknown, token?: string | null)
 };
 
 export const apiPatch = async (path: string, body: unknown, token?: string | null): Promise<any> => {
-  const actualToken = token || globalClerkToken;
   const res = await fetch(buildUrl(path), {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
-    },
+    headers: getHeaders(token),
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`PATCH ${path} failed: ${res.status}`);
@@ -101,12 +97,16 @@ export const apiPatch = async (path: string, body: unknown, token?: string | nul
 
 export const apiUpload = async (path: string, body: FormData, token?: string | null): Promise<any> => {
   const actualToken = token || globalClerkToken;
+  const headers: Record<string, string> = {};
+  if (actualToken) {
+    headers["Authorization"] = `Bearer ${actualToken}`;
+  }
+  if (globalClerkUserId) {
+    headers["X-User-Id"] = globalClerkUserId;
+  }
   const res = await fetch(buildUrl(path), {
     method: "POST",
-    headers: {
-      // Do NOT set Content-Type to application/json for FormData, browser will set it with boundary
-      ...(actualToken ? { Authorization: `Bearer ${actualToken}` } : {}),
-    },
+    headers,
     body: body,
   });
   if (!res.ok) throw new Error(`UPLOAD ${path} failed: ${res.status}`);

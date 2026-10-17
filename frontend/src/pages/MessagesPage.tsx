@@ -19,7 +19,10 @@ export const MessagesPage = () => {
       if (!token) return;
       try {
         const data = await apiGet('/api/conversations', token);
-        setConversations(data.conversations ?? data ?? []);
+        const convs = data.conversations ?? data ?? [];
+        setConversations(convs);
+        const totalUnread = convs.reduce((sum: number, c: any) => sum + (c.unreadCount || c.unread_count || 0), 0);
+        window.dispatchEvent(new CustomEvent('agri_unread_messages_updated', { detail: { count: totalUnread } }));
       } catch (err) {
         console.error("Failed to load conversations:", err);
       } finally {
@@ -158,8 +161,8 @@ export const MessagesPage = () => {
                 </p>
               </div>
               {(conv.unreadCount || conv.unread_count) > 0 && (
-                <div className="w-5 h-5 bg-[#C9A84C] rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-[#0A0A0A] text-xs font-bold">{conv.unreadCount || conv.unread_count}</span>
+                <div className="min-w-[20px] h-5 px-1.5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <span className="text-white text-[11px] font-bold leading-none">{conv.unreadCount || conv.unread_count}</span>
                 </div>
               )}
             </button>

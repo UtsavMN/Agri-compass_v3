@@ -8,10 +8,12 @@ import { useTourStore } from '@/store/tourStore';
 import { WeatherAlertModal } from '@/components/layout/WeatherAlertModal';
 import { FallingLeaves } from '@/components/ui/animations/FallingLeaves';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useClerk } from '@clerk/clerk-react';
+import { useClerk, useAuth } from '@clerk/clerk-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDistrict, useUser } from '@/store';
-import { apiGet } from '@/lib/httpClient';
+import { apiGet, buildUrl, setGlobalClerkToken, setGlobalClerkUserId } from '@/lib/httpClient';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 import { cn } from '@/lib/utils';
 import { useOnboardingGate } from '@/hooks/useOnboardingGate';
 import { Button } from '@/components/ui/button';
@@ -64,6 +66,7 @@ export default function Layout({
 }: LayoutProps) {
   const { user, profile, signOut } = useUser();
   const { openUserProfile } = useClerk();
+  const { getToken } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
   const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const navigate = useNavigate();
@@ -97,37 +100,69 @@ export default function Layout({
 
   useOnboardingGate();
 
+  // Real-time unread messages tracking & synchronization
   useEffect(() => {
     if (!user) return;
     let timeoutId: number;
     let isMounted = true;
+    let stompClient: Client | null = null;
 
-    const fetchUnread = () => {
-      if (!isMounted) return;
-      apiGet('/api/conversations/unread-count', null)
-        .then((res: any) => {
-          if (!isMounted) return;
-          if (res && typeof res.count === 'number') {
-            setUnreadCount(res.count);
-          }
-        })
-        .catch((err) => {
-          if (isMounted) console.error(err);
-        })
-        .finally(() => {
-          if (isMounted) {
-            timeoutId = window.setTimeout(fetchUnread, 15000); // Poll every 15s
-          }
-        });
+    const fetchUnread = async () => {
+      if (!isMounted || !user) return;
+      try {
+        const token = await getToken();
+        if (token) setGlobalClerkToken(token);
+        if (user.id) setGlobalClerkUserId(user.id);
+        const res = await apiGet('/api/conversations/unread-count', token);
+        if (isMounted && res && typeof res.count === 'number') {
+          setUnreadCount(res.count);
+        }
+      } catch (err) {
+        // Silently handle
+      } finally {
+        if (isMounted) {
+          timeoutId = window.setTimeout(fetchUnread, 12000); // Poll every 12s as reliable fallback
+        }
+      }
     };
 
     fetchUnread();
 
+    // Listen to custom instant update event (dispatched when chat is opened/messages read)
+    const handleUnreadUpdate = (e: any) => {
+      if (typeof e.detail?.count === 'number') {
+        setUnreadCount(e.detail.count);
+      } else {
+        fetchUnread();
+      }
+    };
+    window.addEventListener('agri_unread_messages_updated', handleUnreadUpdate);
+
+    // WebSocket real-time subscription for instant incoming messages
+    if (user.id) {
+      try {
+        stompClient = new Client({
+          webSocketFactory: () => new SockJS(buildUrl('/ws')),
+          reconnectDelay: 5000,
+          onConnect: () => {
+            stompClient?.subscribe(`/topic/messages.${user.id}`, () => {
+              fetchUnread();
+            });
+          },
+        });
+        stompClient.activate();
+      } catch (e) {
+        console.error("STOMP connection error in Layout", e);
+      }
+    }
+
     return () => {
       isMounted = false;
       if (timeoutId) window.clearTimeout(timeoutId);
+      window.removeEventListener('agri_unread_messages_updated', handleUnreadUpdate);
+      if (stompClient) stompClient.deactivate();
     };
-  }, [user]);
+  }, [user, getToken, location.pathname]);
 
   // Listen to profile preferences for outdoor mode
   useEffect(() => {
@@ -247,18 +282,26 @@ export default function Layout({
             <div className="hidden sm:flex items-center h-8 px-3 border border-earth-border/40 bg-[#1a1a14]/60 text-gold-100/90 text-[11px] font-bold tracking-widest uppercase rounded-xl">
               <MapPin className="w-3.5 h-3.5 mr-2 text-gold-400" />
               {selectedDistrict || 'NO DISTRICT'}
-            </div>            {/* Messages Button */}
+            </div>            {/* Messages Button (Instagram-style reactive red badge) */}
             {user && (
               <button
                 onClick={() => navigate('/messages')}
-                className="relative p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center rounded-lg hover:bg-[#C9A84C]/5 transition-colors"
+                className="relative p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center rounded-lg hover:bg-[#C9A84C]/5 transition-colors focus:outline-none"
                 aria-label="Messages">
-                <MessageSquare className="h-5 w-5 text-[#F5F0E8]" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-[#C9A84C] rounded-full text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
+                <MessageSquare className="h-5 w-5 text-[#F5F0E8] transition-transform hover:scale-105" />
+                <AnimatePresence>
+                  {unreadCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                      className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center border-2 border-[#12120e] shadow-sm leading-none z-10 pointer-events-none"
+                    >
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </button>
             )}
 
