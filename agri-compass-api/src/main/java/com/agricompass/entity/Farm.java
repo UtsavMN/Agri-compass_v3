@@ -115,6 +115,7 @@ public class Farm {
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
+        private String id;
         private String userId;
         private String name;
         private String location;
@@ -123,6 +124,7 @@ public class Farm {
         private String irrigationType;
         private String currentCrop;
 
+        public Builder id(String id) { this.id = id; return this; }
         public Builder userId(String userId) { this.userId = userId; return this; }
         public Builder name(String name) { this.name = name; return this; }
         public Builder location(String location) { this.location = location; return this; }
@@ -133,6 +135,7 @@ public class Farm {
 
         public Farm build() {
             Farm farm = new Farm();
+            if (this.id != null) farm.id = this.id;
             farm.clerkUserId = this.userId;
             farm.farmName = this.name;
             farm.district = this.location;

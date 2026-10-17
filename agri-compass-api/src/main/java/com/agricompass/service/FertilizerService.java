@@ -118,7 +118,10 @@ public class FertilizerService {
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> calculateRecommendation(String crop, double soilN, double soilP, double soilK) {
-        String cropKey = crop != null ? crop.toLowerCase() : "generic";
+        if (crop == null || crop.trim().isEmpty()) {
+            throw new IllegalArgumentException("Crop name cannot be empty");
+        }
+        String cropKey = crop.toLowerCase().trim();
         Map<String, Object> nutrientReq;
         Map<String, Object> cropData = null;
 
@@ -162,6 +165,7 @@ public class FertilizerService {
         }
 
         Map<String, Object> result = new HashMap<>();
+        result.put("crop", cropData != null ? cropData.get("name") : crop.trim());
         result.put("recommended_n", Math.round(deficitN * 10.0) / 10.0);
         result.put("recommended_p", Math.round(deficitP * 10.0) / 10.0);
         result.put("recommended_k", Math.round(deficitK * 10.0) / 10.0);
