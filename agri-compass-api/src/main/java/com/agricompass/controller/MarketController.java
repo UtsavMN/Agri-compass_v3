@@ -25,15 +25,52 @@ public class MarketController {
     private String dataGovApiKey;
 
     private final RestTemplate restTemplate;
+    private final com.agricompass.service.KrishiMandiService krishiMandiService;
 
     public MarketController(RestTemplate restTemplate) {
+        this(restTemplate, null);
+    }
+
+    public MarketController(RestTemplate restTemplate, com.agricompass.service.KrishiMandiService krishiMandiService) {
         this.restTemplate = restTemplate;
+        this.krishiMandiService = krishiMandiService;
     }
 
     @GetMapping("/prices")
     public ResponseEntity<?> getMarketPrices(
             @RequestParam String district,
             @RequestParam(defaultValue = "20") int limit) {
+
+        // 1. Check local verified Krishi Marata Vahini snapshot first
+        if (krishiMandiService != null) {
+            var kmvPrices = krishiMandiService.getPricesByDistrict(district);
+            if (kmvPrices != null && !kmvPrices.isEmpty()) {
+                var mapped = kmvPrices.stream().limit(limit).map(p -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("commodity", p.getCommodity());
+                    m.put("market", p.getMarket());
+                    m.put("district", p.getDistrict());
+                    m.put("variety", p.getVariety());
+                    m.put("grade", p.getGrade());
+                    m.put("minPrice", p.getMinPrice());
+                    m.put("maxPrice", p.getMaxPrice());
+                    m.put("modalPrice", p.getModalPrice());
+                    m.put("arrivalQuantity", p.getArrivalQuantity());
+                    m.put("arrivalUnit", p.getArrivalUnit());
+                    m.put("priceUnit", p.getPriceUnit());
+                    m.put("date", p.getReportDate());
+                    m.put("source", p.getSource());
+                    return m;
+                }).toList();
+
+                return ResponseEntity.ok(Map.of(
+                    "prices", mapped,
+                    "district", district,
+                    "fetchedAt", java.time.Instant.now().toString(),
+                    "source", "KRISHI_MARATA_VAHINI"
+                ));
+            }
+        }
 
         if (dataGovApiKey == null || dataGovApiKey.equals("default") || dataGovApiKey.trim().isEmpty() || dataGovApiKey.contains("your-")) {
             return ResponseEntity.ok(Map.of(

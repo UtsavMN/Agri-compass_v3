@@ -2,19 +2,26 @@ import { useState, useEffect } from "react";
 import { apiGet } from "../lib/httpClient";
 import { parseSafeDate } from "@/lib/dateUtils";
 
-interface MandiPrice {
+export interface MandiPrice {
   commodity: string;
   market: string;
   district: string;
+  variety?: string;
+  grade?: string;
   minPrice: number;
   maxPrice: number;
   modalPrice: number;
+  arrivalQuantity?: number;
+  arrivalUnit?: string;
+  priceUnit?: string;
   date: string;
-  trend: "up" | "down" | "stable";
+  source?: string;
+  trend?: "up" | "down" | "stable";
 }
 
 export const useMarketPrices = (district: string) => {
   const [prices, setPrices] = useState<MandiPrice[]>([]);
+  const [source, setSource] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -27,20 +34,23 @@ export const useMarketPrices = (district: string) => {
 
         const serverDate = parseSafeDate(data?.fetchedAt) || new Date();
         setPrices(data?.prices || []);
+        setSource(data?.source || null);
         setLastUpdated(serverDate);
 
         // Cache in localStorage as fallback
         localStorage.setItem(`market_prices_${district}`, JSON.stringify({
           prices: data?.prices || [],
+          source: data?.source || null,
           timestamp: serverDate.getTime()
         }));
       } catch (_err) {
         // Load from cache if API fails
         const cached = localStorage.getItem(`market_prices_${district}`);
         if (cached) {
-          const { prices: cachedPrices, timestamp } = JSON.parse(cached);
+          const { prices: cachedPrices, source: cachedSource, timestamp } = JSON.parse(cached);
           const serverDate = parseSafeDate(timestamp) || new Date();
           setPrices(cachedPrices);
+          setSource(cachedSource || null);
           setLastUpdated(serverDate);
           const hoursAgo = Math.max(1, Math.round((Date.now() - serverDate.getTime()) / 3600000));
           setError(`Using cached data from ${hoursAgo}h ago`);
@@ -55,5 +65,5 @@ export const useMarketPrices = (district: string) => {
     if (district) fetchPrices();
   }, [district]);
 
-  return { prices, loading, error, lastUpdated };
+  return { prices, source, loading, error, lastUpdated };
 };

@@ -45,3 +45,13 @@ jdk-17/
 *.zip
 .vercel
 .env*
+kmv_env/
+venv/
+.venv/
+__pycache__/
+*.parquet
+*.pyc
+validate_*.py
+validate_*.json
+validate_*.csv
+test_kmv_*.py
