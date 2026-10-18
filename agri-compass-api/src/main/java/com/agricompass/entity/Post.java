@@ -30,6 +30,15 @@ public class Post {
     @Column(name = "images_json", columnDefinition = "TEXT")
     private String imagesJson = "[]";
 
+    @Column(name = "crop_tag")
+    private String cropTag;
+
+    @Column(name = "mandi_price")
+    private String mandiPrice;
+
+    @Column(name = "poll_json", columnDefinition = "TEXT")
+    private String pollJson;
+
     @Column(name = "created_at", updatable = false)
     private String createdAt;
 
@@ -62,6 +71,15 @@ public class Post {
 
     public String getDistrict() { return district; }
     public void setDistrict(String district) { this.district = district; }
+
+    public String getCropTag() { return cropTag; }
+    public void setCropTag(String cropTag) { this.cropTag = cropTag; }
+
+    public String getMandiPrice() { return mandiPrice; }
+    public void setMandiPrice(String mandiPrice) { this.mandiPrice = mandiPrice; }
+
+    public String getPollJson() { return pollJson; }
+    public void setPollJson(String pollJson) { this.pollJson = pollJson; }
 
     public Integer getLikesCount() { return likesCount; }
     public void setLikesCount(Integer likesCount) { this.likesCount = likesCount; }

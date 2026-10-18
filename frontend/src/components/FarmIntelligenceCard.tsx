@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/httpClient";
 import { History, X } from "lucide-react";
 import { formatDate } from "@/lib/dateUtils";
+import { isCropYetToBeGrown } from "@/lib/ai/soilDiagnosticEngine";
 
 const safeGetAmendmentRecommendations = (report: any): string => {
   if (!report) return "No detailed report.";
@@ -107,7 +108,7 @@ export const FarmIntelligenceCard = ({ farmId, farmName, acres, district, crop, 
             <p className="text-[#F5F0E8]/40 text-xs mt-0.5 font-medium tracking-wider uppercase">{acres} acres • {district}</p>
           </div>
           <span className="text-[#C9A84C] text-xs font-bold uppercase tracking-wider border border-[#C9A84C]/30 px-3 py-1.5 rounded-full bg-[#C9A84C]/5">
-            {crop || "No crop set"}
+            {crop && !isCropYetToBeGrown(crop) ? crop : "Yet to be grown"}
           </span>
         </div>
       </div>

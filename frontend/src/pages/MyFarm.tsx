@@ -16,17 +16,13 @@ import { motion } from 'framer-motion';
 import { useDistrict } from '@/store';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { DISTRICTS } from '@/data/masterData';
-import { Plus, Sprout, MapPin,  Droplet, Trash2,     Shield, Activity, Database,  Sparkles, Pencil, Bot, ArrowRight } from 'lucide-react';
+import { Plus, Sprout, MapPin,  Droplet, Trash2,     Shield, Activity, Database,  Sparkles, Pencil, Bot, ArrowRight, FlaskConical } from 'lucide-react';
 import FertilizerAnalysisModule from '@/components/features/FertilizerAnalysisModule';
 import { SoilAnalysisContent } from '@/pages/SoilAnalysis';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { CropAutocomplete } from '@/components/farm/CropAutocomplete';
 import { FarmBlog } from '@/components/farm/FarmBlog';
-// Local types for UI specific state if needed, but we use the API Farm type
-
-
-
-
+import { isCropYetToBeGrown } from '@/lib/ai/soilDiagnosticEngine';
 
 export default function MyFarm() {
   const { user, profile } = useUser();
@@ -42,6 +38,7 @@ export default function MyFarm() {
 
   const [selectedFarmForAnalysis, setSelectedFarmForAnalysis] = useState<Farm | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [selectedFarmIdForDiagnostics, setSelectedFarmIdForDiagnostics] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'farms' | 'soil-ai'>('farms');
   const [formData, setFormData] = useState({
     name: '',
@@ -51,30 +48,34 @@ export default function MyFarm() {
     irrigation_type: '',
     current_crop: '',
   });
+  const [isCropYetToBeGrownChecked, setIsCropYetToBeGrownChecked] = useState<boolean>(false);
   const [editingFarmId, setEditingFarmId] = useState<string | null>(null);
 
   const handleOpenAddDialog = () => {
     setEditingFarmId(null);
     setFormData({
       name: '',
-      location: '',
+      location: selectedDistrict || '',
       area_acres: '',
-      soil_type: '',
-      irrigation_type: '',
+      soil_type: 'General',
+      irrigation_type: 'Rain Fed',
       current_crop: '',
     });
+    setIsCropYetToBeGrownChecked(false);
     setDialogOpen(true);
   };
 
   const handleEditClick = (farm: Farm) => {
     setEditingFarmId(farm.id);
+    const isFallow = isCropYetToBeGrown(farm.current_crop);
+    setIsCropYetToBeGrownChecked(isFallow);
     setFormData({
       name: farm.name,
       location: farm.location,
       area_acres: String(farm.area_acres),
       soil_type: farm.soil_type || 'General',
       irrigation_type: farm.irrigation_type || 'Standard',
-      current_crop: farm.current_crop || 'Rice',
+      current_crop: isFallow ? '' : (farm.current_crop || ''),
     });
     setDialogOpen(true);
   };
@@ -156,7 +157,9 @@ export default function MyFarm() {
         area_acres: areaAcres,
         soil_type: formData.soil_type || 'General',
         irrigation_type: formData.irrigation_type || 'Standard',
-        current_crop: formData.current_crop || 'Rice',
+        current_crop: isCropYetToBeGrownChecked || !formData.current_crop || formData.current_crop.trim() === ''
+          ? null
+          : formData.current_crop.trim(),
       };
 
       if (editingFarmId) {
@@ -298,11 +301,35 @@ export default function MyFarm() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Current Crop</Label>
-                        <CropAutocomplete
-                          value={formData.current_crop}
-                          onChange={(v) => setFormData({ ...formData, current_crop: v })}
-                        />
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Field Crop Status</Label>
+                          <label className="flex items-center gap-2 cursor-pointer text-[10px] font-bold text-gold-400">
+                            <input
+                              type="checkbox"
+                              checked={isCropYetToBeGrownChecked}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setIsCropYetToBeGrownChecked(checked);
+                                if (checked) {
+                                  setFormData({ ...formData, current_crop: '' });
+                                }
+                              }}
+                              className="rounded border-earth-border text-gold-500 focus:ring-gold-400 h-3.5 w-3.5 accent-[#d9a838]"
+                            />
+                            <span>No crop yet (Yet to be grown)</span>
+                          </label>
+                        </div>
+                        {isCropYetToBeGrownChecked ? (
+                          <div className="p-3 bg-earth-main/50 border border-dashed border-gold-400/30 rounded-xl text-xs text-gold-100/70 flex items-center gap-2">
+                            <Sprout className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                            <span>Field is currently fallow / a crop is yet to be grown in this field</span>
+                          </div>
+                        ) : (
+                          <CropAutocomplete
+                            value={formData.current_crop}
+                            onChange={(v) => setFormData({ ...formData, current_crop: v })}
+                          />
+                        )}
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -458,21 +485,49 @@ export default function MyFarm() {
                                 </div>
                               </div>
 
+                              <div className="flex items-center justify-between p-3 px-4 bg-earth-main/50 rounded-2xl border border-earth-border">
+                                <div className="flex items-center gap-2">
+                                  <Sprout className="h-4 w-4 text-gold-400" />
+                                  <span className="text-[10px] font-black text-gold-100/40 uppercase tracking-widest">Crop:</span>
+                                  {farm.current_crop && !isCropYetToBeGrown(farm.current_crop) ? (
+                                    <span className="text-xs font-black text-gold-100 uppercase tracking-tight">{farm.current_crop}</span>
+                                  ) : (
+                                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 uppercase tracking-wider">
+                                      Yet to be grown
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
                               <div className="flex items-center justify-between p-3 px-4 bg-gold-400/5 rounded-2xl border border-gold-400/10 group-hover:border-gold-400/30 transition-all">
                                 <div className="flex items-center gap-3">
                                   <Droplet className="h-4 w-4 text-gold-400/40" />
                                   <span className="text-[10px] font-black text-gold-100 uppercase tracking-widest">{farm.irrigation_type || 'Rain Fed'}</span>
                                 </div>
-                                <Button
-                                  variant="link"
-                                  className="p-0 h-auto text-[9px] font-black text-gold-400 uppercase tracking-widest no-underline hover:text-gold-100"
-                                  onClick={() => {
-                                    setSelectedFarmForAnalysis(farm);
-                                    setShowAnalysis(true);
-                                  }}
-                                >
-                                  AI Soil Advisory
-                                </Button>
+                                <div className="flex items-center gap-3">
+                                  <Button
+                                    variant="link"
+                                    className="p-0 h-auto text-[9px] font-black text-emerald-400 uppercase tracking-widest no-underline hover:text-emerald-300 flex items-center gap-1"
+                                    onClick={() => {
+                                      setSelectedFarmIdForDiagnostics(farm.id);
+                                      setActiveTab('soil-ai');
+                                    }}
+                                  >
+                                    <FlaskConical className="h-3 w-3" />
+                                    Soil AI Diagnostics
+                                  </Button>
+                                  <span className="text-gold-100/20 text-xs">|</span>
+                                  <Button
+                                    variant="link"
+                                    className="p-0 h-auto text-[9px] font-black text-gold-400 uppercase tracking-widest no-underline hover:text-gold-100"
+                                    onClick={() => {
+                                      setSelectedFarmForAnalysis(farm);
+                                      setShowAnalysis(true);
+                                    }}
+                                  >
+                                    AI Soil Advisory
+                                  </Button>
+                                </div>
                               </div>
 
                               <div className="pt-6 border-t border-earth-border/50">
@@ -489,7 +544,7 @@ export default function MyFarm() {
             </div>
           )
         ) : (
-          <SoilAnalysisContent />
+          <SoilAnalysisContent initialFarmId={selectedFarmIdForDiagnostics} />
         )}
 
         <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>

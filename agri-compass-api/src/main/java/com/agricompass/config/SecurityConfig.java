@@ -50,6 +50,10 @@ public class SecurityConfig {
                     "/api/users/search",
                     "/api/users/check-handle",
                     "/api/users/*/public",
+                    "/api/posts",
+                    "/api/posts/**",
+                    "/api/community",
+                    "/api/community/**",
                     "/ws/**"
                 ).permitAll()
                 .requestMatchers("/api/**").authenticated()

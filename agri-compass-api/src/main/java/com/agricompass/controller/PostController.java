@@ -4,10 +4,12 @@ import com.agricompass.entity.Comment;
 import com.agricompass.entity.Notification;
 import com.agricompass.entity.Post;
 import com.agricompass.entity.PostLike;
+import com.agricompass.entity.PostBookmark;
 import com.agricompass.repository.CommentRepository;
 import com.agricompass.repository.FollowRepository;
 import com.agricompass.repository.NotificationRepository;
 import com.agricompass.repository.PostLikeRepository;
+import com.agricompass.repository.PostBookmarkRepository;
 import com.agricompass.repository.PostRepository;
 import com.agricompass.repository.UserProfileRepository;
 import com.agricompass.service.UserService;
@@ -27,6 +29,7 @@ public class PostController {
 
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
+    private final PostBookmarkRepository postBookmarkRepository;
     private final CommentRepository commentRepository;
     private final UserProfileRepository profileRepository;
     private final UserService userService;
@@ -37,6 +40,7 @@ public class PostController {
     public PostController(
             PostRepository postRepository,
             PostLikeRepository postLikeRepository,
+            PostBookmarkRepository postBookmarkRepository,
             CommentRepository commentRepository,
             UserProfileRepository profileRepository,
             UserService userService,
@@ -45,6 +49,7 @@ public class PostController {
             SimpMessagingTemplate messagingTemplate) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
+        this.postBookmarkRepository = postBookmarkRepository;
         this.commentRepository = commentRepository;
         this.profileRepository = profileRepository;
         this.userService = userService;
@@ -97,6 +102,7 @@ public class PostController {
         Map<String, Long> tmpLikeCounts = new HashMap<>();
         Map<String, Long> tmpCommentCounts = new HashMap<>();
         Set<String> tmpLikedByMe = new HashSet<>();
+        Set<String> tmpBookmarkedByMe = new HashSet<>();
         
         if (!postIds.isEmpty()) {
             tmpLikeCounts = postLikeRepository.countByPostIds(postIds).stream()
@@ -107,18 +113,21 @@ public class PostController {
                 
             if (currentUserId != null) {
                 tmpLikedByMe.addAll(postLikeRepository.findLikedPostIds(postIds, currentUserId));
+                tmpBookmarkedByMe.addAll(postBookmarkRepository.findBookmarkedPostIds(postIds, currentUserId));
             }
         }
         
         final Map<String, Long> likeCounts = tmpLikeCounts;
         final Map<String, Long> commentCounts = tmpCommentCounts;
         final Set<String> likedByMe = tmpLikedByMe;
+        final Set<String> bookmarkedByMe = tmpBookmarkedByMe;
 
         List<String> userIds = postsPage.getContent().stream().map(Post::getUserId).distinct().toList();
         List<com.agricompass.entity.UserProfile> profiles = profileRepository.findAllById(userIds);
         Map<String, com.agricompass.entity.UserProfile> profileMap = profiles.stream()
                 .collect(Collectors.toMap(com.agricompass.entity.UserProfile::getId, p -> p));
 
+        final String finalUserId = currentUserId;
         List<Map<String, Object>> result = postsPage.map(post -> {
             Map<String, Object> dto = new HashMap<>();
             dto.put("id", post.getId());
@@ -142,8 +151,12 @@ public class PostController {
             dto.put("comments_count", comments);
             List<String> cropTags = post.getCropTags();
             dto.put("category", (cropTags != null && !cropTags.isEmpty()) ? cropTags.get(0) : "General");
+            dto.put("crop_tag", post.getCropTag());
+            dto.put("mandi_price", post.getMandiPrice());
+            dto.put("poll", parsePoll(post.getPollJson(), finalUserId));
 
             dto.put("isLiked", likedByMe.contains(post.getId()));
+            dto.put("isBookmarked", bookmarkedByMe.contains(post.getId()));
 
             com.agricompass.entity.UserProfile p = profileMap.get(post.getUserId());
             dto.put("user", userDtoFromProfile(post.getUserId(), p));
@@ -208,6 +221,27 @@ public class PostController {
         }
         post.setImages(imagesList);
 
+        if (body.get("crop_tag") != null && !body.get("crop_tag").toString().isBlank()) {
+            post.setCropTag(body.get("crop_tag").toString().trim());
+        } else if (body.get("cropTag") != null && !body.get("cropTag").toString().isBlank()) {
+            post.setCropTag(body.get("cropTag").toString().trim());
+        }
+
+        if (body.get("mandi_price") != null && !body.get("mandi_price").toString().isBlank()) {
+            post.setMandiPrice(body.get("mandi_price").toString().trim());
+        } else if (body.get("mandiPrice") != null && !body.get("mandiPrice").toString().isBlank()) {
+            post.setMandiPrice(body.get("mandiPrice").toString().trim());
+        }
+
+        if (body.get("poll") != null) {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                post.setPollJson(mapper.writeValueAsString(body.get("poll")));
+            } catch (Exception ignored) {}
+        } else if (body.get("poll_json") != null && !body.get("poll_json").toString().isBlank()) {
+            post.setPollJson(body.get("poll_json").toString().trim());
+        }
+
         return ResponseEntity.ok(postRepository.save(post));
     }
 
@@ -234,6 +268,11 @@ public class PostController {
         dto.put("likes_count", postLikeRepository.countByPostId(post.getId()));
         dto.put("isLiked", currentUserId != null &&
             postLikeRepository.findByPostIdAndClerkUserId(post.getId(), currentUserId).isPresent());
+        dto.put("isBookmarked", currentUserId != null &&
+            postBookmarkRepository.findByPostIdAndClerkUserId(post.getId(), currentUserId).isPresent());
+        dto.put("crop_tag", post.getCropTag());
+        dto.put("mandi_price", post.getMandiPrice());
+        dto.put("poll", parsePoll(post.getPollJson(), currentUserId));
         
         dto.put("user", userDtoFromProfile(post.getUserId(), post.getUserProfile()));
         
@@ -425,9 +464,211 @@ public class PostController {
         // Delete related records to prevent foreign key constraint violations
         commentRepository.deleteByPostId(id);
         postLikeRepository.deleteByPostId(id);
+        postBookmarkRepository.deleteByPostId(id);
         
         postRepository.delete(post);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/bookmark")
+    public ResponseEntity<Map<String, Object>> toggleBookmark(
+            @PathVariable String id,
+            @RequestParam(required = false) String userId,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String currentUserId = resolveUserId(headerUserId);
+        if (currentUserId == null && userId != null && !userId.isBlank()) {
+            currentUserId = userId.trim();
+        }
+        if (currentUserId == null || currentUserId.isBlank()) {
+            currentUserId = "farmer_anonymous";
+        }
+
+        Optional<PostBookmark> existing = postBookmarkRepository.findByPostIdAndClerkUserId(id, currentUserId);
+        boolean bookmarked;
+        if (existing.isPresent()) {
+            postBookmarkRepository.deleteByPostIdAndClerkUserId(id, currentUserId);
+            bookmarked = false;
+        } else {
+            postBookmarkRepository.save(new PostBookmark(id, currentUserId));
+            bookmarked = true;
+        }
+
+        return ResponseEntity.ok(Map.of("bookmarked", bookmarked, "postId", id));
+    }
+
+    @GetMapping("/bookmarked")
+    public ResponseEntity<List<Map<String, Object>>> getBookmarkedPosts(
+            @RequestParam(required = false) String userId,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String currentUserId = resolveUserId(headerUserId);
+        if (currentUserId == null && userId != null && !userId.isBlank()) {
+            currentUserId = userId.trim();
+        }
+        if (currentUserId == null || currentUserId.isBlank()) {
+            currentUserId = "farmer_anonymous";
+        }
+
+        List<String> bookmarkedPostIds = postBookmarkRepository.findPostIdsByClerkUserId(currentUserId);
+        if (bookmarkedPostIds == null || bookmarkedPostIds.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        List<Post> posts = postRepository.findAllById(bookmarkedPostIds);
+        Map<String, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p, (a, b) -> a));
+        List<Post> orderedPosts = bookmarkedPostIds.stream()
+                .map(postMap::get)
+                .filter(Objects::nonNull)
+                .toList();
+
+        List<String> postIds = orderedPosts.stream().map(Post::getId).distinct().toList();
+        Map<String, Long> likeCounts = postLikeRepository.countByPostIds(postIds).stream()
+                .collect(Collectors.toMap(r -> (String) r[0], r -> (Long) r[1]));
+        Map<String, Long> commentCounts = commentRepository.countByPostIds(postIds).stream()
+                .collect(Collectors.toMap(r -> (String) r[0], r -> (Long) r[1]));
+        Set<String> likedByMe = new HashSet<>(postLikeRepository.findLikedPostIds(postIds, currentUserId));
+
+        List<String> userIds = orderedPosts.stream().map(Post::getUserId).distinct().toList();
+        List<com.agricompass.entity.UserProfile> profiles = profileRepository.findAllById(userIds);
+        Map<String, com.agricompass.entity.UserProfile> profileMap = profiles.stream()
+                .collect(Collectors.toMap(com.agricompass.entity.UserProfile::getId, p -> p, (a, b) -> a));
+
+        final String finalUserId = currentUserId;
+        List<Map<String, Object>> result = orderedPosts.stream().map(post -> {
+            Map<String, Object> dto = new HashMap<>();
+            dto.put("id", post.getId());
+            dto.put("user_id", post.getUserId());
+            dto.put("title", post.getTitle());
+            dto.put("body", post.getBody());
+            dto.put("content", post.getBody());
+            dto.put("location", post.getLocation());
+            dto.put("images", post.getImages());
+            dto.put("video_url", post.getVideoUrl());
+            dto.put("kn_caption", post.getKnCaption());
+            dto.put("created_at", post.getCreatedAt() != null ? post.getCreatedAt().toString() : null);
+            dto.put("updated_at", post.getUpdatedAt() != null ? post.getUpdatedAt().toString() : null);
+
+            long likes = likeCounts.getOrDefault(post.getId(), 0L);
+            long comments = commentCounts.getOrDefault(post.getId(), 0L);
+
+            dto.put("_count", Map.of("likes", likes, "comments", comments));
+            dto.put("likes_count", likes);
+            dto.put("comments_count", comments);
+            List<String> cropTags = post.getCropTags();
+            dto.put("category", (cropTags != null && !cropTags.isEmpty()) ? cropTags.get(0) : "General");
+            dto.put("crop_tag", post.getCropTag());
+            dto.put("mandi_price", post.getMandiPrice());
+            dto.put("poll", parsePoll(post.getPollJson(), finalUserId));
+
+            dto.put("isLiked", likedByMe.contains(post.getId()));
+            dto.put("isBookmarked", true);
+
+            com.agricompass.entity.UserProfile p = profileMap.get(post.getUserId());
+            dto.put("user", userDtoFromProfile(post.getUserId(), p));
+
+            return dto;
+        }).toList();
+
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/{id}/poll/vote")
+    public ResponseEntity<?> votePoll(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestParam(required = false, name = "optionId") String optIdParam,
+            @RequestParam(required = false) String userId,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
+        String currentUserId = resolveUserId(headerUserId);
+        if (currentUserId == null && body != null && body.get("userId") != null) {
+            currentUserId = String.valueOf(body.get("userId")).trim();
+        } else if (currentUserId == null && userId != null && !userId.isBlank()) {
+            currentUserId = userId.trim();
+        }
+        if (currentUserId == null || currentUserId.isBlank()) {
+            currentUserId = "farmer_anonymous";
+        }
+
+        String optionId = (body != null && body.get("optionId") != null)
+                ? String.valueOf(body.get("optionId")).trim()
+                : (optIdParam != null ? optIdParam.trim() : null);
+        if (optionId == null || optionId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "optionId is required"));
+        }
+
+        Post post = postRepository.findById(id).orElse(null);
+        if (post == null || post.getPollJson() == null || post.getPollJson().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Poll not found on this post"));
+        }
+
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> pollMap = mapper.readValue(post.getPollJson(), Map.class);
+            Map<String, String> userVotes = (Map<String, String>) pollMap.computeIfAbsent("user_votes", k -> new HashMap<String, String>());
+            String previousVote = userVotes.get(currentUserId);
+
+            List<Map<String, Object>> options = (List<Map<String, Object>>) pollMap.get("options");
+            if (options != null) {
+                if (previousVote != null && !previousVote.equals(optionId)) {
+                    for (Map<String, Object> opt : options) {
+                        if (previousVote.equals(String.valueOf(opt.get("id")))) {
+                            Number count = (Number) opt.getOrDefault("votes", 0);
+                            opt.put("votes", Math.max(0, (count != null ? count.intValue() : 0) - 1));
+                        }
+                    }
+                }
+
+                if (!optionId.equals(previousVote)) {
+                    for (Map<String, Object> opt : options) {
+                        if (optionId.equals(String.valueOf(opt.get("id")))) {
+                            Number count = (Number) opt.getOrDefault("votes", 0);
+                            opt.put("votes", (count != null ? count.intValue() : 0) + 1);
+                        }
+                    }
+                    userVotes.put(currentUserId, optionId);
+                }
+            }
+
+            post.setPollJson(mapper.writeValueAsString(pollMap));
+            postRepository.save(post);
+
+            return ResponseEntity.ok(parsePoll(post.getPollJson(), currentUserId));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to register vote"));
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parsePoll(String pollJson, String currentUserId) {
+        if (pollJson == null || pollJson.trim().isEmpty() || pollJson.equals("{}")) return null;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> map = mapper.readValue(pollJson, Map.class);
+            Map<String, String> userVotes = (Map<String, String>) map.getOrDefault("user_votes", new HashMap<>());
+            String myVote = currentUserId != null ? userVotes.get(currentUserId) : null;
+            map.put("user_voted_option_id", myVote);
+            map.put("has_voted", myVote != null);
+
+            List<Map<String, Object>> options = (List<Map<String, Object>>) map.get("options");
+            int total = 0;
+            if (options != null) {
+                for (Map<String, Object> opt : options) {
+                    Number votes = (Number) opt.getOrDefault("votes", 0);
+                    total += (votes != null ? votes.intValue() : 0);
+                }
+                for (Map<String, Object> opt : options) {
+                    Number votes = (Number) opt.getOrDefault("votes", 0);
+                    int v = votes != null ? votes.intValue() : 0;
+                    int pct = total > 0 ? (int) Math.round((v * 100.0) / total) : 0;
+                    opt.put("percentage", pct);
+                }
+            }
+            map.put("total_votes", total);
+            Map<String, Object> safeMap = new HashMap<>(map);
+            safeMap.remove("user_votes");
+            return safeMap;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private Map<String, Object> userDtoFromProfile(String userId, com.agricompass.entity.UserProfile p) {

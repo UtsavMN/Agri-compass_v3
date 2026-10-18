@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface CropRepository extends JpaRepository<Crop, Long> {
     Optional<Crop> findByNameIgnoreCase(String name);
 
-    @org.springframework.data.jpa.repository.Query("SELECT c FROM Crop c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%'))")
+    @org.springframework.data.jpa.repository.Query("SELECT c FROM Crop c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(COALESCE(c.scientificName, '')) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(COALESCE(c.rawJson, '')) LIKE LOWER(CONCAT('%', :query, '%'))")
     java.util.List<Crop> searchByName(@org.springframework.data.repository.query.Param("query") String query);
 
     @org.springframework.data.jpa.repository.Query("SELECT c FROM Crop c WHERE c.season = :season")

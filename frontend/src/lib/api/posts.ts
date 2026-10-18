@@ -1,5 +1,20 @@
 import { apiGet, apiPost, apiDelete } from '../httpClient'
 
+export interface PollOption {
+  id: string
+  text: string
+  votes: number
+  percentage?: number
+}
+
+export interface PollData {
+  question: string
+  options: PollOption[]
+  total_votes: number
+  user_voted_option_id?: string | null
+  has_voted?: boolean
+}
+
 export interface Post {
   id: string
   user_id: string
@@ -7,6 +22,9 @@ export interface Post {
   body?: string
   content?: string
   crop_tags?: string[]
+  crop_tag?: string | null
+  mandi_price?: string | null
+  poll?: PollData | null
   location?: string
   images?: string[]
   created_at: string
@@ -24,6 +42,7 @@ export interface Post {
     comments: number
   }
   isLiked?: boolean
+  isBookmarked?: boolean
 }
 
 export interface Comment {
@@ -82,6 +101,9 @@ export class PostsAPI {
     title?: string
     body: string
     crop_tags?: string[]
+    crop_tag?: string
+    mandi_price?: string
+    poll?: PollData
     location?: string
     images?: string[]
     farm_id?: string
@@ -110,6 +132,65 @@ export class PostsAPI {
       return await apiPost(`/api/posts/${postId}/like`, { userId })
     } catch (error) {
       console.error('Error toggling like:', error)
+      throw error
+    }
+  }
+
+  // POST /api/posts/:id/bookmark - Bookmark/unbookmark a post
+  static async toggleBookmark(postId: string, userId?: string): Promise<{ bookmarked: boolean; postId: string }> {
+    try {
+      const res = await apiPost(`/api/posts/${postId}/bookmark`, { userId })
+      // Also update local storage cache for immediate offline responsiveness
+      const stored = JSON.parse(localStorage.getItem('agri_bookmarked_post_ids') || '[]')
+      const set = new Set(stored)
+      if (res.bookmarked) {
+        set.add(postId)
+      } else {
+        set.delete(postId)
+      }
+      localStorage.setItem('agri_bookmarked_post_ids', JSON.stringify(Array.from(set)))
+      window.dispatchEvent(new CustomEvent('agri_bookmarks_updated'))
+      return res
+    } catch (error) {
+      console.error('Error toggling bookmark:', error)
+      // Fallback local toggle if server error
+      const stored = JSON.parse(localStorage.getItem('agri_bookmarked_post_ids') || '[]')
+      const set = new Set(stored)
+      const bookmarked = !set.has(postId)
+      if (bookmarked) set.add(postId); else set.delete(postId)
+      localStorage.setItem('agri_bookmarked_post_ids', JSON.stringify(Array.from(set)))
+      window.dispatchEvent(new CustomEvent('agri_bookmarks_updated'))
+      return { bookmarked, postId }
+    }
+  }
+
+  // GET /api/posts/bookmarked - Get all bookmarked posts
+  static async getBookmarkedPosts(userId?: string): Promise<Post[]> {
+    try {
+      const url = userId ? `/api/posts/bookmarked?userId=${encodeURIComponent(userId)}` : `/api/posts/bookmarked`
+      const data = await apiGet(url)
+      if (Array.isArray(data) && data.length > 0) return data
+
+      // Fallback to local cached bookmarks if server returns empty or unauthenticated
+      const storedIds: string[] = JSON.parse(localStorage.getItem('agri_bookmarked_post_ids') || '[]')
+      if (storedIds.length === 0) return []
+      const allPosts = await this.getPosts()
+      return allPosts.filter(p => storedIds.includes(p.id))
+    } catch (error) {
+      console.error('Error fetching bookmarked posts:', error)
+      const storedIds: string[] = JSON.parse(localStorage.getItem('agri_bookmarked_post_ids') || '[]')
+      if (storedIds.length === 0) return []
+      const allPosts = await this.getPosts()
+      return allPosts.filter(p => storedIds.includes(p.id))
+    }
+  }
+
+  // POST /api/posts/:id/poll/vote - Vote on a poll
+  static async votePoll(postId: string, optionId: string, userId?: string): Promise<PollData> {
+    try {
+      return await apiPost(`/api/posts/${postId}/poll/vote`, { optionId, userId })
+    } catch (error) {
+      console.error('Error voting on poll:', error)
       throw error
     }
   }

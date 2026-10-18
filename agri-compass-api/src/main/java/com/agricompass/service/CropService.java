@@ -35,7 +35,10 @@ public class CropService {
     }
 
     public List<CropDTO> searchCrops(String query) {
-        return cropRepository.searchByName(query).stream()
+        if (query == null || query.trim().isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return cropRepository.searchByName(query.trim()).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

@@ -6,7 +6,7 @@ import { staggerContainer, fadeUpVariants } from "@/lib/animations";
 import { useUser, useStore } from "@/store";
 import { apiGet } from "@/lib/httpClient";
 import { FarmIntelligenceCard } from "@/components/FarmIntelligenceCard";
-import { MoreVertical, Settings, LogOut, User, MessageSquare, Sprout, Sliders } from "lucide-react";
+import { MoreVertical, Settings, LogOut, User, MessageSquare, Sprout, Sliders, Bookmark } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,8 +20,10 @@ import { SchemeCard } from "@/pages/GovSchemes";
 import { GOVERNMENT_SCHEMES } from "@/data/schemesData";
 
 import { FarmsAPI } from "@/lib/api/farms";
+import { PostsAPI } from "@/lib/api/posts";
+import { isCropYetToBeGrown } from "@/lib/ai/soilDiagnosticEngine";
 
-type Tab = "posts" | "farms" | "schemes";
+type Tab = "posts" | "saved" | "farms" | "schemes";
 
 export default function Profile() {
   const { user: authUser, profile, signOut } = useUser();
@@ -31,6 +33,7 @@ export default function Profile() {
   const [editOpen, setEditOpen] = useState(false);
 
   const [posts, setPosts] = useState<any[]>([]);
+  const [savedPosts, setSavedPosts] = useState<any[]>([]);
   const [farms, setFarms] = useState<any[]>([]);
   const [savedSchemes, setSavedSchemes] = useState<any[]>([]);
 
@@ -45,19 +48,37 @@ export default function Profile() {
     const handleProfileUpdate = () => {
       loadUserFarms();
       loadUserPosts();
+      loadSavedPosts();
+    };
+    const handleBookmarkUpdate = () => {
+      loadSavedPosts();
     };
     window.addEventListener('agri_profile_updated', handleProfileUpdate);
-    return () => window.removeEventListener('agri_profile_updated', handleProfileUpdate);
+    window.addEventListener('agri_bookmarks_updated', handleBookmarkUpdate);
+    return () => {
+      window.removeEventListener('agri_profile_updated', handleProfileUpdate);
+      window.removeEventListener('agri_bookmarks_updated', handleBookmarkUpdate);
+    };
   }, [authUser]);
 
   useEffect(() => {
     if (authUser?.id) {
       loadUserPosts();
+      loadSavedPosts();
       loadUserFarms();
       loadSavedSchemes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }
   }, [authUser?.id]);
+
+  const loadSavedPosts = async () => {
+    try {
+      const data = await PostsAPI.getBookmarkedPosts(authUser?.id);
+      setSavedPosts(data || []);
+    } catch (e) {
+      console.error('Failed to load saved posts', e);
+    }
+  };
 
   const loadUserFarms = async () => {
     try {
@@ -113,7 +134,7 @@ export default function Profile() {
     return sum + (isNaN(parsed) ? 0 : parsed);
   }, 0);
 
-  const activeCropsCount = farms.filter(f => f.current_crop || f.currentCrop || f.cropFocus).length;
+  const activeCropsCount = farms.filter(f => !isCropYetToBeGrown(f.current_crop || f.currentCrop || f.cropFocus)).length;
 
   const userStats = {
     totalFarms: farms.length,
@@ -229,15 +250,22 @@ export default function Profile() {
 
         {/* TABS */}
         <div className="flex gap-4 border-b border-[#1E1E1E] mb-6 overflow-x-auto hide-scrollbar">
-          {(["posts", "farms", "schemes"] as Tab[]).map((tab) => (
+          {(["posts", "saved", "farms", "schemes"] as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-3 text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-colors relative px-1 ${
+              className={`pb-3 text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-colors relative px-1 flex items-center gap-2 ${
                 activeTab === tab ? "text-[#C9A84C]" : "text-[#F5F0E8]/40 hover:text-[#F5F0E8]/70"
               }`}
             >
-              {tab === "farms" ? `My Farms (${farms.length})` : tab === "schemes" ? `Saved Schemes (${savedSchemes.length})` : `Posts (${posts.length})`}
+              {tab === "saved" && <Bookmark size={14} className={activeTab === tab ? "fill-[#C9A84C]" : ""} />}
+              {tab === "farms"
+                ? `My Farms (${farms.length})`
+                : tab === "schemes"
+                ? `Saved Schemes (${savedSchemes.length})`
+                : tab === "saved"
+                ? `Saved (${savedPosts.length})`
+                : `Posts (${posts.length})`}
               {activeTab === tab && (
                 <motion.div
                   layoutId="profile-tab-indicator"
@@ -262,8 +290,18 @@ export default function Profile() {
                 {posts.length > 0 ? posts.map((post, i) => (
                   <motion.div key={i} variants={fadeUpVariants} custom={i} onClick={() => navigate(`/post/${post.id}`)} className="cursor-pointer">
                     <GoldCard className="h-full hover:-translate-y-1 transition-transform">
-                      <span className="text-[#C9A84C] text-[10px] font-black uppercase tracking-wider">{post.category || 'General'}</span>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[#C9A84C] text-[10px] font-black uppercase tracking-wider">{post.category || 'General'}</span>
+                        {post.crop_tag && (
+                          <span className="text-[9px] font-bold text-gold-300 bg-gold-400/10 px-2 py-0.5 rounded-full border border-gold-400/20">
+                            🌾 {post.crop_tag}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[#F5F0E8]/90 text-sm mt-2 italic line-clamp-3">"{post.content}"</p>
+                      {post.mandi_price && (
+                        <p className="text-[10px] text-[#f5d77f] font-bold mt-2">💰 Mandi: {post.mandi_price}</p>
+                      )}
                       <div className="flex gap-4 mt-4 pt-4 border-t border-[#1E1E1E] text-[10px] text-[#F5F0E8]/40 font-semibold uppercase tracking-wider">
                         <span>{post.likes_count || 0} likes</span>
                         <span>{post.comments_count || 0} comments</span>
@@ -274,6 +312,67 @@ export default function Profile() {
                   <div className="col-span-full text-center py-16 text-[#F5F0E8]/40 border border-[#1E1E1E] border-dashed rounded-2xl">
                     <MessageSquare className="w-8 h-8 mx-auto mb-3 opacity-20" />
                     <p>No posts shared yet.</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {activeTab === "saved" && (
+              <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {savedPosts.length > 0 ? savedPosts.map((post, i) => (
+                  <motion.div key={i} variants={fadeUpVariants} custom={i} className="relative group">
+                    <GoldCard
+                      className="h-full hover:-translate-y-1 transition-transform cursor-pointer relative"
+                      onClick={() => navigate(`/post/${post.id}`)}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[#C9A84C] text-[10px] font-black uppercase tracking-wider">{post.category || 'General'}</span>
+                          {post.crop_tag && (
+                            <span className="text-[9px] font-bold text-gold-300 bg-gold-400/10 px-2 py-0.5 rounded-full border border-gold-400/20">
+                              🌾 {post.crop_tag}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await PostsAPI.toggleBookmark(post.id, authUser?.id);
+                            loadSavedPosts();
+                          }}
+                          className="text-[#C9A84C] hover:text-red-400 p-1 rounded transition-colors"
+                          title="Remove bookmark"
+                        >
+                          <Bookmark size={15} className="fill-[#C9A84C]" />
+                        </button>
+                      </div>
+
+                      <p className="text-[#F5F0E8]/90 text-sm mt-2 italic line-clamp-3">"{post.content}"</p>
+
+                      {post.mandi_price && (
+                        <p className="text-[10px] text-[#f5d77f] font-bold mt-2">💰 Mandi: {post.mandi_price}</p>
+                      )}
+
+                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#1E1E1E] text-[10px] text-[#F5F0E8]/40 font-semibold uppercase tracking-wider">
+                        <span>{post.likes_count || 0} likes · {post.comments_count || 0} comments</span>
+                        <span className="text-[#C9A84C]/80 font-bold">Saved</span>
+                      </div>
+                    </GoldCard>
+                  </motion.div>
+                )) : (
+                  <div className="col-span-full text-center py-16 text-[#F5F0E8]/40 border border-[#1E1E1E] border-dashed rounded-2xl">
+                    <Bookmark className="w-8 h-8 mx-auto mb-3 opacity-20 text-[#C9A84C]" />
+                    <p className="font-semibold text-[#F5F0E8]/70">No saved posts in your Farm Notebook.</p>
+                    <p className="text-xs text-[#F5F0E8]/40 mt-1 max-w-sm mx-auto">
+                      Tap the bookmark icon on any community post or mandi price update to save it here for quick reference.
+                    </p>
+                    <button
+                      onClick={() => navigate('/community')}
+                      className="mt-4 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-gold-400/10 text-gold-400 border border-gold-400/20 hover:bg-gold-400/20 transition-all"
+                    >
+                      Explore Kisan Feed
+                    </button>
                   </div>
                 )}
               </motion.div>

@@ -92,31 +92,76 @@ public class AiController {
         "--- \n" +
         "\n" +
         "## YOUR OUTPUT SCHEMA\n" +
-        "\n" +
-        "Always respond ONLY in the following JSON structure. No extra text, no markdown outside JSON, no preamble:\n" +
+        "If crop_status is 'growing' and preferred_crop is provided, respond with mode 'active_crop_optimization' including nutrient adjustments in units and irrigation adjustments. If crop_status is 'yet_to_be_grown' or no crop is planted, respond with mode 'crop_recommendation' with top recommended_crops.\n" +
         "\n" +
         "{\n" +
+        "  \"mode\": \"crop_recommendation\" | \"active_crop_optimization\",\n" +
+        "  \"current_crop\": \"string or null\",\n" +
         "  \"recommended_crops\": [\n" +
         "    {\n" +
         "      \"crop_name\": \"string\",\n" +
-        "      \"suitability_score\": number, // percentage (0-100)\n" +
+        "      \"suitability_score\": number,\n" +
         "      \"expected_yield_per_acre_tons\": number,\n" +
         "      \"growing_guide\": {\n" +
         "        \"sowing_details\": \"string\",\n" +
-        "        \"fertilizer_npk_schedule_per_acre\": \"string\", // Basal, Top Dress splits\n" +
+        "        \"fertilizer_npk_schedule_per_acre\": \"string\",\n" +
         "        \"irrigation_plan\": \"string\",\n" +
         "        \"pest_disease_management\": \"string\",\n" +
         "        \"harvesting_tips\": \"string\"\n" +
         "      }\n" +
         "    }\n" +
         "  ],\n" +
+        "  \"active_crop_optimization\": {\n" +
+        "    \"crop_name\": \"string\",\n" +
+        "    \"field_status\": \"crop_growing\",\n" +
+        "    \"expected_yield_with_improvements\": \"string\",\n" +
+        "    \"current_vs_ideal_summary\": \"string\",\n" +
+        "    \"nutrient_adjustments\": [\n" +
+        "      {\n" +
+        "        \"nutrient\": \"string\",\n" +
+        "        \"current_level\": \"string\",\n" +
+        "        \"target_level\": \"string\",\n" +
+        "        \"difference\": \"string\",\n" +
+        "        \"action\": \"increase\" | \"decrease\" | \"maintain\",\n" +
+        "        \"unit_recommendation\": \"string\",\n" +
+        "        \"commercial_fertilizer_dosage\": \"string\",\n" +
+        "        \"rationale\": \"string\"\n" +
+        "      }\n" +
+        "    ],\n" +
+        "    \"water_adjustments\": {\n" +
+        "      \"parameter\": \"string\",\n" +
+        "      \"current_moisture\": \"string\",\n" +
+        "      \"ideal_moisture\": \"string\",\n" +
+        "      \"difference\": \"string\",\n" +
+        "      \"action\": \"increase\" | \"decrease\" | \"maintain\",\n" +
+        "      \"unit_recommendation\": \"string\",\n" +
+        "      \"frequency_and_schedule\": \"string\"\n" +
+        "    },\n" +
+        "    \"soil_condition_improvements\": [\n" +
+        "      {\n" +
+        "        \"parameter\": \"string\",\n" +
+        "        \"current_value\": \"string\",\n" +
+        "        \"ideal_target\": \"string\",\n" +
+        "        \"remediation_in_units\": \"string\",\n" +
+        "        \"practical_steps\": \"string\"\n" +
+        "      }\n" +
+        "    ],\n" +
+        "    \"ideal_growing_protocol\": {\n" +
+        "      \"stage_summary\": \"string\",\n" +
+        "      \"field_preparation_and_current_care\": \"string\",\n" +
+        "      \"fertilizer_npk_schedule_per_acre\": \"string\",\n" +
+        "      \"irrigation_plan\": \"string\",\n" +
+        "      \"pest_disease_management\": \"string\",\n" +
+        "      \"harvesting_tips\": \"string\"\n" +
+        "    }\n" +
+        "  },\n" +
         "  \"soil_health_report\": {\n" +
         "    \"status\": \"Excellent\" | \"Good\" | \"Deficient\" | \"Critical\",\n" +
         "    \"limiting_factors\": [ \"string\" ],\n" +
-        "    \"soil_amendment_recommendations\": \"string\" // e.g. adding gypsum for alkaline soils, lime for acidic\n" +
+        "    \"soil_amendment_recommendations\": \"string\"\n" +
         "  },\n" +
         "  \"warnings\": [ \"string\" ],\n" +
-        "  \"confidence_level\": number // percentage (0-100)\n" +
+        "  \"confidence_level\": number\n" +
         "}";
 
     @SuppressWarnings("unchecked")
@@ -465,6 +510,13 @@ public class AiController {
         return "I am KrishiMitra, here to support your farming journey. You can ask me about soil health, crop varieties like Paddy, Cotton, Ragi, or Maize, pest management, weather alerts, or government schemes like PM-KISAN!";
     }
 
+    private boolean isFallowIndicator(String name) {
+        if (name == null) return true;
+        String s = name.trim().toLowerCase();
+        return s.isEmpty() || s.equals("none") || s.equals("null") || s.equals("undefined") ||
+               s.equals("fallow") || s.equals("empty") || s.contains("yet to") || s.contains("awaiting") || s.contains("not planted");
+    }
+
     @SuppressWarnings("unchecked")
     private Map<String, Object> generateAgronomicSoilRecommendation(Map<String, Object> body) {
         Map<String, Object> soilData = (Map<String, Object>) body.getOrDefault("soil_data", Map.of());
@@ -475,6 +527,13 @@ public class AiController {
         double moisture = toDouble(soilData.get("moisture"), 45.0);
         double acres = toDouble(body.get("field_size_acres"), 1.0);
         if (acres <= 0) acres = 1.0;
+
+        String cropStatus = (String) body.getOrDefault("crop_status", "yet_to_be_grown");
+        String preferredCrop = (String) body.get("preferred_crop");
+        if (preferredCrop != null && isFallowIndicator(preferredCrop)) {
+            preferredCrop = null;
+        }
+        boolean isGrowing = "growing".equalsIgnoreCase(cropStatus) && preferredCrop != null && !preferredCrop.trim().isEmpty();
 
         List<String> limitingFactors = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
@@ -562,7 +621,229 @@ public class AiController {
             "soil_amendment_recommendations", amendment
         );
 
+        if (isGrowing) {
+            String activeCrop = preferredCrop;
+            double targetN = 85.0;
+            double targetP = 45.0;
+            double targetK = 50.0;
+            String lowerCrop = activeCrop.toLowerCase();
+            if (lowerCrop.contains("rice") || lowerCrop.contains("paddy")) {
+                targetN = 90.0; targetP = 45.0; targetK = 50.0;
+            } else if (lowerCrop.contains("sugar")) {
+                targetN = 110.0; targetP = 55.0; targetK = 70.0;
+            } else if (lowerCrop.contains("cotton")) {
+                targetN = 75.0; targetP = 40.0; targetK = 45.0;
+            } else if (lowerCrop.contains("tomato")) {
+                targetN = 80.0; targetP = 50.0; targetK = 65.0;
+            } else if (lowerCrop.contains("ragi")) {
+                targetN = 50.0; targetP = 30.0; targetK = 35.0;
+            }
+
+            List<Map<String, Object>> nutrientAdjustments = new ArrayList<>();
+
+            // Nitrogen adjustment
+            double deltaN = targetN - n;
+            if (deltaN > 5) {
+                int ureaPerAcre = (int) Math.max(15, Math.round(deltaN * 0.4047 * 2.17));
+                nutrientAdjustments.add(Map.of(
+                    "nutrient", "Nitrogen (N)",
+                    "current_level", String.format("%.0f kg/ha (%.0f kg/acre)", n, n * 0.4047),
+                    "target_level", String.format("%.0f kg/ha (%.0f kg/acre)", targetN, targetN * 0.4047),
+                    "difference", String.format("-%.0f kg/ha deficit", deltaN),
+                    "action", "increase",
+                    "unit_recommendation", String.format("Apply +%d kg Urea total across your %.1f acre field", (int)(ureaPerAcre * acres), acres),
+                    "commercial_fertilizer_dosage", String.format("+%d kg/acre Urea (Split into 50%% basal and 50%% active vegetative top-dressing)", ureaPerAcre),
+                    "rationale", String.format("Soil nitrogen is below the optimal requirement for %s. Essential for tillering and canopy development.", activeCrop)
+                ));
+            } else if (deltaN < -15) {
+                int reduceUrea = (int) Math.round(Math.abs(deltaN) * 0.4047 * 2.17);
+                nutrientAdjustments.add(Map.of(
+                    "nutrient", "Nitrogen (N)",
+                    "current_level", String.format("%.0f kg/ha (%.0f kg/acre)", n, n * 0.4047),
+                    "target_level", String.format("%.0f kg/ha (%.0f kg/acre)", targetN, targetN * 0.4047),
+                    "difference", String.format("+%.0f kg/ha surplus", Math.abs(deltaN)),
+                    "action", "decrease",
+                    "unit_recommendation", String.format("Reduce synthetic Urea by -%d kg total across %.1f acre field", (int)(reduceUrea * acres), acres),
+                    "commercial_fertilizer_dosage", String.format("Reduce by -%d kg/acre Urea (Avoid excess nitrogen fertilization)", reduceUrea),
+                    "rationale", String.format("Excess nitrogen promotes vegetative lodging and pest susceptibility in %s.", activeCrop)
+                ));
+            } else {
+                nutrientAdjustments.add(Map.of(
+                    "nutrient", "Nitrogen (N)",
+                    "current_level", String.format("%.0f kg/ha", n),
+                    "target_level", String.format("%.0f kg/ha", targetN),
+                    "difference", "Balanced",
+                    "action", "maintain",
+                    "unit_recommendation", String.format("Apply standard maintenance dose of %d kg Urea", (int)(20 * acres)),
+                    "commercial_fertilizer_dosage", "20 kg/acre Urea maintenance dose",
+                    "rationale", "Soil nitrogen is adequately balanced for current growth."
+                ));
+            }
+
+            // Phosphorus adjustment
+            double deltaP = targetP - p;
+            if (deltaP > 3) {
+                int dapPerAcre = (int) Math.max(12, Math.round(deltaP * 0.4047 * 2.17));
+                nutrientAdjustments.add(Map.of(
+                    "nutrient", "Phosphorus (P)",
+                    "current_level", String.format("%.0f kg/ha (%.0f kg/acre)", p, p * 0.4047),
+                    "target_level", String.format("%.0f kg/ha (%.0f kg/acre)", targetP, targetP * 0.4047),
+                    "difference", String.format("-%.0f kg/ha deficit", deltaP),
+                    "action", "increase",
+                    "unit_recommendation", String.format("Apply +%d kg DAP across your %.1f acre field", (int)(dapPerAcre * acres), acres),
+                    "commercial_fertilizer_dosage", String.format("+%d kg/acre DAP placed 5 cm deep in furrows near root zone", dapPerAcre),
+                    "rationale", String.format("Phosphorus is vital for root elongation, tillering, and energy transfer in %s.", activeCrop)
+                ));
+            } else if (deltaP < -10) {
+                int reduceDap = (int) Math.round(Math.abs(deltaP) * 0.4047 * 2.17);
+                nutrientAdjustments.add(Map.of(
+                    "nutrient", "Phosphorus (P)",
+                    "current_level", String.format("%.0f kg/ha", p),
+                    "target_level", String.format("%.0f kg/ha", targetP),
+                    "difference", String.format("+%.0f kg/ha surplus", Math.abs(deltaP)),
+                    "action", "decrease",
+                    "unit_recommendation", String.format("Reduce DAP application by -%d kg across field", (int)(reduceDap * acres)),
+                    "commercial_fertilizer_dosage", String.format("Reduce by -%d kg/acre DAP", reduceDap),
+                    "rationale", "High residual soil phosphorus inhibits zinc absorption."
+                ));
+            } else {
+                nutrientAdjustments.add(Map.of(
+                    "nutrient", "Phosphorus (P)",
+                    "current_level", String.format("%.0f kg/ha", p),
+                    "target_level", String.format("%.0f kg/ha", targetP),
+                    "difference", "Balanced",
+                    "action", "maintain",
+                    "unit_recommendation", String.format("Apply standard maintenance DAP of %d kg", (int)(15 * acres)),
+                    "commercial_fertilizer_dosage", "15 kg/acre DAP",
+                    "rationale", "Available phosphorus meets crop physiological threshold."
+                ));
+            }
+
+            // Potassium adjustment
+            double deltaK = targetK - k;
+            if (deltaK > 4) {
+                int mopPerAcre = (int) Math.max(10, Math.round(deltaK * 0.4047 * 1.67));
+                nutrientAdjustments.add(Map.of(
+                    "nutrient", "Potassium (K)",
+                    "current_level", String.format("%.0f kg/ha (%.0f kg/acre)", k, k * 0.4047),
+                    "target_level", String.format("%.0f kg/ha (%.0f kg/acre)", targetK, targetK * 0.4047),
+                    "difference", String.format("-%.0f kg/ha deficit", deltaK),
+                    "action", "increase",
+                    "unit_recommendation", String.format("Apply +%d kg MOP (Muriate of Potash) for %.1f acre(s)", (int)(mopPerAcre * acres), acres),
+                    "commercial_fertilizer_dosage", String.format("+%d kg/acre MOP in split doses", mopPerAcre),
+                    "rationale", "Potassium governs stomatal regulation, disease resistance, and grain/fruit weight."
+                ));
+            } else {
+                nutrientAdjustments.add(Map.of(
+                    "nutrient", "Potassium (K)",
+                    "current_level", String.format("%.0f kg/ha", k),
+                    "target_level", String.format("%.0f kg/ha", targetK),
+                    "difference", "Balanced",
+                    "action", "maintain",
+                    "unit_recommendation", String.format("Apply maintenance %d kg MOP", (int)(15 * acres)),
+                    "commercial_fertilizer_dosage", "15 kg/acre MOP",
+                    "rationale", "Potassium levels are sufficient for crop health."
+                ));
+            }
+
+            // Secondary & Micronutrients
+            nutrientAdjustments.add(Map.of(
+                "nutrient", "Secondary & Micronutrients",
+                "current_level", "Micronutrient balance evaluated",
+                "target_level", "10 kg/acre Zinc Sulphate + 5 kg/acre Borax",
+                "difference", ph < 6.0 ? "Acid induced micro-locking" : "Standard regional requirement",
+                "action", "increase",
+                "unit_recommendation", String.format("Broadcast %d kg Zinc Sulphate (21%% Zn) across %.1f acre(s)", (int)(10 * acres), acres),
+                "commercial_fertilizer_dosage", "10 kg/acre Zinc Sulphate + 4 kg/acre Borax basal application",
+                "rationale", "Zinc and Boron catalyze enzyme activity and prevent flower drop and seed sterility."
+            ));
+
+            // Water Adjustments in exact units
+            String waterAction = moisture < 35 ? "increase" : (moisture > 80 ? "decrease" : "maintain");
+            String waterUnitRec = moisture < 35
+                ? String.format("Increase irrigation volume by +15-20 mm per watering cycle (Approx. +%d kilolitres per cycle across field)", (int)(60 * acres))
+                : (moisture > 80
+                    ? "Open drainage ditches to drain excess 15-20 mm standing water; suspend irrigation for 4-5 days"
+                    : "Maintain regular irrigation volume (25-30 mm per cycle) as per standard schedule");
+            String waterSchedule = moisture < 35
+                ? "Irrigate every 3-4 days (or run drip system 2.5 hours/day) until root-zone moisture reaches 55%"
+                : (moisture > 80
+                    ? "Delay next irrigation until soil moisture recedes below 65%"
+                    : "Water every 5-7 days depending on evaporation and local weather");
+
+            Map<String, Object> waterAdjustments = Map.of(
+                "parameter", "Root-Zone Irrigation Volume & Frequency",
+                "current_moisture", String.format("%.0f%%", moisture),
+                "ideal_moisture", "50% - 70%",
+                "difference", moisture < 35 ? String.format("-%.0f%% deficit below ideal", 55.0 - moisture) : (moisture > 80 ? String.format("+%.0f%% excess saturation", moisture - 70.0) : "Optimal moisture"),
+                "action", waterAction,
+                "unit_recommendation", waterUnitRec,
+                "frequency_and_schedule", waterSchedule
+            );
+
+            // Soil Condition Improvements in units
+            List<Map<String, Object>> soilConditionImprovements = new ArrayList<>();
+            if (ph < 5.8) {
+                soilConditionImprovements.add(Map.of(
+                    "parameter", "Soil Acidity Neutralization (pH)",
+                    "current_value", String.format("%.1f pH (Acidic)", ph),
+                    "ideal_target", "6.2 - 7.0 pH",
+                    "remediation_in_units", String.format("Apply %d kg/acre Agricultural Lime (CaCO3) or Dolomite", (int)(300 * acres)),
+                    "practical_steps", "Broadcast pulverized agricultural lime evenly across the field 2 weeks before heavy watering to buffer soil acidity and unlock phosphorus."
+                ));
+            } else if (ph > 7.8) {
+                soilConditionImprovements.add(Map.of(
+                    "parameter", "Soil Alkalinity Remediation (pH)",
+                    "current_value", String.format("%.1f pH (Alkaline)", ph),
+                    "ideal_target", "6.5 - 7.5 pH",
+                    "remediation_in_units", String.format("Incorporate %d kg/acre Agricultural Gypsum (CaSO4)", (int)(350 * acres)),
+                    "practical_steps", "Spread gypsum evenly before irrigation to displace sodium ions with calcium and restore soil flocculation and water infiltration."
+                ));
+            }
+            soilConditionImprovements.add(Map.of(
+                "parameter", "Organic Matter & Microbial Activity",
+                "current_value", "Medium organic carbon profile",
+                "ideal_target", "> 0.75% Organic Carbon",
+                "remediation_in_units", String.format("Apply %d tons of decomposed Farmyard Manure (FYM) or Compost", (int)(2.5 * acres)),
+                "practical_steps", "Incorporate well-rotted cow dung manure or vermicompost into root-zone furrows to boost moisture retention and microbial biodiversity."
+            ));
+
+            // Ideal Growing Protocol
+            Map<String, Object> idealGrowingProtocol = Map.of(
+                "stage_summary", String.format("5-Stage Field Care & Yield Optimization Protocol for %s", activeCrop),
+                "field_preparation_and_current_care", String.format("Maintain field weed-free with shallow inter-cultivation at 20 and 40 days. Ensure ridge and furrow formation for root aeration in %s.", activeCrop),
+                "fertilizer_npk_schedule_per_acre", String.format("Basal: %d kg DAP + %d kg MOP + 10 kg Zinc/acre.\nTop Dressing 1: %d kg Urea/acre at active vegetative stage.\nTop Dressing 2: %d kg Urea + 15 kg MOP/acre at flowering/grain formation.", 
+                    (int)(45 * acres), (int)(30 * acres), (int)(35 * acres), (int)(25 * acres)),
+                "irrigation_plan", waterSchedule,
+                "pest_disease_management", String.format("Weekly scouting for common %s pests. Spray Neem oil (1500 ppm @ 2ml/L) as preventive measure; deploy pheromone traps (5/acre).", activeCrop),
+                "harvesting_tips", String.format("Harvest %s when 85%% of crop reaches physiological maturity. Store in dry, well-ventilated bins at <13%% moisture.", activeCrop)
+            );
+
+            Map<String, Object> activeCropOptimization = Map.of(
+                "crop_name", activeCrop,
+                "field_status", "crop_growing",
+                "nutrient_adjustments", nutrientAdjustments,
+                "water_adjustments", waterAdjustments,
+                "soil_condition_improvements", soilConditionImprovements,
+                "ideal_growing_protocol", idealGrowingProtocol,
+                "expected_yield_with_improvements", "3.2 - 4.0 Tons/Acre (with prescribed soil adjustments)",
+                "current_vs_ideal_summary", String.format("Soil chemistry calibrated specifically for %s on %.1f acre(s). Prescribed adjustments will overcome current nutrient limitations and maximize yield potential.", activeCrop, acres)
+            );
+
+            return Map.of(
+                "mode", "active_crop_optimization",
+                "current_crop", activeCrop,
+                "recommended_crops", crops,
+                "active_crop_optimization", activeCropOptimization,
+                "soil_health_report", soilHealthReport,
+                "warnings", warnings,
+                "confidence_level", 95
+            );
+        }
+
         return Map.of(
+            "mode", "crop_recommendation",
+            "current_crop", "",
             "recommended_crops", crops,
             "soil_health_report", soilHealthReport,
             "warnings", warnings,

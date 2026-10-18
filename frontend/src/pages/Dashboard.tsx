@@ -26,6 +26,7 @@ import { MarketTrendCard } from '@/components/dashboard/MarketTrendCard';
 
 import { HeroCarousel } from '@/components/dashboard/HeroCarousel';
 import { WeatherAlertBanner } from '@/components/dashboard/WeatherAlertBanner';
+import { FarmerDashboardBrief } from '@/components/dashboard/FarmerDashboardBrief';
 
 
 interface CropRecommendation {
@@ -48,29 +49,6 @@ interface _WeatherData {
     precipitation: number;
   }>;
 }
-
-interface HeroStatCardProps {
-  icon: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-  sub: string;
-  onClick?: () => void;
-}
-
-const _HeroStatCard = ({ icon, label, value, sub, onClick }: HeroStatCardProps) => (
-  <TiltCard className="h-full animate-fade-in" onClick={onClick}>
-    <div className="card-premium border-t-2 border-gold-400/80 p-6 min-h-[5.5rem] flex items-center gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
-      <div className="w-10 h-10 rounded-xl bg-gold-400/10 flex items-center justify-center flex-shrink-0">
-        <span className="text-gold-400">{icon}</span>
-      </div>
-      <div>
-        <p className="text-[10px] font-black text-gold-100/50 uppercase tracking-widest mb-1">{label}</p>
-        <p className="text-[20px] font-black text-[#f0ece0] leading-tight">{value}</p>
-        <p className="text-[11px] text-[#a09880] mt-0.5 font-bold uppercase tracking-wider">{sub}</p>
-      </div>
-    </div>
-  </TiltCard>
-);
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -180,6 +158,11 @@ export default function Dashboard() {
           userCount={userCount} 
           newsItems={newsItems} 
         />
+
+        {/* ===== FARMER INTELLIGENCE BRIEF (Features 1, 2, 4) ===== */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-10 mb-6 relative z-20">
+          <FarmerDashboardBrief district={selectedDistrict} />
+        </div>
 
         <WeatherAlertBanner />
 

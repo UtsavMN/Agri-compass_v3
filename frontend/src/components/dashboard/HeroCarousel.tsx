@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Cloud, Leaf as  TrendingUp, Users } from 'lucide-react';
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { KarnatakaMap } from './KarnatakaMap';
-import { TiltCard } from '@/components/ui/animations';
+import { ParticleField } from "@/components/ui/ParticleField";
 
 const BASE_HEROES = [
   {
@@ -47,71 +47,24 @@ const BASE_HEROES = [
   },
 ];
 
-interface HeroStatCardProps {
-  icon: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-  sub: string;
-  onClick?: () => void;
-}
-
-const HeroStatCard = ({ icon, label, value, sub, onClick }: HeroStatCardProps) => (
-  <TiltCard className="h-full">
-    <div onClick={onClick} className="card-premium bg-[#1a1a14]/90 backdrop-blur-xl border-t-2 border-gold-400/80 p-2 sm:p-3 md:p-6 min-h-[5rem] md:min-h-[5.5rem] flex flex-col md:flex-row items-center md:items-start justify-center md:justify-start text-center md:text-left gap-1.5 md:gap-4 hover:shadow-[0_0_25px_rgba(196,154,42,0.25)] hover:border-gold-400 transition-all cursor-pointer h-full">
-      <div className="w-6 h-6 md:w-10 md:h-10 rounded-md md:rounded-xl bg-gold-400/20 flex items-center justify-center flex-shrink-0">
-        <span className="text-gold-400 scale-75 md:scale-100 flex items-center justify-center">{icon}</span>
-      </div>
-      <div className="w-full overflow-hidden flex flex-col items-center md:items-start">
-        <p className="text-[6px] sm:text-[8px] md:text-[10px] font-black text-gold-100/90 uppercase tracking-[0.1em] md:tracking-widest md:mb-1 truncate w-full">{label}</p>
-        <p className="text-[11px] sm:text-[14px] md:text-[20px] font-black text-white leading-tight truncate w-full">{value}</p>
-        <p className="text-[6px] sm:text-[8px] md:text-[11px] text-gold-100/70 mt-0.5 font-bold uppercase tracking-wider truncate w-full">{sub}</p>
-      </div>
-    </div>
-  </TiltCard>
-);
-
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { useRef } from "react";
-import { ParticleField } from "@/components/ui/ParticleField";
-import { useDistrict } from "@/store";
-import { useMarketPrices } from "@/hooks/useMarketPrices";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { MarketPricesSection } from "./MarketPricesSection";
-
 export const HeroCarousel = ({ 
-  temp, 
-  condition, 
-  userCount, 
+  temp: _temp, 
+  condition: _condition, 
+  userCount: _userCount, 
   newsItems = []
 }: { 
-  temp: number; 
-  condition: string; 
-  userCount: number; 
+  temp?: number; 
+  condition?: string; 
+  userCount?: number; 
   newsItems?: any[]; 
 }) => {
   const [current, setCurrent] = useState(0);
   const [newsIndex, setNewsIndex] = useState(0);
-  const [marketModalOpen, setMarketModalOpen] = useState(false);
-  
-  const { selectedDistrict } = useDistrict();
-  const { prices, loading: pricesLoading } = useMarketPrices(selectedDistrict);
 
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-
-  let trendLabel = "Market Trends";
-  let trendValue = pricesLoading ? "Loading..." : "No Data";
-  let trendSub = "Recent mandi prices";
-  
-  if (!pricesLoading && prices && prices.length > 0) {
-    const showcase = prices[0];
-    const trendIcon = showcase.trend === 'up' ? '↑' : showcase.trend === 'down' ? '↓' : '-';
-    trendLabel = `${showcase.commodity}`;
-    trendValue = `₹${(showcase as any).modal_price || showcase.modalPrice || 0}/q ${trendIcon}`;
-    trendSub = `${showcase.market} Mandi`;
-  }
 
   const currentNews = newsItems[newsIndex];
   const dynamicNewsText = currentNews ? (typeof currentNews === 'string' ? currentNews : currentNews.title) : 'Stay updated with the latest agricultural news and trade tariffs.';
@@ -254,7 +207,7 @@ export const HeroCarousel = ({
         </div>
 
         {/* Carousel dots */}
-        <div className="flex items-center gap-2 mt-12 pb-6 border-b border-earth-border/20">
+        <div className="flex items-center gap-2 mt-8 pb-4">
           {heroes.map((_, i) => (
             <button
               key={i}
@@ -267,36 +220,7 @@ export const HeroCarousel = ({
             />
           ))}
         </div>
-
-        {/* Bottom stat cards - floating overlay pattern */}
-        <div className="-mb-24 mt-8 relative z-20 w-full px-1 sm:px-0">
-          <div className="grid grid-cols-3 gap-2 md:gap-6">
-            <HeroStatCard icon={<Cloud size={18} />} label="Current Weather" value={`${temp}°C`} sub={condition} />
-            <HeroStatCard icon={<Users size={18} />} label="Active Users" value={String(userCount)} sub="Farmers connected" />
-            <HeroStatCard 
-              icon={<TrendingUp size={18} />} 
-              label={trendLabel} 
-              value={trendValue} 
-              sub={trendSub} 
-              onClick={() => setMarketModalOpen(true)}
-            />
-          </div>
-        </div>
       </motion.div>
-      
-      <Dialog open={marketModalOpen} onOpenChange={setMarketModalOpen}>
-        <DialogContent className="max-w-4xl bg-[#0f0f0b] border-[#C9A84C]/20 max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl text-[#F5F0E8] font-serif">Market Trends</DialogTitle>
-            <DialogDescription className="text-[#F5F0E8]/60">
-              Live mandi prices and trends for {selectedDistrict}.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-4">
-            <MarketPricesSection district={selectedDistrict} />
-          </div>
-        </DialogContent>
-      </Dialog>
     </section>
   );
 };

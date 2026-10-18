@@ -102,6 +102,8 @@ public class CropDTO {
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+    public String getNameEnglish() { return name; }
+    public void setNameEnglish(String nameEnglish) { if (this.name == null || this.name.isEmpty()) { this.name = nameEnglish; } }
     public String getDistrict() { return district; }
     public void setDistrict(String district) { this.district = district; }
     public String getSeason() { return season; }

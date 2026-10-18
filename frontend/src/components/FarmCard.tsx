@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useUser } from '@/store';
 import { FarmsAPI, Farm, FarmImage } from '@/lib/api/farms'
+import { isCropYetToBeGrown } from '@/lib/ai/soilDiagnosticEngine'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -152,6 +153,10 @@ export default function FarmCard({ farm, onDelete, onUpdate }: FarmCardProps) {
               <div className="flex items-center text-sm">
                 <Ruler className="h-4 w-4 mr-2 text-green-600" />
                 <span className="font-medium">{farm.area_acres} acres</span>
+              </div>
+              <div className="flex items-center text-sm text-gold-100/70">
+                <Sprout className="h-4 w-4 mr-2 text-green-600" />
+                <span>Crop: {farm.current_crop && !isCropYetToBeGrown(farm.current_crop) ? farm.current_crop : 'Yet to be grown'}</span>
               </div>
               {farm.soil_type && (
                 <div className="flex items-center text-sm text-gold-100/70">

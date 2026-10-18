@@ -6,7 +6,7 @@ import { Button } from './button'
 import { Card } from './card'
 import { Textarea } from './textarea'
 import { formatDateTime } from '@/lib/dateUtils'
-import { Heart, MessageCircle, Share2, MoreVertical, Loader2, MapPin } from 'lucide-react'
+import { Heart, MessageCircle, Share2, MoreVertical, Loader2, MapPin, Bookmark, BarChart2, CheckCircle2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import {
   DropdownMenu,
@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from './dropdown-menu'
-import { PostsAPI, Comment } from '@/lib/api/posts'
+import { PostsAPI, Comment, PollData } from '@/lib/api/posts'
 
 interface PostCardProps {
   post: {
@@ -25,6 +25,9 @@ interface PostCardProps {
     video_url?: string | null
     location?: string
     created_at: string
+    crop_tag?: string | null
+    mandi_price?: string | null
+    poll?: PollData | null
     user: {
       id: string
       username: string
@@ -36,11 +39,15 @@ interface PostCardProps {
       comments: number
     }
     isLiked?: boolean
+    isBookmarked?: boolean
   }
   onLike?: (postId: string) => void
   onComment?: (postId: string, content: string) => void
   onShare?: (postId: string) => void
   onDelete?: (postId: string) => void
+  onBookmark?: (postId: string) => void
+  onVotePoll?: (postId: string, optionId: string) => void
+  onCropTagClick?: (cropTag: string) => void
   currentUserId?: string
 }
 
@@ -50,6 +57,9 @@ export const PostCard = React.memo(function PostCard({
   onComment,
   onShare,
   onDelete,
+  onBookmark,
+  onVotePoll,
+  onCropTagClick,
   currentUserId,
 }: PostCardProps) {
   const [isCommenting, setIsCommenting] = useState(false)
@@ -138,6 +148,32 @@ export const PostCard = React.memo(function PostCard({
           )}
         </div>
 
+        {/* Crop & Mandi Price Badges */}
+        {(post.crop_tag || post.mandi_price) && (
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {post.crop_tag && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onCropTagClick?.(post.crop_tag!)
+                }}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-gold-400/10 text-gold-300 border border-gold-400/30 hover:bg-gold-400/20 hover:border-gold-400 transition-all cursor-pointer"
+                title={`Filter community feed by ${post.crop_tag}`}
+              >
+                <span>🌾</span>
+                <span>{post.crop_tag}</span>
+              </button>
+            )}
+            {post.mandi_price && (
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#c49a2a]/15 text-[#f5d77f] border border-[#c49a2a]/40 shadow-sm">
+                <span>💰 Mandi Rate:</span>
+                <span className="text-white font-bold">{post.mandi_price}</span>
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="mb-6">
           <p className="text-gold-100/90 leading-relaxed font-medium italic">"{post.content}"</p>
           {post.kn_caption && (
@@ -146,6 +182,79 @@ export const PostCard = React.memo(function PostCard({
             </div>
           )}
         </div>
+
+        {/* Interactive Community Poll & Sentiment */}
+        {post.poll && (
+          <div className="my-5 p-5 bg-gradient-to-br from-[#181d19] to-[#121614] rounded-2xl border border-gold-400/25 shadow-lg space-y-3.5">
+            <div className="flex items-center justify-between pb-2 border-b border-earth-border/40">
+              <div className="flex items-center gap-2 text-gold-400 text-xs font-black uppercase tracking-widest">
+                <BarChart2 className="w-4 h-4" />
+                <span>Community Sentiment Poll</span>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gold-100/40">
+                {post.poll.total_votes || 0} {post.poll.total_votes === 1 ? 'Vote' : 'Votes'}
+              </span>
+            </div>
+
+            <p className="text-sm font-bold text-gold-100 leading-snug">{post.poll.question}</p>
+
+            <div className="space-y-2.5 pt-1">
+              {post.poll.options?.map((opt) => {
+                const isSelected = post.poll?.user_voted_option_id === opt.id
+                const hasVoted = Boolean(post.poll?.has_voted || post.poll?.user_voted_option_id)
+                const pct = opt.percentage ?? (post.poll!.total_votes > 0 ? Math.round((opt.votes / post.poll!.total_votes) * 100) : 0)
+
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => onVotePoll?.(post.id, opt.id)}
+                    className={`w-full text-left relative overflow-hidden rounded-xl border p-3.5 transition-all group ${
+                      isSelected
+                        ? 'border-gold-400/80 bg-gold-400/10 shadow-gold-glow'
+                        : 'border-earth-border/50 hover:border-gold-400/40 bg-earth-elevated/30'
+                    }`}
+                  >
+                    {hasVoted && (
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                        className={`absolute inset-y-0 left-0 ${isSelected ? 'bg-gold-500/25' : 'bg-gold-400/10'}`}
+                      />
+                    )}
+
+                    <div className="relative z-10 flex items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2.5 font-semibold text-gold-100/90">
+                        <span className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                          isSelected ? 'border-gold-400 bg-gold-400 text-earth-main' : 'border-gold-100/30 group-hover:border-gold-400'
+                        }`}>
+                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#0A0A0A] fill-current" />}
+                        </span>
+                        <span className={isSelected ? 'text-gold-300 font-bold' : ''}>{opt.text}</span>
+                      </div>
+
+                      {hasVoted && (
+                        <div className="flex items-center gap-2 shrink-0 font-bold">
+                          <span className="text-[10px] text-gold-100/40">({opt.votes})</span>
+                          <span className={`text-xs ${isSelected ? 'text-gold-300 font-black' : 'text-gold-100/70'}`}>
+                            {pct}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+
+            {post.poll.has_voted && (
+              <p className="text-[9px] font-bold uppercase tracking-widest text-gold-400/60 pt-1 text-right">
+                ✓ Vote recorded · Click any option to change
+              </p>
+            )}
+          </div>
+        )}
 
         {post.images && post.images.length > 0 && (
           <div className="grid gap-3 mb-6">
@@ -186,6 +295,15 @@ export const PostCard = React.memo(function PostCard({
           >
             <MessageCircle className="h-4 w-4" />
             {post._count?.comments || 0} <span className="hidden sm:inline">Comments</span>
+          </button>
+
+          <button 
+            onClick={() => onBookmark?.(post.id)}
+            className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${post.isBookmarked ? 'text-[#C9A84C]' : 'hover:text-gold-400'}`}
+            title={post.isBookmarked ? 'Remove from Saved' : 'Save to Farm Notebook'}
+          >
+            <Bookmark className={`h-4 w-4 ${post.isBookmarked ? 'fill-current text-[#C9A84C]' : ''}`} />
+            <span className="hidden sm:inline">{post.isBookmarked ? 'Saved' : 'Save'}</span>
           </button>
           
           <button 
