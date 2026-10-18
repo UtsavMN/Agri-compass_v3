@@ -31,6 +31,7 @@ public class MarketController {
         this(restTemplate, null);
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     public MarketController(RestTemplate restTemplate, com.agricompass.service.KrishiMandiService krishiMandiService) {
         this.restTemplate = restTemplate;
         this.krishiMandiService = krishiMandiService;
