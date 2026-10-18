@@ -43,9 +43,13 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 const MainLayout = () => {
   return (
     <Layout>
-      <PageTransition>
-        <Outlet />
-      </PageTransition>
+      <ErrorBoundary variant="inline">
+        <Suspense fallback={<LoadingOverlay message="Loading Agri Compass..." transparent />}>
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
+        </Suspense>
+      </ErrorBoundary>
     </Layout>
   );
 };
