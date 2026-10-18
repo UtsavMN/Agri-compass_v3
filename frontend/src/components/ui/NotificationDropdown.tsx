@@ -55,15 +55,24 @@ export const NotificationDropdown: React.FC = () => {
 
       // 2. Fetch real weather alerts from Spring Boot WeatherController
       const weatherRes = await apiGet('/api/weather/Bengaluru', token).catch(() => ({ alerts: [] }));
-      const weatherNotifs: NotificationItem[] = (weatherRes?.alerts || []).map((alert: any, index: number) => ({
-        id: `weather-alert-${index}-${alert.effective || Date.now()}`,
-        type: 'WEATHER_ALERT',
-        message: `Severe Weather: ${alert.event || alert.headline || 'Alert'} - ${alert.desc || alert.description || 'Check local weather advisory'}`,
-        timestamp: new Date(alert.effective || Date.now()).toISOString(),
-        link: '/weather',
-        authorName: 'Weather Alert',
-        isRead: false,
-      }));
+      let readWeatherAlerts = new Set<string>();
+      try {
+        readWeatherAlerts = new Set<string>(JSON.parse(localStorage.getItem('agri_read_weather_alerts') || '[]'));
+      } catch (e) {}
+
+      const weatherNotifs: NotificationItem[] = (weatherRes?.alerts || []).map((alert: any, index: number) => {
+        const rawKey = alert.id || alert.effective || `${alert.event || 'alert'}-${alert.headline || index}`;
+        const alertId = `weather-alert-${String(rawKey).replace(/\s+/g, '_')}`;
+        return {
+          id: alertId,
+          type: 'WEATHER_ALERT',
+          message: `Severe Weather: ${alert.event || alert.headline || 'Alert'} - ${alert.desc || alert.description || 'Check local weather advisory'}`,
+          timestamp: alert.effective ? new Date(alert.effective).toISOString() : new Date().toISOString(),
+          link: '/weather',
+          authorName: 'Weather Alert',
+          isRead: readWeatherAlerts.has(alertId),
+        };
+      });
 
       // Combine and deduplicate
       const combined = [...backendNotifs, ...weatherNotifs];
@@ -152,7 +161,19 @@ export const NotificationDropdown: React.FC = () => {
 
   const markAllAsRead = async () => {
     setHasUnread(false);
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    setNotifications((prev) => {
+      const updated = prev.map((n) => ({ ...n, isRead: true }));
+      try {
+        const readAlerts = new Set<string>(JSON.parse(localStorage.getItem('agri_read_weather_alerts') || '[]'));
+        updated.forEach((n) => {
+          if (n.type === 'WEATHER_ALERT') {
+            readAlerts.add(n.id);
+          }
+        });
+        localStorage.setItem('agri_read_weather_alerts', JSON.stringify(Array.from(readAlerts)));
+      } catch (e) {}
+      return updated;
+    });
     try {
       const token = await getToken();
       await apiPost('/api/notifications/read-all', {}, token);
@@ -177,11 +198,19 @@ export const NotificationDropdown: React.FC = () => {
       setNotifications((prev) =>
         prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
       );
-      try {
-        const token = await getToken();
-        await apiPost(`/api/notifications/${notif.id}/read`, {}, token);
-      } catch (e) {
-        // non-blocking
+      if (notif.type === 'WEATHER_ALERT') {
+        try {
+          const readAlerts = new Set<string>(JSON.parse(localStorage.getItem('agri_read_weather_alerts') || '[]'));
+          readAlerts.add(notif.id);
+          localStorage.setItem('agri_read_weather_alerts', JSON.stringify(Array.from(readAlerts)));
+        } catch (e) {}
+      } else {
+        try {
+          const token = await getToken();
+          await apiPost(`/api/notifications/${notif.id}/read`, {}, token);
+        } catch (e) {
+          // non-blocking
+        }
       }
     }
     if (notif.link) {

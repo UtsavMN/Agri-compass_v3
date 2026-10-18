@@ -89,6 +89,7 @@ public class UserProfile {
 
     // --- Alias convenience methods for controller layer ---
     public String getId() { return clerkUserId; }
+    public void setId(String id) { this.clerkUserId = id; }
     public String getUsername() { return usernameHandle; }
     public String getAvatarUrl() { return profilePictureUrl; }
 }

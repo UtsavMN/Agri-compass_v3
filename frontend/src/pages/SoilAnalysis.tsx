@@ -948,16 +948,16 @@ export function SoilAnalysisContent() {
                   <p className="text-center text-[#a09880] py-8">No past diagnostics found for this farm.</p>
                 ) : (
                   history.map((h, i) => (
-                    <div key={i} className="bg-[#12120e] p-4 rounded-xl border border-[rgba(255,255,255,0.05)]">
+                    <div key={h.id || i} className="bg-[#12120e] p-4 rounded-xl border border-[rgba(255,255,255,0.05)]">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-bold text-[#c49a2a]">{formatDate(h.createdAt || Date.now())}</span>
-                        <span className="text-xs px-2 py-1 rounded bg-[#222] font-semibold">{h.healthStatus || "Unknown"}</span>
+                        <span className="text-sm font-bold text-[#c49a2a]">{formatDate(h.createdAt || h.created_at || Date.now())}</span>
+                        <span className="text-xs px-2 py-1 rounded bg-[#222] font-semibold">{h.healthStatus || h.health_status || "Optimal"}</span>
                       </div>
                       <div className="grid grid-cols-4 gap-2 text-xs text-[#a09880] mb-3">
-                        <div>N: {h.nitrogen}</div><div>P: {h.phosphorus}</div><div>K: {h.potassium}</div><div>pH: {h.ph}</div>
+                        <div>N: {h.nitrogen ?? '-'}</div><div>P: {h.phosphorus ?? '-'}</div><div>K: {h.potassium ?? '-'}</div><div>pH: {h.ph ?? '-'}</div>
                       </div>
                       <p className="text-xs text-[#f0ece0] line-clamp-3 bg-black/20 p-2 rounded italic">
-                        {safeGetAmendmentRecommendations(h.aiReport)}
+                        {safeGetAmendmentRecommendations(h.aiReport || h.ai_report)}
                       </p>
                     </div>
                   ))

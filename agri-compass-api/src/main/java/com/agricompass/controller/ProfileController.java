@@ -63,15 +63,7 @@ public class ProfileController {
             }
         } catch (Exception ignored) {}
 
-        // 5. Fallback: Check if any real user exists in user_profiles
-        try {
-            return userProfileRepository.findAll().stream()
-                .map(UserProfile::getClerkUserId)
-                .filter(id -> id != null && !id.startsWith("mock_") && !"anonymousUser".equalsIgnoreCase(id))
-                .findFirst()
-                .orElse("mock_user_1");
-        } catch (Exception ignored) {}
-
+        // 5. Safe fallback: Default to mock_user_1 when no auth or credentials provided
         return "mock_user_1";
     }
 
@@ -231,7 +223,12 @@ public class ProfileController {
     @PutMapping("/profiles/{id}")
     public ResponseEntity<UserProfile> updateProfileById(
             @PathVariable String id,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
             @RequestBody Map<String, Object> body) {
+        String currentUserId = resolveUserId(headerUserId, body);
+        if (currentUserId != null && !currentUserId.equalsIgnoreCase(id) && !currentUserId.startsWith("mock_")) {
+            return ResponseEntity.status(403).build();
+        }
         UserProfile current = getOrCreateProfile(id);
         return ResponseEntity.ok(applyProfileUpdates(current, body));
     }

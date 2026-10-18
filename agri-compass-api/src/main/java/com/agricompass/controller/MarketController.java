@@ -24,6 +24,12 @@ public class MarketController {
     @Value("${data.gov.in.api.key:default}")
     private String dataGovApiKey;
 
+    private final RestTemplate restTemplate;
+
+    public MarketController(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
     @GetMapping("/prices")
     public ResponseEntity<?> getMarketPrices(
             @RequestParam String district,
@@ -54,7 +60,6 @@ public class MarketController {
         String apiDistrict = districtMap.getOrDefault(district, district);
         log.info("Fetching mandi prices for district: {}", apiDistrict);
 
-        RestTemplate restTemplate = new RestTemplate();
         List<Map<String, Object>> allParsedPrices = new ArrayList<>();
 
         String url = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070" +

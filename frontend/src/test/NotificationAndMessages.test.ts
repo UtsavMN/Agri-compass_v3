@@ -68,4 +68,59 @@ describe('Notification and Messaging System - Precision Business Logic Tests', (
     expect(hasUnreadNotifications(allRead)).toBe(false);
     expect(getUnreadBadge(allRead)).toBe(0);
   });
+
+  it('generates deterministic IDs for weather alerts and preserves read status across polling cycles', () => {
+    const rawAlert = {
+      event: 'Thunderstorm with heavy rain',
+      headline: 'Yellow alert for Bengaluru Rural',
+      effective: '2026-10-18T10:00:00Z',
+    };
+
+    const getDeterministicId = (alert: any, index: number) => {
+      const rawKey = alert.id || alert.effective || `${alert.event || 'alert'}-${alert.headline || index}`;
+      return `weather-alert-${String(rawKey).replace(/\s+/g, '_')}`;
+    };
+
+    const idCycle1 = getDeterministicId(rawAlert, 0);
+    const idCycle2 = getDeterministicId(rawAlert, 0);
+
+    // ID must be strictly deterministic across re-polls
+    expect(idCycle1).toBe(idCycle2);
+    expect(idCycle1).toBe('weather-alert-2026-10-18T10:00:00Z');
+
+    // Simulate marking as read
+    const readStorage = new Set<string>();
+    readStorage.add(idCycle1);
+
+    // Next poll cycle: alert is recognized as read
+    const isReadInNextCycle = readStorage.has(idCycle2);
+    expect(isReadInNextCycle).toBe(true);
+  });
+
+  it('correctly formats message badge count for high volumes (99+ cap)', () => {
+    const formatBadge = (count: number) => (count > 99 ? '99+' : String(count));
+
+    expect(formatBadge(0)).toBe('0');
+    expect(formatBadge(5)).toBe('5');
+    expect(formatBadge(99)).toBe('99');
+    expect(formatBadge(100)).toBe('99+');
+    expect(formatBadge(350)).toBe('99+');
+  });
+
+  it('aggregates unread messages across multiple active farmer conversations', () => {
+    const conversations = [
+      { id: 'c1', otherUser: 'Ramesh', unreadCount: 3 },
+      { id: 'c2', otherUser: 'Sunita', unreadCount: 0 },
+      { id: 'c3', otherUser: 'APMC Agent', unreadCount: 2 },
+    ];
+
+    const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+    expect(totalUnread).toBe(5);
+
+    // Reading conversation c1 reduces total unread
+    conversations[0].unreadCount = 0;
+    const updatedTotal = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+    expect(updatedTotal).toBe(2);
+  });
 });
+

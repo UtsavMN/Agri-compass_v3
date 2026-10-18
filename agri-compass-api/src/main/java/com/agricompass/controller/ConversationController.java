@@ -115,10 +115,14 @@ public class ConversationController {
             return ResponseEntity.status(401).build();
         }
 
-        Conversation c = conversationRepository.findByParticipants(currentUserId, userId).orElseGet(() -> {
+        if (userId == null || userId.trim().isEmpty() || userId.trim().equals(currentUserId)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Conversation c = conversationRepository.findByParticipants(currentUserId, userId.trim()).orElseGet(() -> {
             Conversation newConv = new Conversation();
             newConv.setParticipantOne(currentUserId);
-            newConv.setParticipantTwo(userId);
+            newConv.setParticipantTwo(userId.trim());
             return conversationRepository.save(newConv);
         });
         

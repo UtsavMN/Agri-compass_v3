@@ -25,14 +25,24 @@ public class SchemeController {
 
     @GetMapping("/saved")
     public ResponseEntity<List<SavedScheme>> getSavedSchemes() {
-        String userId = userService.syncUser(null).getId();
-        return ResponseEntity.ok(savedSchemeRepository.findByClerkUserIdOrderByCreatedAtDesc(userId));
+        com.agricompass.entity.UserProfile user = userService.syncUser(null);
+        if (user == null || user.getId() == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(savedSchemeRepository.findByClerkUserIdOrderByCreatedAtDesc(user.getId()));
     }
 
     @PostMapping("/save")
     public ResponseEntity<SavedScheme> saveScheme(@RequestBody Map<String, String> body) {
-        String userId = userService.syncUser(null).getId();
-        String schemeId = body.get("schemeId");
+        com.agricompass.entity.UserProfile user = userService.syncUser(null);
+        if (user == null || user.getId() == null) {
+            return ResponseEntity.status(401).build();
+        }
+        String userId = user.getId();
+        String schemeId = body != null ? body.get("schemeId") : null;
+        if (schemeId == null || schemeId.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
         
         Optional<SavedScheme> existing = savedSchemeRepository.findByClerkUserIdAndSchemeId(userId, schemeId);
         if (existing.isPresent()) {
@@ -48,8 +58,11 @@ public class SchemeController {
     @DeleteMapping("/save/{schemeId}")
     @Transactional
     public ResponseEntity<Void> removeScheme(@PathVariable String schemeId) {
-        String userId = userService.syncUser(null).getId();
-        savedSchemeRepository.deleteByClerkUserIdAndSchemeId(userId, schemeId);
+        com.agricompass.entity.UserProfile user = userService.syncUser(null);
+        if (user == null || user.getId() == null) {
+            return ResponseEntity.status(401).build();
+        }
+        savedSchemeRepository.deleteByClerkUserIdAndSchemeId(user.getId(), schemeId);
         return ResponseEntity.noContent().build();
     }
 }

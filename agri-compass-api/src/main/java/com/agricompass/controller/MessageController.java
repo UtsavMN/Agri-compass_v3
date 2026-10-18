@@ -56,7 +56,10 @@ public class MessageController {
         }
         
         Conversation c = conversationRepository.findById(convId).orElse(null);
-        if (c == null || (!c.getParticipantOne().equals(currentUserId) && !c.getParticipantTwo().equals(currentUserId))) {
+        if (c == null) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!c.getParticipantOne().equals(currentUserId) && !c.getParticipantTwo().equals(currentUserId)) {
             return ResponseEntity.status(403).build();
         }
 
@@ -83,6 +86,14 @@ public class MessageController {
             return ResponseEntity.status(401).build();
         }
 
+        Conversation c = conversationRepository.findById(convId).orElse(null);
+        if (c == null) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!c.getParticipantOne().equals(currentUserId) && !c.getParticipantTwo().equals(currentUserId)) {
+            return ResponseEntity.status(403).build();
+        }
+
         List<Message> unread = messageRepository.findByConversationIdOrderByCreatedAtAsc(convId).stream()
                 .filter(m -> m.getReadAt() == null && !m.getSenderId().equals(currentUserId))
                 .collect(Collectors.toList());
@@ -96,8 +107,8 @@ public class MessageController {
         // Compute new total unread count for current user
         List<Conversation> conversations = conversationRepository.findByParticipant(currentUserId);
         int totalUnread = 0;
-        for (Conversation c : conversations) {
-            totalUnread += messageRepository.countByConversationIdAndReadAtIsNullAndSenderIdNot(c.getId(), currentUserId);
+        for (Conversation conv : conversations) {
+            totalUnread += messageRepository.countByConversationIdAndReadAtIsNullAndSenderIdNot(conv.getId(), currentUserId);
         }
 
         return ResponseEntity.ok(Map.of("success", true, "count", totalUnread));
@@ -113,12 +124,23 @@ public class MessageController {
             return ResponseEntity.status(401).build();
         }
         
-        Conversation c = conversationRepository.findById(convId).orElseThrow(() -> new RuntimeException("Not found"));
+        Conversation c = conversationRepository.findById(convId).orElse(null);
+        if (c == null) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!c.getParticipantOne().equals(currentUserId) && !c.getParticipantTwo().equals(currentUserId)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        String content = body != null ? body.get("content") : null;
+        if (content == null || content.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
         
         Message m = new Message();
         m.setConversationId(convId);
         m.setSenderId(currentUserId);
-        m.setContent(body.get("content"));
+        m.setContent(content.trim());
         m = messageRepository.save(m);
         
         // Notify via WebSocket

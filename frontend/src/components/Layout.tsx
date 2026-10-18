@@ -162,7 +162,7 @@ export default function Layout({
       window.removeEventListener('agri_unread_messages_updated', handleUnreadUpdate);
       if (stompClient) stompClient.deactivate();
     };
-  }, [user, getToken, location.pathname]);
+  }, [user?.id, getToken]);
 
   // Listen to profile preferences for outdoor mode
   useEffect(() => {
