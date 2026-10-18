@@ -387,13 +387,13 @@ public class WeatherController {
         }
     }
 
-    private static String degreesToCardinal(int deg) {
+    static String degreesToCardinal(int deg) {
         String[] directions = {"N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"};
         int idx = (int) Math.round((deg % 360) / 22.5) % 16;
         return directions[idx];
     }
 
-    private static String wmoCodeToDescription(int code) {
+    static String wmoCodeToDescription(int code) {
         switch (code) {
             case 0: return "Clear Sky";
             case 1: return "Mainly Clear";
@@ -424,7 +424,7 @@ public class WeatherController {
         }
     }
 
-    private static Map<String, String> evaluateSprayingSuitability(double windKph, int precipProb, double precipMm) {
+    static Map<String, String> evaluateSprayingSuitability(double windKph, int precipProb, double precipMm) {
         Map<String, String> result = new HashMap<>();
         if (precipProb > 50 || precipMm > 4.0) {
             result.put("suitability", "Unfavorable");
