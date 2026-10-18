@@ -36,30 +36,32 @@ export class CropRecommender {
     if (this.districtsCache.length > 0) return this.districtsCache;
 
     try {
-      // Load directly from public CSV
+      // Load directly from public CSV if available
       const response = await fetch('/districts.csv');
-      if (response.ok) {
+      if (response && response.ok) {
         const csvText = await response.text();
-        this.districtsCache = this.parseCSV(csvText);
-        return this.districtsCache;
+        const parsed = this.parseCSV(csvText);
+        if (parsed.length > 0) {
+          this.districtsCache = parsed;
+          return this.districtsCache;
+        }
       }
-
-      // Hardcoded fallback for Karnataka districts
-      this.districtsCache = [
-        { district: 'Mysuru', recommended_crops: 'Rice, Sugarcane, Coconut', soil_type: 'Red loam', avg_rainfall: '850mm', weather_pattern: 'Tropical' },
-        { district: 'Mandya', recommended_crops: 'Sugarcane, Rice, Ragi', soil_type: 'Alluvial', avg_rainfall: '900mm', weather_pattern: 'Semi-arid' },
-        { district: 'Hassan', recommended_crops: 'Coffee, Rice, Pepper', soil_type: 'Laterite', avg_rainfall: '1200mm', weather_pattern: 'Sub-tropical' },
-        { district: 'Bangalore Rural', recommended_crops: 'Ragi, Groundnut, Vegetables', soil_type: 'Red sandy', avg_rainfall: '800mm', weather_pattern: 'Semi-arid' },
-        { district: 'Tumakuru', recommended_crops: 'Ragi, Groundnut, Sunflower', soil_type: 'Red loam', avg_rainfall: '700mm', weather_pattern: 'Semi-arid' },
-        { district: 'Chikkamagaluru', recommended_crops: 'Coffee, Pepper, Cardamom', soil_type: 'Laterite', avg_rainfall: '2000mm', weather_pattern: 'Tropical' },
-        { district: 'Dakshina Kannada', recommended_crops: 'Coconut, Arecanut, Rubber', soil_type: 'Laterite', avg_rainfall: '3500mm', weather_pattern: 'Tropical' },
-        { district: 'Udupi', recommended_crops: 'Rice, Coconut, Cashew', soil_type: 'Laterite', avg_rainfall: '4000mm', weather_pattern: 'Tropical' },
-      ];
-      return this.districtsCache;
-    } catch (error) {
-      console.error('Error loading districts:', error);
-      return [];
+    } catch (_error) {
+      // Network/file not accessible; proceed to hardcoded Karnataka master dataset
     }
+
+    // Master dataset for Karnataka districts
+    this.districtsCache = [
+      { district: 'Mysuru', recommended_crops: 'Rice, Sugarcane, Coconut', soil_type: 'Red loam', avg_rainfall: '850mm', weather_pattern: 'Tropical' },
+      { district: 'Mandya', recommended_crops: 'Sugarcane, Rice, Ragi', soil_type: 'Alluvial', avg_rainfall: '900mm', weather_pattern: 'Semi-arid' },
+      { district: 'Hassan', recommended_crops: 'Coffee, Rice, Pepper', soil_type: 'Laterite', avg_rainfall: '1200mm', weather_pattern: 'Sub-tropical' },
+      { district: 'Bangalore Rural', recommended_crops: 'Ragi, Groundnut, Vegetables', soil_type: 'Red sandy', avg_rainfall: '800mm', weather_pattern: 'Semi-arid' },
+      { district: 'Tumakuru', recommended_crops: 'Ragi, Groundnut, Sunflower', soil_type: 'Red loam', avg_rainfall: '700mm', weather_pattern: 'Semi-arid' },
+      { district: 'Chikkamagaluru', recommended_crops: 'Coffee, Pepper, Cardamom', soil_type: 'Laterite', avg_rainfall: '2000mm', weather_pattern: 'Tropical' },
+      { district: 'Dakshina Kannada', recommended_crops: 'Coconut, Arecanut, Rubber', soil_type: 'Laterite', avg_rainfall: '3500mm', weather_pattern: 'Tropical' },
+      { district: 'Udupi', recommended_crops: 'Rice, Coconut, Cashew', soil_type: 'Laterite', avg_rainfall: '4000mm', weather_pattern: 'Tropical' },
+    ];
+    return this.districtsCache;
   }
 
   private parseCSV(csvText: string): DistrictData[] {

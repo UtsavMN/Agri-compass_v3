@@ -184,6 +184,16 @@ class CacheManager {
       return false;
     }
   }
+
+  static async getOrSet<T>(key: string, fetcher: () => Promise<T>, options: CacheOptions = {}): Promise<T> {
+    const cached = this.get<T>(key);
+    if (cached !== null) {
+      return cached;
+    }
+    const data = await fetcher();
+    this.set(key, data, options);
+    return data;
+  }
 }
 
 /**
