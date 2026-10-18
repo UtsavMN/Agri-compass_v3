@@ -12,16 +12,19 @@ Tests all 7 validation criteria against the live Neon PostgreSQL database:
 
 import sys
 import uuid
+import os
 import datetime
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-DB_HOST = "ep-royal-hat-atayzkpd.c-9.us-east-1.aws.neon.tech"
-DB_NAME = "neondb"
-DB_USER = "neondb_owner"
-DB_PASS = "npg_DPC3an8RgFSh"
+DB_HOST = os.getenv("DB_HOST", "ep-royal-hat-atayzkpd.c-9.us-east-1.aws.neon.tech")
+DB_NAME = os.getenv("DB_NAME", "neondb")
+DB_USER = os.getenv("DB_USER", "neondb_owner")
+DB_PASS = os.getenv("SPRING_DATASOURCE_PASSWORD") or os.getenv("DB_PASSWORD")
 
 def get_connection():
+    if not DB_PASS:
+        raise ValueError("Missing database password. Set SPRING_DATASOURCE_PASSWORD or DB_PASSWORD in environment.")
     return psycopg2.connect(
         dbname=DB_NAME,
         user=DB_USER,
