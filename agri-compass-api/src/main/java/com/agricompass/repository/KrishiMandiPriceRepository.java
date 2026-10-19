@@ -17,6 +17,9 @@ public interface KrishiMandiPriceRepository extends JpaRepository<KrishiMandiPri
 
     List<KrishiMandiPrice> findByDistrictIgnoreCaseAndCommodityIgnoreCaseOrderByReportDateDesc(String district, String commodity);
 
+    Optional<KrishiMandiPrice> findByMarketIgnoreCaseAndCommodityIgnoreCaseAndVarietyIgnoreCaseAndGradeIgnoreCase(
+            String market, String commodity, String variety, String grade);
+
     Optional<KrishiMandiPrice> findByMarketIgnoreCaseAndCommodityIgnoreCaseAndVarietyIgnoreCase(
             String market, String commodity, String variety);
 

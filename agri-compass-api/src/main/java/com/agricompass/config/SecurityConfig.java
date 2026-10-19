@@ -38,7 +38,6 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/auth/**",
                     "/api/health",
-                    "/api/market/**",
                     "/api/crops/**",
                     "/api/crops",
                     "/api/schemes/**",
@@ -56,6 +55,8 @@ public class SecurityConfig {
                     "/api/community/**",
                     "/ws/**"
                 ).permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/market/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/market/kmv/snapshot", "/api/market/kmv/purge").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )

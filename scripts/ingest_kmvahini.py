@@ -51,7 +51,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Ingest Krishi Marata Vahini mandi prices into AgriCompass.")
     parser.add_argument("--api-url", default=os.getenv("KMV_API_URL", "http://localhost:8080/api/market/kmv/snapshot"),
                         help="Spring Boot snapshot ingestion endpoint")
-    parser.add_argument("--ingest-key", default=os.getenv("KMV_INGEST_KEY", "kmv_internal_secret_key_2026"),
+    parser.add_argument("--ingest-key", default=os.getenv("KMV_INGEST_KEY", ""),
                         help="Ingestion authorization secret key")
     parser.add_argument("--commodities", nargs="+", default=DEFAULT_COMMODITIES,
                         help="List of commodity names to scrape")
@@ -221,6 +221,10 @@ def main():
         print(f"\n[DRY RUN] Ingestion validated {len(valid_records)} records successfully. Skipping POST.")
         print(f"Sample record: {json.dumps(valid_records[0], indent=2)}")
         sys.exit(0)
+
+    if not args.ingest_key:
+        print("Error: Ingestion key is missing. Set KMV_INGEST_KEY environment variable or pass --ingest-key.")
+        sys.exit(1)
 
     # POST payload to Spring Boot
     print(f"\nPosting {len(valid_records)} verified records to {args.api_url} ...")

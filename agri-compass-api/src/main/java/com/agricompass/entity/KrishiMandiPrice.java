@@ -9,7 +9,7 @@ import java.util.UUID;
     @Index(name = "idx_kmv_district", columnList = "district"),
     @Index(name = "idx_kmv_commodity", columnList = "commodity"),
     @Index(name = "idx_kmv_report_date", columnList = "report_date"),
-    @Index(name = "idx_kmv_unique_market_crop", columnList = "market, commodity, variety", unique = true)
+    @Index(name = "idx_kmv_unique_market_crop", columnList = "market, commodity, variety, grade", unique = true)
 })
 public class KrishiMandiPrice {
 
@@ -36,7 +36,8 @@ public class KrishiMandiPrice {
 
     private String variety;
 
-    private String grade;
+    @Column(nullable = false)
+    private String grade = "STANDARD";
 
     @Column(name = "arrival_quantity")
     private Double arrivalQuantity;

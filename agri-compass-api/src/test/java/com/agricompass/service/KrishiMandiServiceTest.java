@@ -50,7 +50,7 @@ class KrishiMandiServiceTest {
                 "arrivalUnit", "Quintal"
         );
 
-        when(repository.findByMarketIgnoreCaseAndCommodityIgnoreCaseAndVarietyIgnoreCase(anyString(), anyString(), anyString()))
+        when(repository.findByMarketIgnoreCaseAndCommodityIgnoreCaseAndVarietyIgnoreCaseAndGradeIgnoreCase(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(Optional.empty());
         when(repository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -137,7 +137,7 @@ class KrishiMandiServiceTest {
         existingNewer.setReportDate("2026-10-18");
         existingNewer.setModalPrice(2600.0);
 
-        when(repository.findByMarketIgnoreCaseAndCommodityIgnoreCaseAndVarietyIgnoreCase("Haveri", "Maize", "LOCAL"))
+        when(repository.findByMarketIgnoreCaseAndCommodityIgnoreCaseAndVarietyIgnoreCaseAndGradeIgnoreCase(eq("Haveri"), eq("Maize"), eq("LOCAL"), anyString()))
                 .thenReturn(Optional.of(existingNewer));
 
         // Incoming is older (2026-10-10)

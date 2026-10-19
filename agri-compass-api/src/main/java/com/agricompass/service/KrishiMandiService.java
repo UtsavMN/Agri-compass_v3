@@ -104,13 +104,15 @@ public class KrishiMandiService {
                 district = (district != null && !district.isBlank()) ? district.trim() : "Karnataka";
 
                 String grade = getString(r, "grade");
+                grade = (grade != null && !grade.isBlank()) ? grade.trim().toUpperCase() : "STANDARD";
+
                 Double arrivals = getDouble(r, "arrivalQuantity", "arrival_quantity", "arrivals");
                 String arrivalUnit = getString(r, "arrivalUnit", "arrival_unit", "unit");
                 String priceUnit = getString(r, "priceUnit", "price_unit");
 
                 // Check for existing record to replace or update safely
-                Optional<KrishiMandiPrice> existingOpt = repository.findByMarketIgnoreCaseAndCommodityIgnoreCaseAndVarietyIgnoreCase(
-                        market.trim(), commodity.trim(), variety
+                Optional<KrishiMandiPrice> existingOpt = repository.findByMarketIgnoreCaseAndCommodityIgnoreCaseAndVarietyIgnoreCaseAndGradeIgnoreCase(
+                        market.trim(), commodity.trim(), variety, grade
                 );
 
                 KrishiMandiPrice entity = existingOpt.orElseGet(KrishiMandiPrice::new);
@@ -132,7 +134,7 @@ public class KrishiMandiService {
                 entity.setMinPrice(minPrice);
                 entity.setMaxPrice(maxPrice);
                 entity.setModalPrice(modalPrice);
-                if (grade != null) entity.setGrade(grade.trim());
+                entity.setGrade(grade);
                 if (arrivals != null) entity.setArrivalQuantity(arrivals);
                 if (arrivalUnit != null && !arrivalUnit.isBlank()) entity.setArrivalUnit(arrivalUnit.trim());
                 if (priceUnit != null && !priceUnit.isBlank()) entity.setPriceUnit(priceUnit.trim());

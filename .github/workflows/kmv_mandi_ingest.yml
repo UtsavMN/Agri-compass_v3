@@ -1,0 +1,51 @@
+name: Krishi Marata Vahini Daily Mandi Ingestion
+
+on:
+  schedule:
+    # 13:30 UTC = 19:00 IST (Daily evening ingestion after Karnataka APMC markets publish)
+    - cron: '30 13 * * *'
+  workflow_dispatch:
+    inputs:
+      commodities:
+        description: 'Space-separated commodities to scrape (default: standard staples)'
+        required: false
+        default: 'MAIZE RAGI PADDY JOWAR BENGAL_GRAM TUR'
+
+jobs:
+  scrape-and-ingest:
+    name: Scrape KSAMB APMC Prices & Ingest Snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Google Chrome
+        uses: browser-actions/setup-chrome@latest
+        with:
+          chrome-version: stable
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements-scraper.txt
+
+      - name: Run Mandi Ingestion
+        env:
+          KMV_API_URL: ${{ secrets.KMV_API_URL }}
+          KMV_INGEST_KEY: ${{ secrets.KMV_INGEST_KEY }}
+        run: |
+          if [ -z "$KMV_API_URL" ] || [ -z "$KMV_INGEST_KEY" ]; then
+            echo "::error::Missing KMV_API_URL or KMV_INGEST_KEY secret in repository settings."
+            exit 1
+          fi
+          python scripts/ingest_kmvahini.py \
+            --api-url "$KMV_API_URL" \
+            --ingest-key "$KMV_INGEST_KEY"

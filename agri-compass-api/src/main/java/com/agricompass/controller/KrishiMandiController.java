@@ -14,13 +14,17 @@ import java.util.Map;
 @RequestMapping("/api/market/kmv")
 public class KrishiMandiController {
 
-    @Value("${kmv.ingest.key:kmv_internal_secret_key_2026}")
+    @Value("${kmv.ingest.key:}")
     private String ingestKey;
 
     private final KrishiMandiService krishiMandiService;
 
     public KrishiMandiController(KrishiMandiService krishiMandiService) {
         this.krishiMandiService = krishiMandiService;
+    }
+
+    private boolean isAuthorized(String headerKey) {
+        return ingestKey != null && !ingestKey.isBlank() && ingestKey.equals(headerKey);
     }
 
     /**
@@ -32,9 +36,9 @@ public class KrishiMandiController {
             @RequestHeader(value = "X-Ingest-Key", required = false) String headerKey,
             @RequestBody List<Map<String, Object>> records) {
 
-        if (headerKey == null || !headerKey.equals(ingestKey)) {
+        if (!isAuthorized(headerKey)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "error", "Unauthorized: Invalid or missing X-Ingest-Key header"
+                    "error", "Unauthorized: Ingestion key is not configured or X-Ingest-Key is invalid"
             ));
         }
 
@@ -68,9 +72,9 @@ public class KrishiMandiController {
             @RequestHeader(value = "X-Ingest-Key", required = false) String headerKey,
             @RequestParam(defaultValue = "30") int days) {
 
-        if (headerKey == null || !headerKey.equals(ingestKey)) {
+        if (!isAuthorized(headerKey)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "error", "Unauthorized: Invalid or missing X-Ingest-Key header"
+                    "error", "Unauthorized: Ingestion key is not configured or X-Ingest-Key is invalid"
             ));
         }
 
