@@ -5,10 +5,12 @@ import com.agricompass.entity.Comment;
 import com.agricompass.entity.Notification;
 import com.agricompass.entity.Post;
 import com.agricompass.entity.PostLike;
+import com.agricompass.entity.PostBookmark;
 import com.agricompass.entity.UserProfile;
 import com.agricompass.repository.CommentRepository;
 import com.agricompass.repository.FollowRepository;
 import com.agricompass.repository.NotificationRepository;
+import com.agricompass.repository.PostBookmarkRepository;
 import com.agricompass.repository.PostLikeRepository;
 import com.agricompass.repository.PostRepository;
 import com.agricompass.repository.UserProfileRepository;
@@ -39,6 +41,9 @@ class PostControllerTest {
     private PostLikeRepository postLikeRepository;
 
     @Mock
+    private PostBookmarkRepository postBookmarkRepository;
+
+    @Mock
     private CommentRepository commentRepository;
 
     @Mock
@@ -63,6 +68,7 @@ class PostControllerTest {
         postController = new PostController(
                 postRepository,
                 postLikeRepository,
+                postBookmarkRepository,
                 commentRepository,
                 profileRepository,
                 userService,
@@ -223,6 +229,43 @@ class PostControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         verify(commentRepository).deleteByPostId("post-my");
         verify(postLikeRepository).deleteByPostId("post-my");
+        verify(postBookmarkRepository).deleteByPostId("post-my");
         verify(postRepository).delete(post);
+    }
+
+    @Test
+    @DisplayName("Unit test: toggleBookmark adds bookmark when not bookmarked")
+    void toggleBookmark_whenNotBookmarked_shouldAddBookmark() {
+        UserProfile user = new UserProfile();
+        user.setClerkUserId("user_bm");
+        when(userService.syncUser(null)).thenReturn(user);
+
+        when(postBookmarkRepository.findByPostIdAndClerkUserId("post-1", "user_bm"))
+                .thenReturn(Optional.empty());
+
+        ResponseEntity<Map<String, Object>> response = postController.toggleBookmark("post-1", null, null);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).containsEntry("bookmarked", true);
+        assertThat(response.getBody()).containsEntry("postId", "post-1");
+        verify(postBookmarkRepository).save(any(PostBookmark.class));
+    }
+
+    @Test
+    @DisplayName("Unit test: toggleBookmark removes bookmark when already bookmarked")
+    void toggleBookmark_whenAlreadyBookmarked_shouldRemoveBookmark() {
+        UserProfile user = new UserProfile();
+        user.setClerkUserId("user_bm");
+        when(userService.syncUser(null)).thenReturn(user);
+
+        PostBookmark existing = new PostBookmark("post-1", "user_bm");
+        when(postBookmarkRepository.findByPostIdAndClerkUserId("post-1", "user_bm"))
+                .thenReturn(Optional.of(existing));
+
+        ResponseEntity<Map<String, Object>> response = postController.toggleBookmark("post-1", null, null);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).containsEntry("bookmarked", false);
+        verify(postBookmarkRepository).deleteByPostIdAndClerkUserId("post-1", "user_bm");
     }
 }

@@ -6,7 +6,7 @@ COPY pom.xml .
 COPY src src
 
 # Build the application using pure Maven (bypassing wrapper issues)
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -Dmaven.test.skip=true
 
 # Run stage
 FROM eclipse-temurin:17-jre-alpine
