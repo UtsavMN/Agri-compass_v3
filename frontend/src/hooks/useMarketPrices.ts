@@ -19,7 +19,7 @@ export interface MandiPrice {
   trend?: "up" | "down" | "stable";
 }
 
-export const useMarketPrices = (district: string) => {
+export const useMarketPrices = (district?: string, commodity?: string, limit: number = 100) => {
   const [prices, setPrices] = useState<MandiPrice[]>([]);
   const [source, setSource] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,16 @@ export const useMarketPrices = (district: string) => {
     const fetchPrices = async () => {
       setLoading(true);
       try {
-        const data = await apiGet(`/api/market/prices?district=${encodeURIComponent(district)}&limit=20`);
+        const params = new URLSearchParams();
+        if (district && district !== 'all') {
+          params.append('district', district);
+        }
+        if (commodity && commodity !== 'all') {
+          params.append('commodity', commodity);
+        }
+        params.append('limit', String(limit));
+
+        const data = await apiGet(`/api/market/prices?${params.toString()}`);
 
         const serverDate = parseSafeDate(data?.fetchedAt) || new Date();
         setPrices(data?.prices || []);
@@ -38,14 +47,16 @@ export const useMarketPrices = (district: string) => {
         setLastUpdated(serverDate);
 
         // Cache in localStorage as fallback
-        localStorage.setItem(`market_prices_${district}`, JSON.stringify({
+        const cacheKey = `market_prices_${district || 'all'}_${commodity || 'all'}`;
+        localStorage.setItem(cacheKey, JSON.stringify({
           prices: data?.prices || [],
           source: data?.source || null,
           timestamp: serverDate.getTime()
         }));
       } catch (_err) {
         // Load from cache if API fails
-        const cached = localStorage.getItem(`market_prices_${district}`);
+        const cacheKey = `market_prices_${district || 'all'}_${commodity || 'all'}`;
+        const cached = localStorage.getItem(cacheKey) || (district ? localStorage.getItem(`market_prices_${district}`) : null);
         if (cached) {
           const { prices: cachedPrices, source: cachedSource, timestamp } = JSON.parse(cached);
           const serverDate = parseSafeDate(timestamp) || new Date();
@@ -62,8 +73,8 @@ export const useMarketPrices = (district: string) => {
       }
     };
 
-    if (district) fetchPrices();
-  }, [district]);
+    fetchPrices();
+  }, [district, commodity, limit]);
 
   return { prices, source, loading, error, lastUpdated };
 };

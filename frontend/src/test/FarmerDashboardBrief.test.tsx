@@ -84,7 +84,7 @@ describe('FarmerDashboardBrief Component (Carousel, Checklist & Synced Irrigatio
       return [];
     });
 
-    vi.spyOn(weatherAdvisor, 'getWeatherData').mockImplementation(async (district: string) => {
+    vi.spyOn(weatherAdvisor, 'getWeatherData').mockImplementation(async (district?: string) => {
       return {
         temperature: district === 'Mandya' ? 31 : 28,
         humidity: 60,

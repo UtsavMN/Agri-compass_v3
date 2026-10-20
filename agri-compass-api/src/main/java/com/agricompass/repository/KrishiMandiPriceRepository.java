@@ -32,4 +32,13 @@ public interface KrishiMandiPriceRepository extends JpaRepository<KrishiMandiPri
 
     @Query("SELECT COUNT(p) FROM KrishiMandiPrice p WHERE p.reportDate < :cutoffDate")
     long countByReportDateBefore(@Param("cutoffDate") String cutoffDate);
+
+    @Query("SELECT DISTINCT p.commodity FROM KrishiMandiPrice p ORDER BY p.commodity ASC")
+    List<String> findDistinctCommodities();
+
+    @Query("SELECT DISTINCT p.district FROM KrishiMandiPrice p ORDER BY p.district ASC")
+    List<String> findDistinctDistricts();
+
+    @Query("SELECT DISTINCT p.market FROM KrishiMandiPrice p ORDER BY p.market ASC")
+    List<String> findDistinctMarkets();
 }

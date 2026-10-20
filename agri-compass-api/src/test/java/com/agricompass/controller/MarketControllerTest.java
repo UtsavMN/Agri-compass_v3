@@ -29,11 +29,14 @@ class MarketControllerTest {
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private com.agricompass.service.KrishiMandiService krishiMandiService;
+
     private MarketController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new MarketController(restTemplate);
+        controller = new MarketController(restTemplate, krishiMandiService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -95,5 +98,112 @@ class MarketControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.prices.length()").value(0))
                 .andExpect(jsonPath("$.district").value("Mysuru"));
+    }
+
+    @Test
+    @DisplayName("GET /api/market/prices returns verified Krishi Marata Vahini prices when available")
+    void getMarketPrices_withKmvData_returnsKmvPrices() throws Exception {
+        com.agricompass.entity.KrishiMandiPrice price = new com.agricompass.entity.KrishiMandiPrice();
+        price.setId("kmv-1");
+        price.setCommodity("Maize");
+        price.setMarket("Haveri");
+        price.setDistrict("Haveri");
+        price.setVariety("LOCAL");
+        price.setGrade("MEDIUM");
+        price.setMinPrice(2350.0);
+        price.setMaxPrice(2600.0);
+        price.setModalPrice(2500.0);
+        price.setArrivalQuantity(8832.0);
+        price.setArrivalUnit("Quintal");
+        price.setPriceUnit("Rs/Quintal");
+        price.setReportDate("2026-10-18");
+        price.setSource("KRISHI_MARATA_VAHINI");
+
+        when(krishiMandiService.getPrices("Haveri", "Maize")).thenReturn(List.of(price));
+
+        mockMvc.perform(get("/api/market/prices")
+                        .param("district", "Haveri")
+                        .param("commodity", "Maize"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.source").value("KRISHI_MARATA_VAHINI"))
+                .andExpect(jsonPath("$.district").value("Haveri"))
+                .andExpect(jsonPath("$.commodity").value("Maize"))
+                .andExpect(jsonPath("$.prices[0].commodity").value("Maize"))
+                .andExpect(jsonPath("$.prices[0].market").value("Haveri"))
+                .andExpect(jsonPath("$.prices[0].modalPrice").value(2500.0))
+                .andExpect(jsonPath("$.prices[0].arrivalQuantity").value(8832.0));
+
+        verifyNoInteractions(restTemplate);
+    }
+
+    @Test
+    @DisplayName("GET /api/market/prices works statewide when district parameter is omitted")
+    void getMarketPrices_statewide_returnsAllKarnataka() throws Exception {
+        com.agricompass.entity.KrishiMandiPrice p1 = new com.agricompass.entity.KrishiMandiPrice();
+        p1.setCommodity("Tomato");
+        p1.setMarket("Kolar");
+        p1.setDistrict("Kolar");
+        p1.setModalPrice(1500.0);
+        p1.setReportDate("2026-10-18");
+        p1.setSource("KRISHI_MARATA_VAHINI");
+
+        when(krishiMandiService.getPrices(null, null)).thenReturn(List.of(p1));
+
+        mockMvc.perform(get("/api/market/prices"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.source").value("KRISHI_MARATA_VAHINI"))
+                .andExpect(jsonPath("$.district").value("All Districts"))
+                .andExpect(jsonPath("$.prices[0].commodity").value("Tomato"));
+    }
+
+    @Test
+    @DisplayName("GET /api/market/commodities returns distinct commodity list")
+    void getCommodities_returnsList() throws Exception {
+        when(krishiMandiService.getDistinctCommodities()).thenReturn(List.of("Arecanut", "Cotton", "Maize", "Tomato"));
+
+        mockMvc.perform(get("/api/market/commodities"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]").value("Arecanut"))
+                .andExpect(jsonPath("$[3]").value("Tomato"));
+    }
+
+    @Test
+    @DisplayName("GET /api/market/districts returns distinct district list")
+    void getDistricts_returnsList() throws Exception {
+        when(krishiMandiService.getDistinctDistricts()).thenReturn(List.of("Belagavi", "Haveri", "Kolar", "Shivamogga"));
+
+        mockMvc.perform(get("/api/market/districts"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]").value("Belagavi"))
+                .andExpect(jsonPath("$[1]").value("Haveri"));
+    }
+
+    @Test
+    @DisplayName("GET /api/market/summary returns aggregated market statistics")
+    void getSummary_returnsStatistics() throws Exception {
+        com.agricompass.entity.KrishiMandiPrice p1 = new com.agricompass.entity.KrishiMandiPrice();
+        p1.setMarket("Haveri");
+        p1.setDistrict("Haveri");
+        p1.setCommodity("Maize");
+        p1.setModalPrice(2500.0);
+        p1.setReportDate("2026-10-18");
+
+        com.agricompass.entity.KrishiMandiPrice p2 = new com.agricompass.entity.KrishiMandiPrice();
+        p2.setMarket("Kolar");
+        p2.setDistrict("Kolar");
+        p2.setCommodity("Tomato");
+        p2.setModalPrice(1500.0);
+        p2.setReportDate("2026-10-18");
+
+        when(krishiMandiService.getPrices(null, null)).thenReturn(List.of(p1, p2));
+
+        mockMvc.perform(get("/api/market/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalMandis").value(2))
+                .andExpect(jsonPath("$.totalCommodities").value(2))
+                .andExpect(jsonPath("$.totalDistricts").value(2))
+                .andExpect(jsonPath("$.totalRecords").value(2))
+                .andExpect(jsonPath("$.avgModalPrice").value(2000.0))
+                .andExpect(jsonPath("$.source").value("KRISHI_MARATA_VAHINI"));
     }
 }

@@ -56,7 +56,7 @@ public class SecurityConfig {
                     "/ws/**"
                 ).permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/market/**").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/market/kmv/snapshot", "/api/market/kmv/purge").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/market/**").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )

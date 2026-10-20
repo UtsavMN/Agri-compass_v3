@@ -4,7 +4,7 @@ import type { Post, PollData } from '../lib/api/posts';
 describe('Community Features 4, 5 & 6 (Polls, Bookmarks in Profile, Crop & Mandi Tagging, Timeframe Filter)', () => {
   const mockNow = new Date('2026-10-18T18:00:00Z').getTime();
 
-  const samplePosts: Post[] = [
+  const samplePosts: any[] = [
     {
       id: 'p-1',
       content: 'Tomato wholesale rates surging at Kolar APMC!',
@@ -82,7 +82,7 @@ describe('Community Features 4, 5 & 6 (Polls, Bookmarks in Profile, Crop & Mandi
     it('accurately tallies new votes and recalculates percentage split', () => {
       const poll: PollData = {
         question: 'Expected Chilli price this month?',
-        totalVotes: 4,
+        total_votes: 4,
         options: [
           { id: '1', text: 'Bullish (Rising)', votes: 3, percentage: 75 },
           { id: '2', text: 'Bearish (Falling)', votes: 1, percentage: 25 },
@@ -90,7 +90,7 @@ describe('Community Features 4, 5 & 6 (Polls, Bookmarks in Profile, Crop & Mandi
       };
 
       // User votes for option '2'
-      const updatedTotal = poll.totalVotes + 1;
+      const updatedTotal = poll.total_votes + 1;
       const updatedOptions = poll.options.map((opt) => {
         const votes = opt.id === '2' ? opt.votes + 1 : opt.votes;
         return {

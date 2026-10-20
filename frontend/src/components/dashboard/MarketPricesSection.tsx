@@ -10,8 +10,9 @@ const PriceSkeleton = () => (
   <div className="animate-pulse bg-[#111] border border-[#1E1E1E] rounded-xl p-5 h-24" />
 );
 
-export const MarketPricesSection = ({ district }: { district: string }) => {
-  const { prices, source, loading, error, lastUpdated } = useMarketPrices(district);
+export const MarketPricesSection = ({ district, commodity }: { district: string; commodity?: string }) => {
+  const effectiveDistrict = district === 'all' || district === 'All Karnataka' ? undefined : district;
+  const { prices, source, loading, error, lastUpdated } = useMarketPrices(effectiveDistrict, commodity);
 
   const formatReportDate = (dateStr?: string) => {
     if (!dateStr) return null;

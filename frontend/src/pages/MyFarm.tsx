@@ -158,7 +158,7 @@ export default function MyFarm() {
         soil_type: formData.soil_type || 'General',
         irrigation_type: formData.irrigation_type || 'Standard',
         current_crop: isCropYetToBeGrownChecked || !formData.current_crop || formData.current_crop.trim() === ''
-          ? null
+          ? undefined
           : formData.current_crop.trim(),
       };
 

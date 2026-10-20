@@ -332,7 +332,7 @@ export const FarmerDashboardBrief: React.FC<FarmerDashboardBriefProps> = ({ dist
     const precip = weatherData?.precipitation ?? 0;
     
     // Check spraying suitability from Open-Meteo or calculate
-    let suitability: 'Optimal' | 'Caution' | 'Unfavorable' = 'Optimal';
+    let suitability: 'Optimal' | 'Caution' | 'Unfavorable' | 'Favorable' = 'Optimal';
     let sprayReason = 'Calm winds & low rain risk — ideal for foliar nutrition & protective sprays.';
 
     if (weatherData?.forecast && weatherData.forecast.length > 0) {

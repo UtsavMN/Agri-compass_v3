@@ -9,7 +9,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,6 +29,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final CropGrowingStepRepository stepRepo;
     private final CropDistrictRepository districtRepo;
     private final CropEconomicsRepository economicsRepo;
+    private final KrishiMandiPriceRepository krishiMandiRepo;
 
     public DatabaseSeeder(
             CropRepository cropRepo,
@@ -42,7 +43,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             CropAiScoreRepository aiScoreRepo,
             CropGrowingStepRepository stepRepo,
             CropDistrictRepository districtRepo,
-            CropEconomicsRepository economicsRepo) {
+            CropEconomicsRepository economicsRepo,
+            KrishiMandiPriceRepository krishiMandiRepo) {
         this.cropRepo = cropRepo;
         this.soilRepo = soilRepo;
         this.nutrientRepo = nutrientRepo;
@@ -55,17 +57,22 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.stepRepo = stepRepo;
         this.districtRepo = districtRepo;
         this.economicsRepo = economicsRepo;
+        this.krishiMandiRepo = krishiMandiRepo;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void run(String... args) throws Exception {
-        // if (cropRepo.count() > 0) {
-        //     System.out.println("✅ Database already seeded. Skipping DatabaseSeeder to speed up startup.");
-        //     return;
-        // }
-
         ObjectMapper mapper = new ObjectMapper();
+
+        // 1. Seed Krishi Marata Vahini mandi prices first
+        seedKrishiMandiPrices(mapper);
+
+        if (cropRepo.count() > 0) {
+            System.out.println("✅ Database crops already seeded. Skipping Crops_data.json to ensure fast startup.");
+            return;
+        }
+
         TypeReference<List<Map<String, Object>>> typeRef = new TypeReference<>() {};
         
         try (InputStream inputStream = new ClassPathResource("dataset/Crops_data.json").getInputStream()) {
@@ -277,6 +284,44 @@ public class DatabaseSeeder implements CommandLineRunner {
         } catch (Exception e) {
             System.err.println("❌ Error seeding dataset: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void seedKrishiMandiPrices(ObjectMapper mapper) {
+        try {
+            try (InputStream inputStream = new ClassPathResource("dataset/krishi_mandi_seed.json").getInputStream()) {
+                TypeReference<List<Map<String, Object>>> typeRef = new TypeReference<>() {};
+                List<Map<String, Object>> records = mapper.readValue(inputStream, typeRef);
+                if (krishiMandiRepo.count() == records.size()) {
+                    return;
+                }
+                krishiMandiRepo.deleteAll();
+                String today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata")).toString();
+                List<KrishiMandiPrice> entities = new ArrayList<>();
+                for (Map<String, Object> r : records) {
+                    KrishiMandiPrice p = new KrishiMandiPrice();
+                    p.setMarket((String) r.get("market"));
+                    p.setDistrict((String) r.get("district"));
+                    p.setCommodity((String) r.get("commodity"));
+                    p.setVariety((String) r.get("variety"));
+                    p.setGrade((String) r.get("grade"));
+                    p.setMinPrice(((Number) r.get("minPrice")).doubleValue());
+                    p.setMaxPrice(((Number) r.get("maxPrice")).doubleValue());
+                    p.setModalPrice(((Number) r.get("modalPrice")).doubleValue());
+                    p.setArrivalQuantity(((Number) r.get("arrivalQuantity")).doubleValue());
+                    p.setArrivalUnit((String) r.getOrDefault("arrivalUnit", "Quintal"));
+                    p.setPriceUnit((String) r.getOrDefault("priceUnit", "Rs/Quintal"));
+                    String rDate = (String) r.get("reportDate");
+                    p.setReportDate(rDate != null && !rDate.isBlank() ? rDate.trim() : today);
+                    p.setSource("KRISHI_MARATA_VAHINI");
+                    p.setState((String) r.getOrDefault("state", "Karnataka"));
+                    entities.add(p);
+                }
+                krishiMandiRepo.saveAll(entities);
+                System.out.println("✅ Krishi Marata Vahini Mandi Dataset Seeded: " + entities.size() + " verified APMC records.");
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ Warning: Could not seed Krishi Marata Vahini records: " + e.getMessage());
         }
     }
 
