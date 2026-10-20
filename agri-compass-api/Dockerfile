@@ -1,21 +1,22 @@
-FROM maven:3.9.4-eclipse-temurin-17-alpine as build
+FROM maven:3.9.6-eclipse-temurin-17-alpine as build
 WORKDIR /app
 
-# Copy pom.xml and source code
+# Cache dependencies layer
 COPY pom.xml .
-COPY src src
+RUN mvn dependency:go-offline -B || true
 
-# Build the application using pure Maven (bypassing wrapper issues)
+# Copy source code and build
+COPY src src
 RUN mvn clean package -DskipTests -Dmaven.test.skip=true
 
-# Run stage
-FROM eclipse-temurin:17-jre-alpine
+# Run stage - Use Jammy (Ubuntu/glibc) for 100% reliable SQLite native binaries & fast DNS resolution
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
-# Copy the built jar from the build stage
+# Copy the built jar from build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Expose the default Spring Boot port
+# Expose Spring Boot port (Render automatically maps $PORT)
 EXPOSE 8080
 
 # Command to run the application

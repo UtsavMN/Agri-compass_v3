@@ -76,15 +76,34 @@ public class DatabaseConfig {
     }
 
     private boolean testPostgresConnection(String jdbcUrl, String user, String password) {
-        try {
-            Class.forName("org.postgresql.Driver");
-            DriverManager.setLoginTimeout(5);
-            try (Connection conn = DriverManager.getConnection(jdbcUrl, user, password)) {
-                return conn != null && !conn.isClosed();
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newSingleThreadExecutor();
+        java.util.concurrent.Future<Boolean> future = executor.submit(() -> {
+            try {
+                Class.forName("org.postgresql.Driver");
+                String urlWithTimeouts = jdbcUrl;
+                if (!urlWithTimeouts.contains("connectTimeout")) {
+                    urlWithTimeouts += (urlWithTimeouts.contains("?") ? "&" : "?") + "connectTimeout=4&loginTimeout=4&socketTimeout=4";
+                }
+                try (Connection conn = DriverManager.getConnection(urlWithTimeouts, user, password)) {
+                    return conn != null && !conn.isClosed();
+                }
+            } catch (Exception e) {
+                log.warn("PostgreSQL pre-flight connectivity check failed: {}", e.getMessage());
+                return false;
             }
-        } catch (Exception e) {
-            log.warn("PostgreSQL pre-flight connectivity check failed: {}", e.getMessage());
+        });
+
+        try {
+            return future.get(5, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (java.util.concurrent.TimeoutException te) {
+            future.cancel(true);
+            log.warn("PostgreSQL connectivity check timed out after 5 seconds. Falling back to SQLite.");
             return false;
+        } catch (Exception e) {
+            log.warn("PostgreSQL check interrupted: {}", e.getMessage());
+            return false;
+        } finally {
+            executor.shutdownNow();
         }
     }
 
