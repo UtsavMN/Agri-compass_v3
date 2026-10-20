@@ -198,26 +198,30 @@ def parse_kmv_html_report(html: str, iso_date: str) -> Tuple[List[Dict[str, Any]
 
 def main():
     parser = argparse.ArgumentParser(description="Live scraper for Karnataka Krishi Marata Vahini (KMV).")
-    parser.add_argument("date", nargs="?", default="2026-10-19", help="Report date (YYYY-MM-DD or DD/MM/YYYY)")
-    parser.add_argument("output", nargs="?", default="backend/src/main/resources/dataset/krishi_mandi_seed.json", help="Output JSON path")
-    parser.add_argument("--ingest", action="store_true", help="Post directly to backend /api/market/kmv/snapshot")
-    parser.add_argument("--backend-url", default="http://localhost:8085", help="Backend API base URL")
+    parser.add_argument("date", nargs="?", default=None, help="Report date (YYYY-MM-DD or DD/MM/YYYY)")
+    parser.add_argument("--date", dest="opt_date", default=None, help="Report date flag (YYYY-MM-DD or DD/MM/YYYY)")
+    parser.add_argument("output", nargs="?", default=None, help="Output JSON path")
+    parser.add_argument("--output", dest="opt_output", default=None, help="Output JSON path flag")
+    parser.add_argument("--ingest", action="store_true", help="Post directly to backend /api/market/snapshot")
+    parser.add_argument("--backend-url", default="http://localhost:8080", help="Backend API base URL")
     parser.add_argument("--ingest-key", default="internal_dev_secret_key", help="Ingest authentication key")
 
     args = parser.parse_args()
 
+    date_str = args.opt_date or args.date or "2026-10-19"
+    out_file = args.opt_output or args.output
+
     # Parse date
-    if "/" in args.date:
-        d_obj = datetime.strptime(args.date, "%d/%m/%Y")
+    if "/" in date_str:
+        d_obj = datetime.strptime(date_str, "%d/%m/%Y")
     else:
-        d_obj = datetime.strptime(args.date, "%Y-%m-%d")
+        d_obj = datetime.strptime(date_str, "%Y-%m-%d")
 
     report_date_kmv = d_obj.strftime("%d/%m/%Y")
     iso_date = d_obj.strftime("%Y-%m-%d")
 
     print(f"=== KMV Statewide Market Scraper ===")
     print(f"Target Date : {iso_date} (KMV query: {report_date_kmv})")
-    print(f"Output File : {args.output}")
 
     try:
         raw_html = fetch_live_kmv_html(report_date_kmv)
@@ -247,13 +251,20 @@ def main():
     print(f"APMC Markets      : {len(markets)}")
     print(f"Commodities       : {len(commodities)}")
 
-    out_path = Path(args.output)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(valid_records, indent=2), encoding="utf-8")
-    print(f"[OK] Successfully saved {len(valid_records)} records to {out_path}")
+    seed_paths = [
+        Path("agri-compass-api/src/main/resources/dataset/krishi_mandi_seed.json"),
+        Path("frontend/src/data/krishi_mandi_seed.json")
+    ]
+    if out_file:
+        seed_paths.append(Path(out_file))
+
+    for p in seed_paths:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(valid_records, indent=2), encoding="utf-8")
+        print(f"[OK] Successfully synced {len(valid_records)} records to {p}")
 
     if args.ingest:
-        ingest_url = f"{args.backend_url}/api/market/kmv/snapshot"
+        ingest_url = f"{args.backend_url}/api/market/snapshot"
         print(f"\n[Ingest] Posting {len(valid_records)} records to {ingest_url} ...")
         try:
             resp = requests.post(
