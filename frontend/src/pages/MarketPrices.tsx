@@ -24,6 +24,31 @@ import {
   AlertTriangle,
   MapPin,
 } from 'lucide-react';
+import { useDistrict, useUser } from '../store';
+import { KARNATAKA_DISTRICT_COORDINATES } from '@/lib/ai/weatherAdvisor';
+
+function getDistrictDistance(d1: string, d2: string): number {
+  if (!d1 || !d2) return 999999;
+  const norm1 = d1.toLowerCase().trim().replace(/[\s_-]+/g, '');
+  const norm2 = d2.toLowerCase().trim().replace(/[\s_-]+/g, '');
+  if (norm1 === norm2) return 0;
+
+  const findCoords = (name: string) => {
+    const clean = name.toLowerCase().replace(/[\s_-]+/g, '');
+    const key = Object.keys(KARNATAKA_DISTRICT_COORDINATES).find(
+      k => k.toLowerCase().replace(/[\s_-]+/g, '') === clean
+    );
+    return key ? KARNATAKA_DISTRICT_COORDINATES[key] : null;
+  };
+
+  const c1 = findCoords(d1);
+  const c2 = findCoords(d2);
+  if (!c1 || !c2) return 99999;
+
+  const dLat = (c1.lat - c2.lat) * 111;
+  const dLon = (c1.lon - c2.lon) * 111 * Math.cos(((c1.lat + c2.lat) / 2) * (Math.PI / 180));
+  return Math.sqrt(dLat * dLat + dLon * dLon);
+}
 
 export const MarketPrices: React.FC = () => {
   const [prices, setPrices] = useState<MandiPrice[]>([]);
@@ -113,18 +138,36 @@ export const MarketPrices: React.FC = () => {
     }
   }, [syncNotice]);
 
-  // Client-side text search on top of backend filtered records
+  const { selectedDistrict: userDistrict } = useDistrict();
+  const { profile } = useUser();
+  const effectiveUserDistrict = (userDistrict && userDistrict !== 'all')
+    ? userDistrict
+    : (profile?.district || profile?.location || 'Dakshina Kannada');
+
+  // Client-side text search on top of backend filtered records with proximity sorting
   const filteredPrices = useMemo(() => {
-    if (!searchQuery.trim()) return prices;
-    const q = searchQuery.toLowerCase();
-    return prices.filter(
-      p =>
-        p.commodity.toLowerCase().includes(q) ||
-        p.market.toLowerCase().includes(q) ||
-        p.district.toLowerCase().includes(q) ||
-        p.variety.toLowerCase().includes(q)
-    );
-  }, [prices, searchQuery]);
+    let list = prices;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = prices.filter(
+        p =>
+          p.commodity.toLowerCase().includes(q) ||
+          p.market.toLowerCase().includes(q) ||
+          p.district.toLowerCase().includes(q) ||
+          p.variety.toLowerCase().includes(q)
+      );
+    }
+
+    // Always sort so that mandis closest to the user's location appear first
+    return [...list].sort((a, b) => {
+      const distA = getDistrictDistance(a.district, effectiveUserDistrict);
+      const distB = getDistrictDistance(b.district, effectiveUserDistrict);
+      if (Math.abs(distA - distB) > 0.1) {
+        return distA - distB;
+      }
+      return a.market.localeCompare(b.market);
+    });
+  }, [prices, searchQuery, effectiveUserDistrict]);
 
   // Determine active crop for comparison chart
   const activeCropForChart = useMemo(() => {

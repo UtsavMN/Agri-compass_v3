@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from 'recharts';
 import { MandiPrice } from '../types/market';
 import { Store, Info } from 'lucide-react';
+import { useUnits, convertPricePerWeight } from '@/lib/unitConverter';
 
 interface MandiComparisonChartProps {
   records: MandiPrice[];
@@ -9,6 +10,8 @@ interface MandiComparisonChartProps {
 }
 
 export const MandiComparisonChart: React.FC<MandiComparisonChartProps> = ({ records, selectedCrop }) => {
+  const { weightUnit } = useUnits();
+
   // 1. Filter records by commodity
   const cropRecords = useMemo(() => {
     return records.filter(r => r.commodity.toLowerCase() === selectedCrop.toLowerCase());
@@ -52,6 +55,10 @@ export const MandiComparisonChart: React.FC<MandiComparisonChartProps> = ({ reco
   // Case B: Exactly ONE market is reporting for this commodity
   if (comparableRecords.length === 1) {
     const single = comparableRecords[0];
+    const convModal = convertPricePerWeight(single.modalPrice, weightUnit);
+    const convMin = convertPricePerWeight(single.minPrice, weightUnit);
+    const convMax = convertPricePerWeight(single.maxPrice, weightUnit);
+
     return (
       <div className="bg-[#171410] border border-[#2b241c] rounded-2xl p-6 shadow-xl my-6">
         <div className="flex flex-col sm:flex-row justify-between sm:items-start mb-4 gap-3">
@@ -87,15 +94,15 @@ export const MandiComparisonChart: React.FC<MandiComparisonChartProps> = ({ reco
           <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
             <div className="bg-[#171410] px-3 py-2 rounded-lg border border-[#2b241c]">
               <span className="text-[#8c806f] block text-[10px]">MIN RATE</span>
-              <span className="text-blue-400 font-bold">₹{single.minPrice.toLocaleString('en-IN')}</span>
+              <span className="text-blue-400 font-bold">₹{convMin.value.toLocaleString('en-IN')}</span>
             </div>
             <div className="bg-[#231e17] px-4 py-2 rounded-lg border border-[#3b3225]">
-              <span className="text-[#e5a93c] block text-[10px] font-bold">MODAL RATE</span>
-              <span className="text-2xl font-black text-[#e5a93c]">₹{single.modalPrice.toLocaleString('en-IN')}</span>
+              <span className="text-[#e5a93c] block text-[10px] font-bold">MODAL RATE {convModal.unitLabel}</span>
+              <span className="text-2xl font-black text-[#e5a93c]">₹{convModal.value.toLocaleString('en-IN')}</span>
             </div>
             <div className="bg-[#171410] px-3 py-2 rounded-lg border border-[#2b241c]">
               <span className="text-[#8c806f] block text-[10px]">MAX RATE</span>
-              <span className="text-emerald-400 font-bold">₹{single.maxPrice.toLocaleString('en-IN')}</span>
+              <span className="text-emerald-400 font-bold">₹{convMax.value.toLocaleString('en-IN')}</span>
             </div>
           </div>
         </div>
@@ -111,13 +118,21 @@ export const MandiComparisonChart: React.FC<MandiComparisonChartProps> = ({ reco
   }
 
   // Case C: MULTIPLE (2+) markets reporting — Render inter-mandi comparison chart
-  const chartData = comparableRecords.slice(0, 12).map(r => ({
-    market: r.market,
-    district: r.district,
-    modalPrice: r.modalPrice,
-    minPrice: r.minPrice,
-    maxPrice: r.maxPrice,
-  }));
+  const chartData = comparableRecords.slice(0, 12).map(r => {
+    const convModal = convertPricePerWeight(r.modalPrice, weightUnit);
+    const convMin = convertPricePerWeight(r.minPrice, weightUnit);
+    const convMax = convertPricePerWeight(r.maxPrice, weightUnit);
+    return {
+      market: r.market,
+      district: r.district,
+      modalPrice: convModal.value,
+      minPrice: convMin.value,
+      maxPrice: convMax.value,
+      unitLabel: convModal.unitLabel,
+    };
+  });
+
+  const unitDisplay = chartData[0]?.unitLabel || (weightUnit === 'Quintal' ? '₹/Quintal' : weightUnit === 'Kg' ? '₹/kg' : '₹/tonne');
 
   return (
     <div className="bg-[#171410] border border-[#2b241c] rounded-2xl p-6 shadow-xl my-6">
@@ -133,7 +148,7 @@ export const MandiComparisonChart: React.FC<MandiComparisonChartProps> = ({ reco
             Cross-Mandi Modal Price Spread: <span className="text-[#e5a93c]">{selectedCrop}</span>
           </h3>
           <p className="text-xs text-[#a89b88]">
-            Comparing modal transaction rates ({activeUnit}) across reporting APMC yards in Karnataka.
+            Comparing modal transaction rates ({unitDisplay}) across reporting APMC yards in Karnataka.
           </p>
         </div>
       </div>
@@ -145,8 +160,16 @@ export const MandiComparisonChart: React.FC<MandiComparisonChartProps> = ({ reco
             <XAxis dataKey="market" stroke="#8c806f" fontSize={11} tickLine={false} interval={0} angle={-15} textAnchor="end" />
             <YAxis stroke="#8c806f" fontSize={11} tickLine={false} tickFormatter={(v) => `₹${v}`} />
             <Tooltip
-              contentStyle={{ backgroundColor: '#1f1a14', borderColor: '#3b3225', borderRadius: '12px', color: '#faf6ee' }}
-              formatter={(val: any) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Modal Price']}
+              contentStyle={{
+                backgroundColor: '#19150F',
+                borderColor: '#C9A84C60',
+                borderRadius: '12px',
+                color: '#FAF6EE',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.6)'
+              }}
+              itemStyle={{ color: '#E5A93C', fontWeight: 700 }}
+              labelStyle={{ color: '#FAF6EE', fontWeight: 700, marginBottom: '4px' }}
+              formatter={(val: any) => [`₹${Number(val).toLocaleString('en-IN')} ${chartData[0]?.unitLabel || ''}`, 'Modal Price']}
               labelFormatter={(label, payload) => {
                 const item = payload && payload[0] && payload[0].payload;
                 return item ? `${label} APMC (${item.district})` : `${label} APMC`;
@@ -162,7 +185,7 @@ export const MandiComparisonChart: React.FC<MandiComparisonChartProps> = ({ reco
       </div>
 
       <div className="mt-3 flex items-center justify-between text-xs text-[#8c806f] pt-3 border-t border-[#2b241c]">
-        <span>Only compatible quotes matching unit ({activeUnit}) and observation date ({activeDate}) are compared.</span>
+        <span>Only compatible quotes matching observation date ({activeDate}) are compared in {unitDisplay}.</span>
         <span className="font-mono text-[10px] text-[#e5a93c]">PARITY AUDITED</span>
       </div>
     </div>

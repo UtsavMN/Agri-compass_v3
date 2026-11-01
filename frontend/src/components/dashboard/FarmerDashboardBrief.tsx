@@ -26,6 +26,7 @@ import {
   Layers,
   CalendarCheck
 } from 'lucide-react';
+import { useUnits, convertArea, convertPricePerWeight } from '@/lib/unitConverter';
 
 interface FarmerDashboardBriefProps {
   district?: string;
@@ -114,6 +115,7 @@ export const FarmerDashboardBrief: React.FC<FarmerDashboardBriefProps> = ({ dist
   const navigate = useNavigate();
   const { user } = useUser();
   const { selectedDistrict } = useDistrict();
+  const { landUnit, weightUnit } = useUnits();
   const defaultDistrict = district || selectedDistrict || 'Bengaluru Urban';
 
   // 1. Farms Data & Carousel State
@@ -409,6 +411,14 @@ export const FarmerDashboardBrief: React.FC<FarmerDashboardBriefProps> = ({ dist
     };
   }, [apiPrices, targetDistrict]);
 
+  const convertedParcelArea = useMemo(() => {
+    return convertArea(farmBrief.acres, landUnit);
+  }, [farmBrief.acres, landUnit]);
+
+  const convertedMandiPrice = useMemo(() => {
+    return convertPricePerWeight(mandiMover.modalPrice, weightUnit);
+  }, [mandiMover.modalPrice, weightUnit]);
+
   const completedTaskCount = farmTasks.filter((t) => t.completed).length;
 
   return (
@@ -478,7 +488,7 @@ export const FarmerDashboardBrief: React.FC<FarmerDashboardBriefProps> = ({ dist
                       ? (farmBrief.isFallow ? 'bg-gold-400/10 text-gold-300 border-gold-400/30' : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30')
                       : 'bg-white/5 text-gold-100/50 border-white/10'
                   }`}>
-                    {farmBrief.hasFarms ? `${farmBrief.acres.toFixed(1)} Ac` : '0 Farms'}
+                    {farmBrief.hasFarms ? `${convertedParcelArea.value} ${convertedParcelArea.unit}` : '0 Farms'}
                   </span>
                 )}
               </div>
@@ -490,7 +500,7 @@ export const FarmerDashboardBrief: React.FC<FarmerDashboardBriefProps> = ({ dist
                 </h3>
                 {farmBrief.hasFarms && (
                   <span className="text-[10px] text-gold-100/60 font-semibold shrink-0">
-                    {farmBrief.location} · {farmBrief.acres.toFixed(0)} Ac
+                    {farmBrief.location} · {convertedParcelArea.value} {convertedParcelArea.unit}
                   </span>
                 )}
               </div>
@@ -762,7 +772,7 @@ export const FarmerDashboardBrief: React.FC<FarmerDashboardBriefProps> = ({ dist
                   {mandiMover.commodity}
                 </h3>
                 <span className="text-sm font-black text-gold-300 shrink-0 ml-2">
-                  ₹{mandiMover.modalPrice.toLocaleString('en-IN')}<span className="text-[10px] font-normal text-gold-100/60">/q</span>
+                  ₹{convertedMandiPrice.value.toLocaleString('en-IN')}<span className="text-[10px] font-normal text-gold-100/60">{convertedMandiPrice.unitLabel}</span>
                 </span>
               </div>
 

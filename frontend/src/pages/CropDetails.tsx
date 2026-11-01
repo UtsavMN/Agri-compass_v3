@@ -16,11 +16,26 @@ import { formatCurrency } from '@/data/masterData';
 import { CropDetailsShimmer } from '@/components/ui/loading-shimmer';
 import { useCropDetail } from '@/hooks/useCropGuides';
 import { PdfDownloadButton } from '@/components/ui/PdfDownloadButton';
+import { useUnits, convertDosage, convertPricePerWeight, HECTARE_TO_LAND_UNIT, ACRE_TO_LAND_UNIT, LandUnit } from '@/lib/unitConverter';
+
+function scaleFertilizers(fertilizerText: string | undefined | null, landUnit: LandUnit): string {
+  if (!fertilizerText) return "-";
+  if (landUnit === 'Hectare') return fertilizerText;
+  const divider = HECTARE_TO_LAND_UNIT[landUnit] || 1;
+  return fertilizerText.replace(/(\d+(?:\.\d+)?)\s*(kg|tonnes|t)/gi, (match, num, unit) => {
+    const val = parseFloat(num);
+    if (isNaN(val)) return match;
+    const scaled = val / divider;
+    const formatted = scaled >= 10 ? Math.round(scaled).toString() : scaled.toFixed(1);
+    return `${formatted} ${unit}`;
+  });
+}
 
 export default function CropDetails() {
   const { cropName } = useParams<{ cropName: string }>();
   const navigate = useNavigate();
   const { crop, loading, error } = useCropDetail(cropName ?? "");
+  const { landUnit, weightUnit } = useUnits();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -293,18 +308,30 @@ export default function CropDetails() {
                     <div className="grid grid-cols-3 gap-2">
                       <div className="p-2.5 rounded-xl bg-[#191610] border border-[#2A2720] text-center">
                         <span className="text-[10px] font-bold text-[#F5F0E8]/50 block">Nitrogen (N)</span>
-                        <span className="text-sm font-mono text-[#C9A84C] font-bold">{crop.nKgAcre || 40}</span>
-                        <span className="text-[9px] text-[#F5F0E8]/40 block">kg/acre</span>
+                        <span className="text-sm font-mono text-[#C9A84C] font-bold">
+                          {convertDosage((crop.nKgAcre || 40) * 2.47105, landUnit).formattedValue}
+                        </span>
+                        <span className="text-[9px] text-[#F5F0E8]/40 block">
+                          {convertDosage((crop.nKgAcre || 40) * 2.47105, landUnit).unitLabel}
+                        </span>
                       </div>
                       <div className="p-2.5 rounded-xl bg-[#191610] border border-[#2A2720] text-center">
                         <span className="text-[10px] font-bold text-[#F5F0E8]/50 block">Phosphorus (P)</span>
-                        <span className="text-sm font-mono text-[#C9A84C] font-bold">{crop.pKgAcre || 20}</span>
-                        <span className="text-[9px] text-[#F5F0E8]/40 block">kg/acre</span>
+                        <span className="text-sm font-mono text-[#C9A84C] font-bold">
+                          {convertDosage((crop.pKgAcre || 20) * 2.47105, landUnit).formattedValue}
+                        </span>
+                        <span className="text-[9px] text-[#F5F0E8]/40 block">
+                          {convertDosage((crop.pKgAcre || 20) * 2.47105, landUnit).unitLabel}
+                        </span>
                       </div>
                       <div className="p-2.5 rounded-xl bg-[#191610] border border-[#2A2720] text-center">
                         <span className="text-[10px] font-bold text-[#F5F0E8]/50 block">Potassium (K)</span>
-                        <span className="text-sm font-mono text-[#C9A84C] font-bold">{crop.kKgAcre || 20}</span>
-                        <span className="text-[9px] text-[#F5F0E8]/40 block">kg/acre</span>
+                        <span className="text-sm font-mono text-[#C9A84C] font-bold">
+                          {convertDosage((crop.kKgAcre || 20) * 2.47105, landUnit).formattedValue}
+                        </span>
+                        <span className="text-[9px] text-[#F5F0E8]/40 block">
+                          {convertDosage((crop.kKgAcre || 20) * 2.47105, landUnit).unitLabel}
+                        </span>
                       </div>
                     </div>
 
@@ -328,9 +355,9 @@ export default function CropDetails() {
                         <tr>
                           <th className="py-3 px-4">Application Stage</th>
                           <th className="py-3 px-4">Timing (DAS)</th>
-                          <th className="py-3 px-4">N (kg/ha)</th>
-                          <th className="py-3 px-4">P (kg/ha)</th>
-                          <th className="py-3 px-4">K (kg/ha)</th>
+                          <th className="py-3 px-4">N ({convertDosage(100, landUnit).unitLabel})</th>
+                          <th className="py-3 px-4">P ({convertDosage(100, landUnit).unitLabel})</th>
+                          <th className="py-3 px-4">K ({convertDosage(100, landUnit).unitLabel})</th>
                           <th className="py-3 px-4">Commercial Fertilizers & Method</th>
                         </tr>
                       </thead>
@@ -339,10 +366,16 @@ export default function CropDetails() {
                           <tr key={idx} className="hover:bg-[#191610]/50 transition-colors">
                             <td className="py-3 px-4 font-bold text-gold-200">{row.stage}</td>
                             <td className="py-3 px-4 font-mono text-[#F5F0E8]/70">{row.days_after_sowing || "At planting"}</td>
-                            <td className="py-3 px-4 font-mono text-[#C9A84C]">{row.N_kg_ha ?? "-"}</td>
-                            <td className="py-3 px-4 font-mono text-[#C9A84C]">{row.P_kg_ha ?? "-"}</td>
-                            <td className="py-3 px-4 font-mono text-[#C9A84C]">{row.K_kg_ha ?? "-"}</td>
-                            <td className="py-3 px-4 text-[#F5F0E8]/80">{row.fertilizers} ({row.method || "Basal"})</td>
+                            <td className="py-3 px-4 font-mono text-[#C9A84C]">
+                              {row.N_kg_ha != null ? convertDosage(Number(row.N_kg_ha), landUnit).formattedValue : "-"}
+                            </td>
+                            <td className="py-3 px-4 font-mono text-[#C9A84C]">
+                              {row.P_kg_ha != null ? convertDosage(Number(row.P_kg_ha), landUnit).formattedValue : "-"}
+                            </td>
+                            <td className="py-3 px-4 font-mono text-[#C9A84C]">
+                              {row.K_kg_ha != null ? convertDosage(Number(row.K_kg_ha), landUnit).formattedValue : "-"}
+                            </td>
+                            <td className="py-3 px-4 text-[#F5F0E8]/80">{scaleFertilizers(row.fertilizers, landUnit)} ({row.method || "Basal"})</td>
                           </tr>
                         ))}
                       </tbody>
@@ -830,18 +863,22 @@ export default function CropDetails() {
                 <Card className="card-premium bg-[#111008] border-[#2A2720]">
                   <CardHeader className="border-b border-[#2A2720] pb-3">
                     <CardTitle className="text-xs text-[#C9A84C] font-mono uppercase tracking-widest">
-                      Financial Projections (Per Acre)
+                      Financial Projections (Per {landUnit})
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-5 space-y-4">
                     <div className="p-4 bg-[#191610] rounded-xl border border-[#2A2720] space-y-3">
                       <div className="flex justify-between text-xs">
-                        <span className="text-[#F5F0E8]/50">Est. Input Capital / Acre</span>
-                        <span className="font-mono font-bold text-[#F5F0E8]">{formatCurrency(crop.capitalMin || 25000)}</span>
+                        <span className="text-[#F5F0E8]/50">Est. Input Capital / {landUnit}</span>
+                        <span className="font-mono font-bold text-[#F5F0E8]">
+                          {formatCurrency(Math.round((crop.capitalMin || 25000) * (ACRE_TO_LAND_UNIT[landUnit] ? 1 / ACRE_TO_LAND_UNIT[landUnit] : 1)))}
+                        </span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-[#F5F0E8]/50">Est. Gross Returns / Acre</span>
-                        <span className="font-mono font-bold text-[#C9A84C]">{formatCurrency(crop.returnsMin || 55000)}</span>
+                        <span className="text-[#F5F0E8]/50">Est. Gross Returns / {landUnit}</span>
+                        <span className="font-mono font-bold text-[#C9A84C]">
+                          {formatCurrency(Math.round((crop.returnsMin || 55000) * (ACRE_TO_LAND_UNIT[landUnit] ? 1 / ACRE_TO_LAND_UNIT[landUnit] : 1)))}
+                        </span>
                       </div>
                       <div className="pt-3 border-t border-[#2A2720] flex justify-between text-sm">
                         <span className="font-bold text-[#F5F0E8]">Net Profit Margin</span>
@@ -868,7 +905,9 @@ export default function CropDetails() {
                     <div>
                       <span className="text-[10px] font-bold text-[#F5F0E8]/40 uppercase tracking-widest block mb-1">Reference Minimum Support Price (MSP)</span>
                       <p className="text-sm font-mono text-[#C9A84C] font-bold">
-                        {crop.selling?.msp_amount ? `₹${crop.selling.msp_amount.toLocaleString()} / Quintal` : "Market determined auction price"}
+                        {crop.selling?.msp_amount 
+                          ? `${convertPricePerWeight(crop.selling.msp_amount, weightUnit).formatted} ${convertPricePerWeight(crop.selling.msp_amount, weightUnit).unitLabel}` 
+                          : "Market determined auction price"}
                       </p>
                     </div>
                     <div>

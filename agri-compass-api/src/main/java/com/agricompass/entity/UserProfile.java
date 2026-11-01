@@ -35,7 +35,7 @@ public class UserProfile {
     private String preferences = "{}";
 
     @Column(nullable = false)
-    private String language = "kn";
+    private String language = "en";
 
     @Column(name = "onboarding_completed", nullable = false)
     private Integer onboardingCompleted = 0;

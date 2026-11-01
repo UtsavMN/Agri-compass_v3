@@ -33,7 +33,7 @@ export default function Onboarding() {
     usernameHandle: "",
     phone: "",
     district: "",
-    language: "kn",
+    language: "en",
     profilePicture: null as File | null,
     profilePictureUrl: "",
     hasFarm: false,
@@ -205,7 +205,7 @@ export default function Onboarding() {
 
                 {/* Language toggle */}
                 <div className="flex gap-3">
-                  {(["kn", "en"] as const).map(lang => (
+                  {(["en", "kn"] as const).map(lang => (
                     <button key={lang}
                       onClick={() => setForm(f => ({ ...f, language: lang }))}
                       className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${

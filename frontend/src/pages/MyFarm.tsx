@@ -23,10 +23,12 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { CropAutocomplete } from '@/components/farm/CropAutocomplete';
 import { FarmBlog } from '@/components/farm/FarmBlog';
 import { isCropYetToBeGrown } from '@/lib/ai/soilDiagnosticEngine';
+import { useUnits, convertArea, ACRE_TO_LAND_UNIT } from '@/lib/unitConverter';
 
 export default function MyFarm() {
   const { user, profile } = useUser();
   const { toast } = useToast();
+  const { landUnit } = useUnits();
   const [farms, setFarms] = useState<Farm[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -69,10 +71,11 @@ export default function MyFarm() {
     setEditingFarmId(farm.id);
     const isFallow = isCropYetToBeGrown(farm.current_crop);
     setIsCropYetToBeGrownChecked(isFallow);
+    const convertedArea = convertArea(farm.area_acres || 0, landUnit);
     setFormData({
       name: farm.name,
       location: farm.location,
-      area_acres: String(farm.area_acres),
+      area_acres: String(convertedArea.value),
       soil_type: farm.soil_type || 'General',
       irrigation_type: farm.irrigation_type || 'Standard',
       current_crop: isFallow ? '' : (farm.current_crop || ''),
@@ -144,17 +147,19 @@ export default function MyFarm() {
     e.preventDefault();
     try {
       if (!user?.id) return;
-      const areaAcres = parseFloat(formData.area_acres);
-      if (isNaN(areaAcres)) {
+      const inputArea = parseFloat(formData.area_acres);
+      if (isNaN(inputArea) || inputArea <= 0) {
         toast({ title: 'Invalid Area', description: 'Please enter a numeric value for farm size.', variant: 'destructive' });
         return;
       }
+      const factor = ACRE_TO_LAND_UNIT[landUnit] || 1;
+      const canonicalAcres = Math.round((inputArea / factor) * 1000) / 1000;
 
       const farmPayload = {
         user_id: user.id,
         name: formData.name,
         location: formData.location || selectedDistrict,
-        area_acres: areaAcres,
+        area_acres: canonicalAcres,
         soil_type: formData.soil_type || 'General',
         irrigation_type: formData.irrigation_type || 'Standard',
         current_crop: isCropYetToBeGrownChecked || !formData.current_crop || formData.current_crop.trim() === ''
@@ -250,33 +255,33 @@ export default function MyFarm() {
                     <Plus className="mr-2 h-4 w-4" />
                     Add Farm
                   </Button>
-                  <DialogContent className="sm:max-w-[425px] bg-earth-elevated border-earth-border/50 text-gold-100 p-0 shadow-premium">
-                    <DialogHeader>
-                      <DialogTitle className="text-2xl font-black">
+                  <DialogContent className="sm:max-w-[500px] w-[95vw] bg-[#141410] border border-earth-border/60 text-gold-100 p-6 sm:p-7 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader className="space-y-1 text-left pb-4 border-b border-earth-border/30">
+                      <DialogTitle className="text-xl sm:text-2xl font-black text-gold-200 tracking-wide">
                         {editingFarmId ? 'Edit Farm Details' : 'Add New Farm'}
                       </DialogTitle>
-                      <DialogDescription className="text-gold-100/40 font-bold uppercase text-[10px] tracking-widest mt-2">
+                      <DialogDescription className="text-gold-100/50 font-bold uppercase text-[11px] tracking-wider mt-1">
                         {editingFarmId ? 'Modify land details and crop information' : 'Enter land details and crop information'}
                       </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Farm Name</Label>
+                    <form onSubmit={handleSubmit} className="space-y-4 pt-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-gold-200 block">Farm Name</Label>
                         <Input
                           placeholder="e.g. Uttara Farm"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="bg-earth-main border-earth-border focus-visible:ring-gold-400 text-gold-100 rounded-xl h-11"
+                          className="bg-earth-main border-earth-border focus-visible:ring-gold-400 text-gold-100 rounded-xl h-11 px-3 text-sm font-semibold"
                           required
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Location / District</Label>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-gold-200 block">Location / District</Label>
                          <Select
                            value={formData.location}
                            onValueChange={(val) => setFormData({ ...formData, location: val })}
                          >
-                           <SelectTrigger className="bg-earth-main border-earth-border focus:ring-gold-400 text-gold-100 rounded-xl h-11 uppercase text-[11px] font-bold tracking-widest notranslate" translate="no">
+                           <SelectTrigger className="bg-earth-main border-earth-border focus:ring-gold-400 text-gold-100 rounded-xl h-11 uppercase text-xs font-bold tracking-wider notranslate" translate="no">
                              <SelectValue placeholder="Select District" />
                            </SelectTrigger>
                            <SelectContent className="bg-earth-elevated border-earth-border max-h-[300px] notranslate" translate="no">
@@ -288,22 +293,22 @@ export default function MyFarm() {
                            </SelectContent>
                          </Select>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Farm Size (Acres)</Label>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-gold-200 block">Farm Size ({landUnit})</Label>
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="10.00"
+                          placeholder={landUnit === 'Gunta' ? '40.00' : landUnit === 'Hectare' ? '4.00' : '10.00'}
                           value={formData.area_acres}
                           onChange={(e) => setFormData({ ...formData, area_acres: e.target.value })}
-                          className="bg-earth-main border-earth-border focus-visible:ring-gold-400 text-gold-100 rounded-xl h-11"
+                          className="bg-earth-main border-earth-border focus-visible:ring-gold-400 text-gold-100 rounded-xl h-11 px-3 text-sm font-semibold"
                           required
                         />
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Field Crop Status</Label>
-                          <label className="flex items-center gap-2 cursor-pointer text-[10px] font-bold text-gold-400">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <Label className="text-xs font-bold uppercase tracking-wider text-gold-200">Field Crop Status</Label>
+                          <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gold-400">
                             <input
                               type="checkbox"
                               checked={isCropYetToBeGrownChecked}
@@ -314,7 +319,7 @@ export default function MyFarm() {
                                   setFormData({ ...formData, current_crop: '' });
                                 }
                               }}
-                              className="rounded border-earth-border text-gold-500 focus:ring-gold-400 h-3.5 w-3.5 accent-[#d9a838]"
+                              className="rounded border-earth-border text-gold-500 focus:ring-gold-400 h-4 w-4 accent-[#d9a838]"
                             />
                             <span>No crop yet (Yet to be grown)</span>
                           </label>
@@ -331,39 +336,39 @@ export default function MyFarm() {
                           />
                         )}
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Soil Type</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-bold uppercase tracking-wider text-gold-200 block">Soil Type</Label>
                           <Select value={formData.soil_type} onValueChange={(v) => setFormData({ ...formData, soil_type: v })}>
-                            <SelectTrigger className="bg-earth-main border-earth-border text-gold-100 rounded-xl h-11">
+                            <SelectTrigger className="bg-earth-main border-earth-border text-gold-100 rounded-xl h-11 text-xs font-bold">
                               <SelectValue placeholder="Type" />
                             </SelectTrigger>
                             <SelectContent className="bg-earth-elevated border-earth-border">
                               {['Alluvial', 'Black', 'Red', 'Laterite', 'Desert', 'Clay', 'Sandy', 'Loamy'].map(t => (
-                                <SelectItem key={t} value={t} className="text-gold-100 uppercase text-[10px] font-bold">{t}</SelectItem>
+                                <SelectItem key={t} value={t} className="text-gold-100 uppercase text-xs font-bold">{t}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-gold-100/40">Irrigation Type</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-bold uppercase tracking-wider text-gold-200 block">Irrigation Type</Label>
                           <Select value={formData.irrigation_type} onValueChange={(v) => setFormData({ ...formData, irrigation_type: v })}>
-                            <SelectTrigger className="bg-earth-main border-earth-border text-gold-100 rounded-xl h-11">
+                            <SelectTrigger className="bg-earth-main border-earth-border text-gold-100 rounded-xl h-11 text-xs font-bold">
                               <SelectValue placeholder="System" />
                             </SelectTrigger>
                             <SelectContent className="bg-earth-elevated border-earth-border">
                               {['Drip', 'Sprinkler', 'Canal', 'Tube Well', 'Rain Fed', 'Mixed'].map(t => (
-                                <SelectItem key={t} value={t} className="text-gold-100 uppercase text-[10px] font-bold">{t}</SelectItem>
+                                <SelectItem key={t} value={t} className="text-gold-100 uppercase text-xs font-bold">{t}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
-                      <div className="flex justify-end gap-3 pt-4">
-                        <Button type="button" variant="ghost" className="text-gold-100/40 font-bold uppercase text-xs" onClick={() => setDialogOpen(false)}>
+                      <div className="flex items-center justify-end gap-3 pt-4 border-t border-earth-border/30 mt-6">
+                        <Button type="button" variant="ghost" className="text-gold-100/60 hover:text-gold-100 font-bold uppercase text-xs h-11 px-5 rounded-xl border border-transparent hover:border-earth-border/40" onClick={() => setDialogOpen(false)}>
                           Cancel
                         </Button>
-                        <Button type="submit" className="btn-gold px-8">
+                        <Button type="submit" className="btn-gold px-8 h-11 rounded-xl font-bold text-xs uppercase tracking-wider shadow-gold-glow">
                           {editingFarmId ? 'Save Changes' : 'Add Farm'}
                         </Button>
                       </div>
@@ -473,8 +478,8 @@ export default function MyFarm() {
                                 <div className="p-3 bg-earth-main/50 rounded-2xl border border-earth-border">
                                   <span className="text-[8px] font-black text-gold-100/20 uppercase tracking-widest block mb-1">Size</span>
                                   <div className="flex items-baseline gap-1">
-                                    <span className="text-lg font-black text-gold-100 tracking-tighter">{farm.area_acres || 0}</span>
-                                    <span className="text-[9px] font-bold text-gold-100/40 uppercase">Acres</span>
+                                    <span className="text-lg font-black text-gold-100 tracking-tighter">{convertArea(farm.area_acres || 0, landUnit).value}</span>
+                                    <span className="text-[9px] font-bold text-gold-100/40 uppercase">{landUnit}</span>
                                   </div>
                                 </div>
                                 <div className="p-3 bg-earth-main/50 rounded-2xl border border-earth-border">

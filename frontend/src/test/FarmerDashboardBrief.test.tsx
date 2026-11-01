@@ -104,7 +104,7 @@ describe('FarmerDashboardBrief Component (Carousel, Checklist & Synced Irrigatio
             precipitation_probability: 10,
             wind_speed_max: 9,
             wind_direction: 'NE',
-            spraying_suitability: 'Optimal',
+            spraying_suitability: 'Favorable',
             spraying_reason: 'Calm winds & low rain risk — ideal for foliar nutrition & protective sprays.',
           },
         ],

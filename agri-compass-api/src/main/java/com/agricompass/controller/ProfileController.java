@@ -88,7 +88,7 @@ public class ProfileController {
         p.setFullName("Farmer");
         p.setDistrict("Bengaluru Urban");
         p.setState("Karnataka");
-        p.setLanguage("kn");
+        p.setLanguage("en");
         p.setOnboardingCompleted(1);
         return userProfileRepository.save(p);
     }

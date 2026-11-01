@@ -116,11 +116,25 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, [language, i18n, location.pathname]);
 
 
+  const syncSettingsLanguage = (lang: Language) => {
+    try {
+      const saved = localStorage.getItem('agri_compass_settings');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        parsed.language = lang;
+        localStorage.setItem('agri_compass_settings', JSON.stringify(parsed));
+      }
+    } catch {
+      // Ignore JSON parse errors
+    }
+  };
+
   const toggleLanguage = () => {
     const newLang = language === 'en' ? 'kn' : 'en';
     sessionStorage.removeItem('googtrans_cleared');
     setLanguageState(newLang);
     localStorage.setItem('language', newLang);
+    syncSettingsLanguage(newLang);
     document.documentElement.lang = newLang;
     window.location.reload();
   };
@@ -129,6 +143,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.removeItem('googtrans_cleared');
     setLanguageState(newLanguage);
     localStorage.setItem('language', newLanguage);
+    syncSettingsLanguage(newLanguage);
     document.documentElement.lang = newLanguage;
     window.location.reload();
   };

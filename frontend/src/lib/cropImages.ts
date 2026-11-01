@@ -1,7 +1,7 @@
-// Crop name to premium Unsplash/Wikipedia hybrid agricultural image mapping
+// Crop name to authentic botanical images (restored accurate version with fixed URLs)
 export const CROP_IMAGE_MAP: { [key: string]: string } = {
   'rice': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/20201102.Hengnan.Hybrid_rice_Sanyou-1.6.jpg/960px-20201102.Hengnan.Hybrid_rice_Sanyou-1.6.jpg',
-  'paddy': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/20201102.Hengnan.Hybrid_rice_Sanyou-1.6.jpg/400px-20201102.Hengnan.Hybrid_rice_Sanyou-1.6.jpg',
+  'paddy': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/20201102.Hengnan.Hybrid_rice_Sanyou-1.6.jpg/960px-20201102.Hengnan.Hybrid_rice_Sanyou-1.6.jpg',
   'rice (paddy)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/20201102.Hengnan.Hybrid_rice_Sanyou-1.6.jpg/960px-20201102.Hengnan.Hybrid_rice_Sanyou-1.6.jpg',
   'wheat': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?q=60&w=400&auto=format&fit=crop',
   'maize': 'https://upload.wikimedia.org/wikipedia/commons/e/e3/Zea_mays_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-283.jpg',
@@ -13,15 +13,15 @@ export const CROP_IMAGE_MAP: { [key: string]: string } = {
   'groundnut (peanut)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Arachis_hypogaea_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-163.jpg/960px-Arachis_hypogaea_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-163.jpg',
   'chickpea': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Chickpea_BNC.jpg/960px-Chickpea_BNC.jpg',
   'chickpea (chana)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Chickpea_BNC.jpg/960px-Chickpea_BNC.jpg',
-  'sugarcane': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Sugarcane_stalks.jpg/400px-Sugarcane_stalks.jpg',
+  'sugarcane': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Sugarcane_stalks.jpg/500px-Sugarcane_stalks.jpg',
   'onion': 'https://images.unsplash.com/photo-1508747703725-719777637510?q=60&w=400&auto=format&fit=crop',
   'potato': 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?q=60&w=400&auto=format&fit=crop',
-  'ragi': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Eleusine_coracana_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-056.jpg/800px-Eleusine_coracana_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-056.jpg',
-  'ragi (finger millet)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Eleusine_coracana_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-056.jpg/800px-Eleusine_coracana_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-056.jpg',
+  'ragi': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Eleusine_coracana_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-056.jpg/500px-Eleusine_coracana_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-056.jpg',
+  'ragi (finger millet)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Eleusine_coracana_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-056.jpg/500px-Eleusine_coracana_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-056.jpg',
   'jowar': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Sorghum_bicolor03.jpg/960px-Sorghum_bicolor03.jpg',
   'jowar (sorghum)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Sorghum_bicolor03.jpg/960px-Sorghum_bicolor03.jpg',
   'chilli': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Madame_Jeanette_and_other_chillies.jpg/960px-Madame_Jeanette_and_other_chillies.jpg',
-  'turmeric': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Turmeric_rhizome.jpg/400px-Turmeric_rhizome.jpg',
+  'turmeric': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Turmeric_rhizome.jpg/500px-Turmeric_rhizome.jpg',
   'coconut': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Cocos_nucifera_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-187.jpg/960px-Cocos_nucifera_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-187.jpg',
   'arecanut': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Bago%2C_mercado_23.jpg/960px-Bago%2C_mercado_23.jpg',
   'banana': 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?q=60&w=400&auto=format&fit=crop',
@@ -30,7 +30,7 @@ export const CROP_IMAGE_MAP: { [key: string]: string } = {
   'pomegranate': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Pomegranate_Juice_%282019%29.jpg/960px-Pomegranate_Juice_%282019%29.jpg',
   'mustard': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Mustard_plant_flower.jpg/960px-Mustard_plant_flower.jpg',
   'pigeon pea': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Cajanus_cajan_Blanco1.167-cropped.jpg/960px-Cajanus_cajan_Blanco1.167-cropped.jpg',
-  'pigeon pea (toor dal / red gram)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Cajanus_cajan_Blanco1.167-cropped.jpg/400px-Cajanus_cajan_Blanco1.167-cropped.jpg',
+  'pigeon pea (toor dal / red gram)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Cajanus_cajan_Blanco1.167-cropped.jpg/960px-Cajanus_cajan_Blanco1.167-cropped.jpg',
   'foxtail millet': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Japanese_Foxtail_millet_02.jpg/960px-Japanese_Foxtail_millet_02.jpg',
   'little millet': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/A_crop_%22samai_%22_grown_in_the_rain_water_only_itself.jpg/960px-A_crop_%22samai_%22_grown_in_the_rain_water_only_itself.jpg',
   'barnyard millet': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Echinochloa_esculenta_sl2.jpg/960px-Echinochloa_esculenta_sl2.jpg',
@@ -50,7 +50,7 @@ export const CROP_IMAGE_MAP: { [key: string]: string } = {
   'beans': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Heaps_of_beans.jpg/960px-Heaps_of_beans.jpg',
   'beans (french beans)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Heaps_of_beans.jpg/960px-Heaps_of_beans.jpg',
   'coffee': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Roasted_coffee_beans.jpg/960px-Roasted_coffee_beans.jpg',
-  'cocoa': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Cocoa_Pods.JPG/400px-Cocoa_Pods.JPG',
+  'cocoa': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Theobroma_cacao_MHNT.BOT.2004.0.204.jpg/500px-Theobroma_cacao_MHNT.BOT.2004.0.204.jpg',
   'black pepper': 'https://images.unsplash.com/photo-1669171959577-f7204adf99e7?q=60&w=400&auto=format&fit=crop',
   'cardamom': 'https://images.unsplash.com/photo-1642255500170-2637b4e4cecd?q=60&w=400&auto=format&fit=crop',
   'ginger': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Koeh-146-no_text.jpg/960px-Koeh-146-no_text.jpg',
@@ -64,11 +64,11 @@ export const CROP_IMAGE_MAP: { [key: string]: string } = {
   'soybean': 'https://upload.wikimedia.org/wikipedia/commons/8/82/Soybean.USDA.jpg',
   'sunflower': 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?q=60&w=400&auto=format&fit=crop',
   'sesame': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Sesamum_indicum_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-129.jpg',
-  'castor': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Ricinus_communis_20110903.jpg/800px-Ricinus_communis_20110903.jpg',
-  'tobacco': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Tobacco_leaves.jpg/400px-Tobacco_leaves.jpg'
+  'castor': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Ricin_commun.jpg/500px-Ricin_commun.jpg',
+  'tobacco': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Tobacco_leaves.jpg/500px-Tobacco_leaves.jpg'
 };
 
-const DEFAULT_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?q=80&w=800&auto=format&fit=crop';
+const DEFAULT_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=800&auto=format&fit=crop';
 
 /**
  * Resolves a crop name to a premium image URL using case-insensitive matching.

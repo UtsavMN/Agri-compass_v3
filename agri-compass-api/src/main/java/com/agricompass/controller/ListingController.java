@@ -100,7 +100,7 @@ public class ListingController {
                 fallbackProfile.setFullName("Farmer Partner");
                 fallbackProfile.setDistrict(location);
                 fallbackProfile.setState("Karnataka");
-                fallbackProfile.setLanguage("kn");
+                fallbackProfile.setLanguage("en");
                 fallbackProfile.setOnboardingCompleted(0);
                 try {
                     userProfile = userProfileRepository.save(fallbackProfile);

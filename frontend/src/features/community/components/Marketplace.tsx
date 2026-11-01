@@ -640,8 +640,8 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [priceUnit, setPriceUnit] = useState('Total Price');
-  const [quantity, setQuantity] = useState('1');
+  const [priceUnit, setPriceUnit] = useState('');
+  const [quantity, setQuantity] = useState('');
   const [quantityUnit, setQuantityUnit] = useState('Quintals');
   const [isNegotiable, setIsNegotiable] = useState(false);
   const [location, setLocation] = useState('');
@@ -667,7 +667,6 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
   useEffect(() => {
     if (selectedCategory) {
       setSubType(selectedCategory.subTypes[0]);
-      setPriceUnit(selectedCategory.priceLabel);
     }
   }, [selectedCategory]);
 
@@ -769,8 +768,8 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
         listing_type: listingType,
         type: listingType,
         price: !isNaN(cleanPrice) ? cleanPrice : 0,
-        priceUnit,
-        price_unit: priceUnit,
+        priceUnit: priceUnit.trim() || selectedCategory?.priceLabel || 'Total Price',
+        price_unit: priceUnit.trim() || selectedCategory?.priceLabel || 'Total Price',
         quantity: quantity.trim() || '1',
         quantityUnit: quantityUnit.trim() || 'Units',
         quantity_unit: quantityUnit.trim() || 'Units',
@@ -918,6 +917,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                   <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Price Unit</label>
                   <input
                     type="text"
+                    placeholder={selectedCategory?.priceLabel || "₹ selling price or ₹/day rental"}
                     value={priceUnit}
                     onChange={(e) => setPriceUnit(e.target.value)}
                     className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-10 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"
@@ -931,7 +931,7 @@ function CreateListingModal({ onClose, onCreated }: { onClose: () => void; onCre
                   <label className="block text-[11px] text-[#6a6050] uppercase tracking-widest font-bold">Quantity Available</label>
                   <input
                     type="text"
-                    placeholder="e.g. 50"
+                    placeholder="1"
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
                     className="w-full bg-earth-main/50 border border-earth-border/40 text-gold-100 h-10 px-3 rounded-lg text-xs font-semibold focus:border-[#c49a2a] outline-none"

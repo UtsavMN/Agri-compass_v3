@@ -140,6 +140,56 @@
     color: var(--text-primary) !important;
     -webkit-text-fill-color: var(--text-primary) !important;
   }
+
+  /* Form default / placeholder text: lower opacity than typed text */
+  input::placeholder,
+  textarea::placeholder {
+    opacity: 0.38 !important;
+    color: rgba(245, 240, 232, 0.45) !important;
+    -webkit-text-fill-color: rgba(245, 240, 232, 0.45) !important;
+    transition: opacity 150ms ease, color 150ms ease;
+  }
+
+  /* When the user clicks or focuses the field to type input, immediately hide default text */
+  input:focus::placeholder,
+  textarea:focus::placeholder,
+  input:focus-visible::placeholder,
+  textarea:focus-visible::placeholder {
+    opacity: 0 !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+  }
+
+  /* WebKit specific pseudo element */
+  input::-webkit-input-placeholder,
+  textarea::-webkit-input-placeholder {
+    opacity: 0.38 !important;
+    color: rgba(245, 240, 232, 0.45) !important;
+    -webkit-text-fill-color: rgba(245, 240, 232, 0.45) !important;
+    transition: opacity 150ms ease, color 150ms ease;
+  }
+
+  input:focus::-webkit-input-placeholder,
+  textarea:focus::-webkit-input-placeholder,
+  input:focus-visible::-webkit-input-placeholder,
+  textarea:focus-visible::-webkit-input-placeholder {
+    opacity: 0 !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+  }
+
+  /* Mozilla specific pseudo element */
+  input::-moz-placeholder,
+  textarea::-moz-placeholder {
+    opacity: 0.38 !important;
+    color: rgba(245, 240, 232, 0.45) !important;
+  }
+
+  input:focus::-moz-placeholder,
+  textarea:focus::-moz-placeholder {
+    opacity: 0 !important;
+    color: transparent !important;
+  }
 }
 
 /* ============================================ */

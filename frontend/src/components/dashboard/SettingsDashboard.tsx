@@ -102,6 +102,8 @@ export function SettingsDashboard() {
     ? profile.district
     : (profile?.location && profile.location !== 'Unknown' ? profile.location : (selectedDistrict || 'Bengaluru Urban'));
 
+  const currentActiveLang: 'en' | 'kn' = localStorage.getItem('language') === 'kn' ? 'kn' : 'en';
+
   const [settings, setSettings] = useState<SettingsData>(() => {
     try {
       const saved = localStorage.getItem('agri_compass_settings');
@@ -114,6 +116,7 @@ export function SettingsDashboard() {
         return {
           ...DEFAULT_SETTINGS,
           ...parsed,
+          language: currentActiveLang,
           location: {
             ...DEFAULT_SETTINGS.location,
             ...(parsed.location || {}),
@@ -132,6 +135,7 @@ export function SettingsDashboard() {
     const coords = KARNATAKA_DISTRICT_COORDINATES[onboardingDistrict] || { lat: 12.9716, lon: 77.5946 };
     return {
       ...DEFAULT_SETTINGS,
+      language: currentActiveLang,
       location: {
         district: onboardingDistrict,
         taluk: onboardingDistrict,
@@ -197,7 +201,7 @@ export function SettingsDashboard() {
             ...DEFAULT_SETTINGS,
             ...prev,
             ...remoteData,
-            language: remoteData.language || res.language || prev.language || 'en',
+            language: prev.language || currentActiveLang,
             location: {
               ...DEFAULT_SETTINGS.location,
               ...(prev?.location || {}),
@@ -224,7 +228,16 @@ export function SettingsDashboard() {
   };
 
   const updateSetting = <K extends keyof SettingsData>(key: K, value: SettingsData[K]) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings(prev => {
+      const next = { ...prev, [key]: value };
+      if (key === 'landUnit') {
+        localStorage.setItem('agri_compass_land_unit', String(value));
+      } else if (key === 'weightUnit') {
+        localStorage.setItem('agri_compass_weight_unit', String(value));
+      }
+      window.dispatchEvent(new CustomEvent('agri_compass_settings_updated', { detail: next }));
+      return next;
+    });
     setHasUnsavedChanges(true);
   };
 
@@ -266,6 +279,7 @@ export function SettingsDashboard() {
       localStorage.setItem('agri_compass_land_unit', settings.landUnit);
       localStorage.setItem('agri_compass_weight_unit', settings.weightUnit);
       localStorage.setItem('agri_compass_offline_saver', String(settings.offlineDataSaver));
+      window.dispatchEvent(new CustomEvent('agri_compass_settings_updated', { detail: settings }));
 
       // 2. Apply theme & language side effects ONLY ON SAVE
       if (settings.highContrastMode) {

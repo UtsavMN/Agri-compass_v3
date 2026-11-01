@@ -48,6 +48,11 @@ export const CropCardPremium = React.memo(function CropCardPremium({ crop }: Cro
             alt={crop.nameEnglish}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             loading="lazy"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.onerror = null;
+              target.src = 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=800&auto=format&fit=crop';
+            }}
           />
         ) : (
           <div className="w-full h-full bg-earth-elevated flex items-center justify-center">
