@@ -14,7 +14,8 @@ import java.util.UUID;
 public class KrishiMandiPrice {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id = UUID.randomUUID().toString();
 
     @Column(nullable = false)
     private String source = "KRISHI_MARATA_VAHINI";

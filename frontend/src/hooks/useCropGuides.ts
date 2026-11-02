@@ -49,6 +49,13 @@ export const mapToCropCard = (dto: any): CropCard => {
       raw = typeof dto.rawJson === "string" ? JSON.parse(dto.rawJson) : dto.rawJson;
     } catch (e) {}
   }
+  if (!raw || Object.keys(raw).length === 0) {
+    if (dto.raw_json) {
+      try {
+        raw = typeof dto.raw_json === "string" ? JSON.parse(dto.raw_json) : dto.raw_json;
+      } catch (e) {}
+    }
+  }
 
   // If rawJson was empty, match from bundled master dataset
   if (!raw || Object.keys(raw).length === 0) {
@@ -64,31 +71,40 @@ export const mapToCropCard = (dto: any): CropCard => {
   }
 
   const durationParsed = typeof raw.duration_days === "string"
-    ? parseInt(raw.duration_days.replace(/[^0-9]/g, "")) || dto.durationDays || 100
-    : dto.durationDays || 100;
+    ? parseInt(raw.duration_days.replace(/[^0-9]/g, "")) || dto.durationDays || dto.duration_days || 100
+    : dto.durationDays || dto.duration_days || 100;
 
   const pdfInfo = findCropPdf(raw.slug || dto.slug || dto.name || "");
+
+  const investment = dto.investmentPerAcre ?? dto.investment_per_acre ?? 25000;
+  const returns = dto.expectedReturns ?? dto.expected_returns ?? 45000;
+  const aiProfitScore = dto.aiScore?.profitabilityScore ?? 
+                        dto.ai_score?.profitability_score ?? 
+                        (typeof dto.aiScore === 'number' ? dto.aiScore : null) ?? 
+                        (typeof dto.ai_score === 'number' ? dto.ai_score : null) ?? 
+                        raw.ai_suitability?.profitability_score ?? 
+                        85;
 
   return {
     id: String(dto.id || raw.id || pdfInfo.id),
     slug: raw.slug || dto.slug || pdfInfo.slug,
     nameEnglish: raw.name || dto.name || dto.nameEnglish || "",
-    nameKannada: (Array.isArray(raw.local_names) && raw.local_names[raw.local_names.length - 1]) || dto.nameKannada || dto.name || "",
-    nameScientific: raw.scientific_name || dto.scientificName || null,
+    nameKannada: (Array.isArray(raw.local_names) && raw.local_names[raw.local_names.length - 1]) || dto.nameKannada || dto.name_kannada || dto.name || "",
+    nameScientific: raw.scientific_name || dto.scientificName || dto.scientific_name || null,
     season: Array.isArray(raw.season) ? raw.season.join(", ") : (dto.season || "Kharif"),
     durationDays: durationParsed,
-    difficulty: (raw.difficulty_level || dto.difficultyLevel || "Moderate") as any,
-    capitalMin: dto.investmentPerAcre || 25000,
-    capitalMax: dto.investmentPerAcre ? Math.round(dto.investmentPerAcre * 1.3) : 35000,
-    returnsMin: dto.expectedReturns || 45000,
-    returnsMax: dto.expectedReturns ? Math.round(dto.expectedReturns * 1.4) : 75000,
-    districts: JSON.stringify(raw.recommended_districts_karnataka || dto.recommendedDistricts || (dto.district ? [dto.district] : ["Statewide"])),
-    soilType: raw.soil?.texture || dto.soilType || "Fertile Loam",
-    rainfallMm: raw.climate?.rainfall_mm || dto.rainfallMm || "700-1100 mm",
-    nKgAcre: (raw.npk_requirement_kg_per_ha?.N ? Math.round(raw.npk_requirement_kg_per_ha.N / 2.471) : dto.nutrient?.nitrogenKg) || 45,
-    pKgAcre: (raw.npk_requirement_kg_per_ha?.P ? Math.round(raw.npk_requirement_kg_per_ha.P / 2.471) : dto.nutrient?.phosphorusKg) || 25,
-    kKgAcre: (raw.npk_requirement_kg_per_ha?.K ? Math.round(raw.npk_requirement_kg_per_ha.K / 2.471) : dto.nutrient?.potassiumKg) || 25,
-    aiScore: dto.aiScore?.profitabilityScore || null,
+    difficulty: (raw.difficulty_level || dto.difficultyLevel || dto.difficulty_level || "Moderate") as any,
+    capitalMin: investment,
+    capitalMax: investment ? Math.round(investment * 1.3) : 35000,
+    returnsMin: returns,
+    returnsMax: returns ? Math.round(returns * 1.4) : 75000,
+    districts: JSON.stringify(raw.recommended_districts_karnataka || dto.recommendedDistricts || dto.recommended_districts || (dto.district ? [dto.district] : ["Statewide"])),
+    soilType: raw.soil?.texture || dto.soilType || dto.soil_type || "Fertile Loam",
+    rainfallMm: raw.climate?.rainfall_mm || dto.rainfallMm || dto.rainfall_mm || "700-1100 mm",
+    nKgAcre: (raw.npk_requirement_kg_per_ha?.N ? Math.round(raw.npk_requirement_kg_per_ha.N / 2.471) : (dto.nutrient?.nitrogenKg ?? dto.nutrient?.nitrogen_kg)) || 45,
+    pKgAcre: (raw.npk_requirement_kg_per_ha?.P ? Math.round(raw.npk_requirement_kg_per_ha.P / 2.471) : (dto.nutrient?.phosphorusKg ?? dto.nutrient?.phosphorus_kg)) || 25,
+    kKgAcre: (raw.npk_requirement_kg_per_ha?.K ? Math.round(raw.npk_requirement_kg_per_ha.K / 2.471) : (dto.nutrient?.potassiumKg ?? dto.nutrient?.potassium_kg)) || 25,
+    aiScore: aiProfitScore,
     pdfAvailable: true,
   };
 };
@@ -500,7 +516,7 @@ export const useCropList = (params?: {
         const q = params.search.toLowerCase();
         dtos = dtos.filter((c: any) =>
           (c.name || "").toLowerCase().includes(q) ||
-          (c.scientificName || "").toLowerCase().includes(q) ||
+          (c.scientificName || c.scientific_name || "").toLowerCase().includes(q) ||
           (c.slug || "").toLowerCase().includes(q)
         );
       }
@@ -508,24 +524,36 @@ export const useCropList = (params?: {
         dtos = dtos.filter((c: any) => (c.season || "").toLowerCase().includes(params.season!.toLowerCase()));
       }
       if (params?.district && params.district !== "all") {
-        dtos = dtos.filter((c: any) =>
-          (c.district || "").toLowerCase().includes(params.district!.toLowerCase()) ||
-          (c.recommendedDistricts && c.recommendedDistricts.some((d: string) => d.toLowerCase().includes(params.district!.toLowerCase())))
-        );
+        const dNorm = params.district.toLowerCase();
+        const filtered = dtos.filter((c: any) => {
+          const recDists: string[] = c.recommendedDistricts || c.recommended_districts || [];
+          const distName = (c.district || "").toLowerCase();
+          return (
+            distName.includes(dNorm) ||
+            recDists.some((d: string) => d.toLowerCase().includes(dNorm)) ||
+            (dNorm.includes("bengaluru") && (distName.includes("bengaluru") || recDists.some((d: string) => d.toLowerCase().includes("bengaluru") || d.toLowerCase().includes("bangalore")))) ||
+            (dNorm.includes("bangalore") && (distName.includes("bangalore") || recDists.some((d: string) => d.toLowerCase().includes("bengaluru") || d.toLowerCase().includes("bangalore"))))
+          );
+        });
+        if (filtered.length > 0) {
+          dtos = filtered;
+        }
       }
+
+      let cards = dtos.map(mapToCropCard);
 
       // Sorting
       if (params?.sort === "alphabetical" || params?.sort === "name") {
-        dtos.sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
+        cards.sort((a, b) => (a.nameEnglish || "").localeCompare(b.nameEnglish || ""));
       } else if (params?.sort === "profit_high_low" || params?.sort === "expectedReturns") {
-        dtos.sort((a: any, b: any) => ((b.expectedReturns || 0) - (b.investmentPerAcre || 0)) - ((a.expectedReturns || 0) - (a.investmentPerAcre || 0)));
+        cards.sort((a, b) => ((b.returnsMin || 0) - (b.capitalMin || 0)) - ((a.returnsMin || 0) - (a.capitalMin || 0)));
       } else if (params?.sort === "investmentPerAcre") {
-        dtos.sort((a: any, b: any) => (a.investmentPerAcre || 0) - (b.investmentPerAcre || 0));
+        cards.sort((a, b) => (a.capitalMin || 0) - (b.capitalMin || 0));
       } else if (params?.sort === "ai_score") {
-        dtos.sort((a: any, b: any) => (b.aiScore?.profitabilityScore || 0) - (a.aiScore?.profitabilityScore || 0));
+        cards.sort((a, b) => (b.aiScore ?? 85) - (a.aiScore ?? 85));
       }
 
-      setCrops(dtos.map(mapToCropCard));
+      setCrops(cards);
     } catch (err: any) {
       console.error(err);
       setError(err.message ?? "Failed to load crops");

@@ -37,35 +37,46 @@ public class DatabaseConfig {
     @Value("${spring.datasource.password:${SPRING_DATASOURCE_PASSWORD:${DATABASE_PASSWORD:${DB_PASSWORD:}}}}")
     private String configuredPassword;
 
-    private boolean isPostgreSqlActive = false;
+    private Boolean postgreSqlActive = null;
+
+    private synchronized boolean isPostgreSqlActive() {
+        if (postgreSqlActive != null) {
+            return postgreSqlActive;
+        }
+        ResolvedConnectionInfo info = resolveConnection(configuredUrl, configuredUsername, configuredPassword);
+        if (info.isPostgres) {
+            log.info("Testing PostgreSQL connection at {}...", info.jdbcUrl);
+            boolean reachable = testPostgresConnection(info.jdbcUrl, info.username, info.password);
+            if (reachable) {
+                log.info("✅ Successfully connected to PostgreSQL database. Activating PostgreSQL engine.");
+                postgreSqlActive = true;
+                return true;
+            } else {
+                log.warn("⚠️ Primary PostgreSQL database is unreachable, invalid, or quota exceeded. " +
+                         "Falling back to embedded SQLite (jdbc:sqlite:agri.db) to ensure 100% deployment uptime.");
+            }
+        } else {
+            log.info("No PostgreSQL URL configured. Using embedded SQLite database (jdbc:sqlite:agri.db).");
+        }
+        postgreSqlActive = false;
+        return false;
+    }
 
     @Bean
     @Primary
     public DataSource dataSource() {
         ResolvedConnectionInfo info = resolveConnection(configuredUrl, configuredUsername, configuredPassword);
-
-        if (info.isPostgres) {
-            log.info("Testing PostgreSQL connection at {}...", info.jdbcUrl);
-            boolean reachable = testPostgresConnection(info.jdbcUrl, info.username, info.password);
-            if (reachable) {
-                log.info("? Successfully connected to PostgreSQL database. Activating PostgreSQL engine.");
-                isPostgreSqlActive = true;
-                return createPostgresDataSource(info);
-            } else {
-                log.warn("?? Primary PostgreSQL database is unreachable, invalid, or quota exceeded. " +
-                         "Falling back to embedded SQLite (jdbc:sqlite:agri.db) to ensure 100% deployment uptime.");
-            }
+        if (isPostgreSqlActive()) {
+            return createPostgresDataSource(info);
         }
-
         log.info("Activating embedded SQLite database (jdbc:sqlite:agri.db).");
-        isPostgreSqlActive = false;
         return createSqliteDataSource();
     }
 
     @Bean
     public HibernatePropertiesCustomizer hibernatePropertiesCustomizer() {
         return properties -> {
-            if (isPostgreSqlActive) {
+            if (isPostgreSqlActive()) {
                 properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
                 log.info("Hibernate dialect configured: org.hibernate.dialect.PostgreSQLDialect");
             } else {
@@ -82,7 +93,7 @@ public class DatabaseConfig {
                 Class.forName("org.postgresql.Driver");
                 String urlWithTimeouts = jdbcUrl;
                 if (!urlWithTimeouts.contains("connectTimeout")) {
-                    urlWithTimeouts += (urlWithTimeouts.contains("?") ? "&" : "?") + "connectTimeout=4&loginTimeout=4&socketTimeout=4";
+                    urlWithTimeouts += (urlWithTimeouts.contains("?") ? "&" : "?") + "connectTimeout=10&socketTimeout=10";
                 }
                 try (Connection conn = DriverManager.getConnection(urlWithTimeouts, user, password)) {
                     return conn != null && !conn.isClosed();
@@ -94,10 +105,10 @@ public class DatabaseConfig {
         });
 
         try {
-            return future.get(5, java.util.concurrent.TimeUnit.SECONDS);
+            return future.get(12, java.util.concurrent.TimeUnit.SECONDS);
         } catch (java.util.concurrent.TimeoutException te) {
             future.cancel(true);
-            log.warn("PostgreSQL connectivity check timed out after 5 seconds. Falling back to SQLite.");
+            log.warn("PostgreSQL connectivity check timed out after 12 seconds. Falling back to SQLite.");
             return false;
         } catch (Exception e) {
             log.warn("PostgreSQL check interrupted: {}", e.getMessage());

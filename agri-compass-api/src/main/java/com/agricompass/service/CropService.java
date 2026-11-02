@@ -44,13 +44,30 @@ public class CropService {
     }
 
     public List<CropDTO> getRecommendations(String district) {
-        List<CropDistrict> districtCrops = districtRepository.findByDistrictNameIgnoreCase(district);
+        if (district == null || district.isBlank() || "all".equalsIgnoreCase(district.trim())) {
+            return getHighProfitCrops();
+        }
+
+        String dTrim = district.trim();
+        List<CropDistrict> districtCrops = districtRepository.findByDistrictNameIgnoreCase(dTrim);
+        
+        // If not found and district mentions Bangalore/Bengaluru Urban, try Bengaluru Rural
+        if (districtCrops.isEmpty()) {
+            String lower = dTrim.toLowerCase();
+            if (lower.contains("bengaluru") || lower.contains("bangalore")) {
+                districtCrops = districtRepository.findByDistrictNameIgnoreCase("Bengaluru Rural");
+            }
+        }
+
         if (districtCrops.isEmpty()) {
             // Fallback: return top rated crops generally
             return cropRepository.findAll().stream()
-                    .filter(c -> c.getAiScore() != null)
-                    .sorted((c1, c2) -> c2.getAiScore().getProfitabilityScore().compareTo(c1.getAiScore().getProfitabilityScore()))
-                    .limit(3)
+                    .sorted((c1, c2) -> {
+                        int s1 = c1.getAiScore() != null ? c1.getAiScore().getProfitabilityScore() : 85;
+                        int s2 = c2.getAiScore() != null ? c2.getAiScore().getProfitabilityScore() : 85;
+                        return Integer.compare(s2, s1);
+                    })
+                    .limit(6)
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
         }
@@ -58,20 +75,28 @@ public class CropService {
         return districtCrops.stream()
                 .map(CropDistrict::getCrop)
                 .distinct()
-                .filter(c -> c.getAiScore() != null)
                 .sorted((c1, c2) -> {
                     // Weighted score: 60% profitability, 40% climate suitability
-                    double score1 = c1.getAiScore().getProfitabilityScore() * 0.6 + c1.getAiScore().getClimateSuitabilityScore() * 0.4;
-                    double score2 = c2.getAiScore().getProfitabilityScore() * 0.6 + c2.getAiScore().getClimateSuitabilityScore() * 0.4;
+                    double score1 = (c1.getAiScore() != null ? c1.getAiScore().getProfitabilityScore() : 85) * 0.6 + 
+                                    (c1.getAiScore() != null ? c1.getAiScore().getClimateSuitabilityScore() : 85) * 0.4;
+                    double score2 = (c2.getAiScore() != null ? c2.getAiScore().getProfitabilityScore() : 85) * 0.6 + 
+                                    (c2.getAiScore() != null ? c2.getAiScore().getClimateSuitabilityScore() : 85) * 0.4;
                     return Double.compare(score2, score1);
                 })
-                .limit(3)
+                .limit(6)
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     public List<CropDTO> getCropsByDistrict(String district) {
-        List<CropDistrict> districtCrops = districtRepository.findByDistrictNameIgnoreCase(district);
+        if (district == null || district.isBlank() || "all".equalsIgnoreCase(district.trim())) {
+            return cropRepository.findAll().stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+        }
+
+        String dTrim = district.trim();
+        List<CropDistrict> districtCrops = districtRepository.findByDistrictNameIgnoreCase(dTrim);
         if (!districtCrops.isEmpty()) {
             return districtCrops.stream()
                     .map(CropDistrict::getCrop)
@@ -79,9 +104,28 @@ public class CropService {
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
         }
-        return cropRepository.findByDistrict(district).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+
+        // Check if district is Bengaluru Urban or Bangalore - map to Bengaluru Rural
+        String cleanDistrict = dTrim.toLowerCase();
+        if (cleanDistrict.contains("bengaluru") || cleanDistrict.contains("bangalore")) {
+            List<CropDistrict> bengaluruRural = districtRepository.findByDistrictNameIgnoreCase("Bengaluru Rural");
+            if (!bengaluruRural.isEmpty()) {
+                return bengaluruRural.stream()
+                        .map(CropDistrict::getCrop)
+                        .distinct()
+                        .map(this::convertToDTO)
+                        .collect(Collectors.toList());
+            }
+        }
+
+        List<Crop> byDistrict = cropRepository.findByDistrict(dTrim);
+        if (!byDistrict.isEmpty()) {
+            return byDistrict.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+        }
+
+        return getRecommendations(dTrim);
     }
 
     public List<CropDTO> getCropsBySeason(String season) {
