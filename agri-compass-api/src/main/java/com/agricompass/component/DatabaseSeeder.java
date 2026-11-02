@@ -300,7 +300,6 @@ public class DatabaseSeeder implements CommandLineRunner {
                 List<KrishiMandiPrice> entities = new ArrayList<>();
                 for (Map<String, Object> r : records) {
                     KrishiMandiPrice p = new KrishiMandiPrice();
-                    p.setId(java.util.UUID.randomUUID().toString());
                     p.setMarket((String) r.get("market"));
                     p.setDistrict((String) r.get("district"));
                     p.setCommodity((String) r.get("commodity"));

@@ -144,6 +144,10 @@ class CacheManager {
     localStorage.removeItem(this.getCacheKey(key));
   }
 
+  static remove(key: string): void {
+    localStorage.removeItem(this.getCacheKey(key));
+  }
+
   static clear(): void {
     const keysToRemove: string[] = [];
 

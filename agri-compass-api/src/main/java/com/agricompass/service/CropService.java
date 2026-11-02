@@ -62,12 +62,9 @@ public class CropService {
         if (districtCrops.isEmpty()) {
             // Fallback: return top rated crops generally
             return cropRepository.findAll().stream()
-                    .sorted((c1, c2) -> {
-                        int s1 = c1.getAiScore() != null ? c1.getAiScore().getProfitabilityScore() : 85;
-                        int s2 = c2.getAiScore() != null ? c2.getAiScore().getProfitabilityScore() : 85;
-                        return Integer.compare(s2, s1);
-                    })
-                    .limit(6)
+                    .filter(c -> c.getAiScore() != null)
+                    .sorted((c1, c2) -> c2.getAiScore().getProfitabilityScore().compareTo(c1.getAiScore().getProfitabilityScore()))
+                    .limit(3)
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
         }
@@ -75,15 +72,16 @@ public class CropService {
         return districtCrops.stream()
                 .map(CropDistrict::getCrop)
                 .distinct()
+                .filter(c -> c.getAiScore() != null)
                 .sorted((c1, c2) -> {
                     // Weighted score: 60% profitability, 40% climate suitability
-                    double score1 = (c1.getAiScore() != null ? c1.getAiScore().getProfitabilityScore() : 85) * 0.6 + 
-                                    (c1.getAiScore() != null ? c1.getAiScore().getClimateSuitabilityScore() : 85) * 0.4;
-                    double score2 = (c2.getAiScore() != null ? c2.getAiScore().getProfitabilityScore() : 85) * 0.6 + 
-                                    (c2.getAiScore() != null ? c2.getAiScore().getClimateSuitabilityScore() : 85) * 0.4;
+                    double score1 = c1.getAiScore().getProfitabilityScore() * 0.6 + 
+                                    c1.getAiScore().getClimateSuitabilityScore() * 0.4;
+                    double score2 = c2.getAiScore().getProfitabilityScore() * 0.6 + 
+                                    c2.getAiScore().getClimateSuitabilityScore() * 0.4;
                     return Double.compare(score2, score1);
                 })
-                .limit(6)
+                .limit(3)
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

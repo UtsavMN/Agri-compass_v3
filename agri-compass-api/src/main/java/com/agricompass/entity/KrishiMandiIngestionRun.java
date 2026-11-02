@@ -12,7 +12,7 @@ public class KrishiMandiIngestionRun {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id = UUID.randomUUID().toString();
+    private String id;
 
     @Column(nullable = false)
     private String source = "KRISHI_MARATA_VAHINI";
@@ -21,7 +21,7 @@ public class KrishiMandiIngestionRun {
     private String reportDate;
 
     @Column(name = "started_at", nullable = false)
-    private String startedAt;
+    private String startedAt = Instant.now().toString();
 
     @Column(name = "finished_at")
     private String finishedAt;
