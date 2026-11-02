@@ -83,7 +83,7 @@ const schemes: GovernmentScheme[] = [
     benefit: '₹4,000 per acre (2 installments)',
     eligibility: ['Karnataka farmers', '2-5 hectares land', 'Small and marginal farmers'],
     documents: ['Karnataka resident proof', 'Land records', 'Bank account'],
-    applicationLink: 'https://raitamitra.karnataka.gov.in/',
+    applicationLink: 'https://www.myscheme.gov.in/schemes/raitha-siri',
     matchScore: 90,
   },
   {
@@ -95,7 +95,7 @@ const schemes: GovernmentScheme[] = [
     benefit: 'Interest subvention up to ₹3 lakh at 4% interest',
     eligibility: ['All farmers', 'Tenant farmers with valid agreements', 'Fishermen and animal husbandry'],
     documents: ['Land records', 'Identity proof', 'Address proof', 'Passport photo'],
-    applicationLink: 'https://www.nabard.org/kcc.aspx',
+    applicationLink: 'https://www.myscheme.gov.in/schemes/kcc',
     matchScore: 75,
   },
   {

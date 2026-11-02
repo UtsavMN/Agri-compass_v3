@@ -56,3 +56,6 @@ validate_*.py
 validate_*.json
 validate_*.csv
 test_kmv_*.py
+
+*.db
+neon_backup.json

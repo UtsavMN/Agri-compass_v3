@@ -37,11 +37,19 @@ public class DatabaseConfig {
     @Value("${spring.datasource.password:${SPRING_DATASOURCE_PASSWORD:${DATABASE_PASSWORD:${DB_PASSWORD:}}}}")
     private String configuredPassword;
 
+    @Value("${app.pause-neon:${PAUSE_NEON:false}}")
+    private boolean pauseNeon;
+
     private Boolean postgreSqlActive = null;
 
     private synchronized boolean isPostgreSqlActive() {
         if (postgreSqlActive != null) {
             return postgreSqlActive;
+        }
+        if (pauseNeon) {
+            log.info("⏸️ Neon PostgreSQL is paused to conserve compute hours for presentation on 6th. Using fully synced local SQLite database (jdbc:sqlite:agri.db).");
+            postgreSqlActive = false;
+            return false;
         }
         ResolvedConnectionInfo info = resolveConnection(configuredUrl, configuredUsername, configuredPassword);
         if (info.isPostgres) {
