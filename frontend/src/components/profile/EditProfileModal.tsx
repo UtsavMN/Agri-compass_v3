@@ -78,8 +78,8 @@ export function EditProfileModal({ onClose }: { onClose: () => void }) {
       };
 
       await updateProfile(payload);
-      if (formData.district && formData.district !== selectedDistrict) {
-        setSelectedDistrict(formData.district);
+      if (formData.district) {
+        await setSelectedDistrict(formData.district);
       }
       onClose();
     } catch (e) {

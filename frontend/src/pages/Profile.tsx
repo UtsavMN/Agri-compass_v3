@@ -27,7 +27,7 @@ type Tab = "posts" | "saved" | "farms" | "schemes";
 
 export default function Profile() {
   const { user: authUser, profile, signOut } = useUser();
-  const { openUserProfile } = useClerk();
+  const { openUserProfile, signOut: clerkSignOut } = useClerk();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("posts");
   const [editOpen, setEditOpen] = useState(false);
@@ -219,6 +219,11 @@ export default function Profile() {
                 <DropdownMenuItem 
                   onClick={async () => {
                     await signOut();
+                    try {
+                      await clerkSignOut();
+                    } catch (e) {
+                      console.warn("Clerk sign out error", e);
+                    }
                     navigate('/');
                   }} 
                   className="text-red-400 hover:bg-red-500/10 cursor-pointer rounded-lg py-2.5 px-3 mt-1"

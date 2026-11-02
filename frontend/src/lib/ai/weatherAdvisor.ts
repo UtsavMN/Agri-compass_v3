@@ -195,7 +195,7 @@ export class WeatherAdvisor {
 
     try {
       // 1. Fetch high-precision 7-day agricultural forecast from Open-Meteo
-      const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,et0_fao_evapotranspiration,uv_index_max&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&timezone=Asia%2FKolkata`;
+      const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,et0_fao_evapotranspiration,uv_index_max&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&timezone=auto`;
       
       const omPromise = fetch(openMeteoUrl).then(res => res.ok ? res.json() : null).catch(() => null);
 
@@ -246,18 +246,37 @@ export class WeatherAdvisor {
           };
         });
 
-        // Determine current observations
-        const currentTemp = omData.current?.temperature_2m !== undefined ? Math.round(omData.current.temperature_2m) : (waData?.current?.temp_c ? Math.round(waData.current.temp_c) : 25);
-        const currentHumidity = omData.current?.relative_humidity_2m !== undefined ? Math.round(omData.current.relative_humidity_2m) : (waData?.current?.humidity ?? 65);
-        const currentWind = omData.current?.wind_speed_10m !== undefined ? Math.round(omData.current.wind_speed_10m) : (waData?.current?.wind_kph ? Math.round(waData.current.wind_kph) : 10);
+        // Determine current observations - prefer live station ground readings for temperature
+        const currentTemp = waData?.current?.temp_c !== undefined
+          ? Math.round(waData.current.temp_c)
+          : (omData.current?.temperature_2m !== undefined ? Math.round(omData.current.temperature_2m) : 25);
+        const currentHumidity = waData?.current?.humidity !== undefined
+          ? Math.round(waData.current.humidity)
+          : (omData.current?.relative_humidity_2m !== undefined ? Math.round(omData.current.relative_humidity_2m) : 65);
+        const currentWind = waData?.current?.wind_kph !== undefined
+          ? Math.round(waData.current.wind_kph)
+          : (omData.current?.wind_speed_10m !== undefined ? Math.round(omData.current.wind_speed_10m) : 10);
         const currentWindDeg = omData.current?.wind_direction_10m ?? 0;
-        const currentDesc = waData?.current?.condition?.text || WeatherAdvisor.wmoCodeToDescription(omData.current?.weather_code ?? 0);
-        const feelsLike = omData.current?.apparent_temperature !== undefined ? Math.round(omData.current.apparent_temperature) : (waData?.current?.feelslike_c ? Math.round(waData.current.feelslike_c) : currentTemp);
-        const pressure = omData.current?.surface_pressure ? Math.round(omData.current.surface_pressure) : (waData?.current?.pressure_mb ? Math.round(waData.current.pressure_mb) : undefined);
+        const currentWindDir = waData?.current?.wind_dir || WeatherAdvisor.degreesToCardinal(currentWindDeg);
+        const precip = omData.current?.precipitation !== undefined ? omData.current.precipitation : (waData?.current?.precip_mm ?? 0);
+        
+        let currentDesc = WeatherAdvisor.wmoCodeToDescription(omData.current?.weather_code ?? 0);
+        if (waData?.current?.condition?.text) {
+          const waText = String(waData.current.condition.text).trim();
+          if (waText.toLowerCase().includes('rain') && precip === 0) {
+            // keep sky cover condition from WMO code (e.g. Partly Cloudy or Overcast)
+          } else if (waText) {
+            currentDesc = waText;
+          }
+        }
+
+        const feelsLike = waData?.current?.feelslike_c !== undefined
+          ? Math.round(waData.current.feelslike_c)
+          : (omData.current?.apparent_temperature !== undefined ? Math.round(omData.current.apparent_temperature) : currentTemp);
+        const pressure = waData?.current?.pressure_mb ? Math.round(waData.current.pressure_mb) : (omData.current?.surface_pressure ? Math.round(omData.current.surface_pressure) : undefined);
         const uv = waData?.current?.uv ?? (omData.daily?.uv_index_max?.[0] ? Number(omData.daily.uv_index_max[0].toFixed(1)) : undefined);
         const visibility = waData?.current?.vis_km !== undefined ? waData.current.vis_km : undefined;
         const todayEt0 = omData.daily?.et0_fao_evapotranspiration?.[0] ? Number(omData.daily.et0_fao_evapotranspiration[0].toFixed(2)) : undefined;
-        const precip = omData.current?.precipitation !== undefined ? omData.current.precipitation : (waData?.current?.precip_mm ?? 0);
 
         return {
           temperature: currentTemp,

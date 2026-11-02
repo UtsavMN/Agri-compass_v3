@@ -19,8 +19,7 @@ import { CropCardPremium, Crop } from '@/components/ui/crop-card-premium';
 import { AnimatedSection } from '@/components/ui/AnimatedSection';
 import { StaggerContainer, StaggerItem, TiltCard } from '@/components/ui/animations';
 import { LottieEmptyState } from '@/components/ui/lottie-loading';
-import {  Post } from '@/lib/api/posts';
-import {    FileText,  Leaf, MapPin, Zap } from 'lucide-react';
+import { FileText, Leaf, MapPin, Zap } from 'lucide-react';
 import { useScroll, useTransform } from 'framer-motion';
 import { MarketTrendCard } from '@/components/dashboard/MarketTrendCard';
 
@@ -68,7 +67,6 @@ export default function Dashboard() {
   const [cropRecommendations, setCropRecommendations] = useState<CropRecommendation[]>([]);
 
   const [newsItems, setNewsItems] = useState<any[]>([]);
-  const [communityPosts, setCommunityPosts] = useState<Post[]>([]);
   const [_mobileNavOpen, _setMobileNavOpen] = useState(false);
   const [userCount, setUserCount] = useState(0);
   const [weatherState, setWeatherState] = useState<{ temp: number; condition: string }>({ temp: 26, condition: 'Clear' });
@@ -107,7 +105,6 @@ export default function Dashboard() {
       ]);
 
       if (summaryData) {
-        setCommunityPosts(summaryData.posts || []);
         setUserCount(summaryData.userCount || 0);
       }
 
@@ -204,12 +201,10 @@ export default function Dashboard() {
           </AnimatedSection>
 
           {/* ══════════════════════════════════════════
-              ZONE 4 — MARKET NEWS + COMMUNITY SNIPPET
-              Two columns, market news left, community right
+              ZONE 4 — MARKET INTELLIGENCE & NEWS
           ══════════════════════════════════════════ */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-            
-            {/* Market News Card (1fr) */}
+          <div className="w-full">
+            {/* Market News Card */}
             <div className="glass-panel rounded-2xl p-6 flex flex-col justify-between">
               <div>
                 <span className="text-[11px] text-[#6a6050] uppercase tracking-wider font-bold">
@@ -219,7 +214,7 @@ export default function Dashboard() {
                   Agricultural News & Trade Bulletins
                 </h3>
                 
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {newsItems.map((news, index) => (
                     <div 
                       key={(typeof news === 'string' ? news : news.title) + '-' + index} 
@@ -249,63 +244,6 @@ export default function Dashboard() {
                 Go to Market Prices →
               </button>
             </div>
-
-            {/* Community Snippet Card (320px) */}
-            <div className="glass-panel rounded-2xl p-6 flex flex-col justify-between w-full">
-              <div>
-                <span className="text-[11px] text-[#6a6050] uppercase tracking-wider font-bold">
-                  COMMUNITY DISCUSSION
-                </span>
-                <h3 className="text-[14px] font-medium text-[#f0ece0] mt-1 mb-6">
-                  Kisan Feed Highlights
-                </h3>
-                
-                <div className="space-y-4">
-                  {communityPosts.length > 0 ? (
-                    communityPosts.map((post) => (
-                      <div 
-                        key={post.id} 
-                        className="p-3.5 rounded-lg bg-[#12120e] border border-[rgba(255,255,255,0.03)] hover:border-gold-400/20 transition-all cursor-pointer group"
-                        onClick={() => navigate(`/post/${post.id}`)}
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-5 h-5 rounded-full bg-[#c49a2a]/20 flex items-center justify-center text-[10px] text-[#c49a2a] font-bold">
-                            {post.user?.full_name?.[0] || post.user?.username?.[0] || 'K'}
-                          </div>
-                          <span className="text-[11px] font-bold text-[#e2dcd0] truncate max-w-[120px]">
-                            {post.user?.full_name || post.user?.username || 'Farmer'}
-                          </span>
-                          {post.location && (
-                            <span className="text-[9px] text-[#6a6050] flex items-center gap-0.5 ml-auto">
-                              <MapPin size={8} /> {post.location}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-[#a09880] group-hover:text-[#f0ece0] transition-colors line-clamp-2 leading-relaxed">
-                          {post.body || post.content || ''}
-                        </p>
-                        <div className="flex items-center gap-3 mt-2 text-[10px] text-[#6a6050] font-bold">
-                          <span className="flex items-center gap-1">👍 {post._count?.likes || 0}</span>
-                          <span className="flex items-center gap-1">💬 {post._count?.comments || 0}</span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-6 text-xs text-[#6a6050]">
-                      No recent community posts
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => navigate('/community')} 
-                className="mt-6 text-[11px] text-[#c49a2a] hover:text-[#d4aa3a] text-left transition-colors uppercase tracking-widest font-bold min-h-[44px] flex items-center"
-              >
-                Open Kisan Feed →
-              </button>
-            </div>
-
           </div>
 
         </div>

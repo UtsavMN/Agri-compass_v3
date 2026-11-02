@@ -249,6 +249,10 @@ export class WeatherCache {
     return CacheManager.get(`weather_${district}`);
   }
 
+  static clearWeather(district: string): void {
+    CacheManager.remove(`weather_${district}`);
+  }
+
   static setForecast(district: string, data: any): void {
     CacheManager.set(`forecast_${district}`, data, { ttl: this.FORECAST_TTL });
   }

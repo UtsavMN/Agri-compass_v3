@@ -28,16 +28,42 @@ export interface WeatherLog {
 export class WeatherAPI {
   private static weatherAdvisor = new WeatherAdvisor()
 
+  // Helper to detect if a cached result contains obsolete mock defaults
+  private static isDefaultMock(res: any): boolean {
+    if (!res || !res.weather) return false;
+    const w = res.weather;
+    const temp = w.temperature ?? w.temp ?? w.temp_c;
+    const hum = w.humidity;
+    const wind = w.windSpeed ?? w.wind_speed ?? w.wind_kph;
+    const press = w.pressure ?? w.pressure_mb;
+    if (temp === 25 && hum === 65) return true;
+    if (temp === 25 && press === 1013) return true;
+    if (temp === 25 && wind === 10) return true;
+    return false;
+  }
+
   // Get microclimate weather directly for exact GPS coordinates
-  static async getWeatherForCoordinates(lat: number, lon: number, districtName?: string, placeName?: string): Promise<WeatherResponse | null> {
+  static async getWeatherForCoordinates(
+    lat: number,
+    lon: number,
+    districtName?: string,
+    placeName?: string,
+    forceRefresh: boolean = false
+  ): Promise<WeatherResponse | null> {
     const nearestDistrict = districtName || findNearestDistrict(lat, lon).district;
     const finalPlace = placeName || nearestDistrict;
     const cacheKey = `weather_coords_${lat.toFixed(3)}_${lon.toFixed(3)}`;
 
-    // Try cache first
-    const cached = WeatherCache.getWeather(cacheKey);
-    if (cached) {
-      return { ...cached, cached: true };
+    // Try cache first unless force refresh requested or cached data is default mock
+    if (!forceRefresh) {
+      const cached = WeatherCache.getWeather(cacheKey);
+      if (cached) {
+        if (this.isDefaultMock(cached)) {
+          WeatherCache.clearWeather(cacheKey);
+        } else {
+          return { ...cached, cached: true };
+        }
+      }
     }
 
     if (!NetworkUtils.isOnline()) {
@@ -57,7 +83,7 @@ export class WeatherAPI {
       // Continue to high-precision direct client engine
     }
 
-    // 2. High-precision microclimate query with exact coordinates via Open-Meteo
+    // 2. High-precision microclimate query with exact coordinates via Open-Meteo & WeatherAPI
     try {
       const weatherData = await this.weatherAdvisor.getWeatherData(nearestDistrict, { lat, lon });
       if (weatherData) {
@@ -77,17 +103,23 @@ export class WeatherAPI {
       console.error('Weather coordinates client error:', fallbackError);
     }
 
-    return this.getWeatherForDistrict(nearestDistrict);
+    return this.getWeatherForDistrict(nearestDistrict, forceRefresh);
   }
 
   // GET /api/weather/:district - Get current weather and advisory with caching
-  static async getWeatherForDistrict(district: string): Promise<WeatherResponse | null> {
+  static async getWeatherForDistrict(district: string, forceRefresh: boolean = false): Promise<WeatherResponse | null> {
     const _cacheKey = `weather_${district}`;
 
-    // Try cache first
-    const cached = WeatherCache.getWeather(district);
-    if (cached) {
-      return { ...cached, cached: true };
+    // Try cache first unless force refresh requested or cached data is default mock
+    if (!forceRefresh) {
+      const cached = WeatherCache.getWeather(district);
+      if (cached) {
+        if (this.isDefaultMock(cached)) {
+          WeatherCache.clearWeather(district);
+        } else {
+          return { ...cached, cached: true };
+        }
+      }
     }
 
     // Check network status

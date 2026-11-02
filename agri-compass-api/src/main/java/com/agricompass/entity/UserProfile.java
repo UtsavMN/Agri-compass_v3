@@ -28,6 +28,9 @@ public class UserProfile {
     @Column(name = "profile_picture_url", columnDefinition = "TEXT")
     private String profilePictureUrl;
 
+    @Column(name = "cover_photo_url", columnDefinition = "TEXT")
+    private String coverPhotoUrl;
+
     @Column(columnDefinition = "TEXT")
     private String bio;
 
@@ -68,6 +71,9 @@ public class UserProfile {
 
     public String getProfilePictureUrl() { return profilePictureUrl; }
     public void setProfilePictureUrl(String profilePictureUrl) { this.profilePictureUrl = profilePictureUrl; }
+
+    public String getCoverPhotoUrl() { return coverPhotoUrl; }
+    public void setCoverPhotoUrl(String coverPhotoUrl) { this.coverPhotoUrl = coverPhotoUrl; }
 
     public String getBio() { return bio; }
     public void setBio(String bio) { this.bio = bio; }

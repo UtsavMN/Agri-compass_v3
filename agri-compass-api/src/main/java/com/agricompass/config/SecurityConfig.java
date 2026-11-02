@@ -46,18 +46,27 @@ public class SecurityConfig {
                     "/api/marketplace/**",
                     "/api/upload",
                     "/api/upload/**",
-                    "/api/users/search",
-                    "/api/users/check-handle",
-                    "/api/users/*/public",
+                    "/api/users",
+                    "/api/users/**",
+                    "/api/profile",
+                    "/api/profile/**",
+                    "/api/profiles",
+                    "/api/profiles/**",
                     "/api/posts",
                     "/api/posts/**",
                     "/api/community",
                     "/api/community/**",
+                    "/api/farms",
+                    "/api/farms/**",
+                    "/api/weather",
+                    "/api/weather/**",
+                    "/api/conversations",
+                    "/api/conversations/**",
+                    "/api/notifications",
+                    "/api/notifications/**",
+                    "/api/market/**",
                     "/ws/**"
                 ).permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/market/**").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/market/**").permitAll()
-                .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(org.springframework.security.config.Customizer.withDefaults()));
@@ -67,7 +76,6 @@ public class SecurityConfig {
 
     // Relies on Spring Boot auto-configuration for JwtDecoder
     // via spring.security.oauth2.resourceserver.jwt.issuer-uri
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {

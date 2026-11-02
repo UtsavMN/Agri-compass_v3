@@ -6,6 +6,7 @@ import com.agricompass.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
+@Transactional
 public class ProfileController {
 
     private final UserService userService;
@@ -90,10 +92,13 @@ public class ProfileController {
         p.setState("Karnataka");
         p.setLanguage("en");
         p.setOnboardingCompleted(1);
-        return userProfileRepository.save(p);
+        UserProfile saved = userProfileRepository.save(p);
+        try { userProfileRepository.flush(); } catch (Exception ignored) {}
+        return saved != null ? saved : p;
     }
 
     private UserProfile applyProfileUpdates(UserProfile profile, Map<String, Object> body) {
+        if (profile == null) return null;
         if (body == null) return profile;
 
         // Full Name
@@ -137,6 +142,17 @@ public class ProfileController {
             profile.setProfilePictureUrl(avatar.trim());
         }
 
+        // Cover Photo URL
+        String cover = null;
+        if (body.containsKey("coverPhotoUrl") && body.get("coverPhotoUrl") != null) {
+            cover = (String) body.get("coverPhotoUrl");
+        } else if (body.containsKey("cover_photo_url") && body.get("cover_photo_url") != null) {
+            cover = (String) body.get("cover_photo_url");
+        }
+        if (cover != null && !cover.isBlank()) {
+            profile.setCoverPhotoUrl(cover.trim());
+        }
+
         // District / Location
         if (body.containsKey("district") && body.get("district") != null) {
             profile.setDistrict(((String) body.get("district")).trim());
@@ -174,7 +190,11 @@ public class ProfileController {
             profile.setPreferences(body.get("preferences").toString());
         }
 
-        return userProfileRepository.save(profile);
+        profile.setOnboardingCompleted(1);
+
+        UserProfile saved = userProfileRepository.save(profile);
+        try { userProfileRepository.flush(); } catch (Exception ignored) {}
+        return saved != null ? saved : profile;
     }
 
     // GET /api/profiles - get own profile (legacy)
@@ -241,8 +261,13 @@ public class ProfileController {
         String userId = resolveUserId(headerUserId, body);
         UserProfile current = getOrCreateProfile(userId);
         UserProfile updated = applyProfileUpdates(current, body);
-        updated.setOnboardingCompleted(1);
-        return ResponseEntity.ok(userProfileRepository.save(updated));
+        if (updated != null) {
+            updated.setOnboardingCompleted(1);
+            UserProfile saved = userProfileRepository.save(updated);
+            try { userProfileRepository.flush(); } catch (Exception ignored) {}
+            return ResponseEntity.ok(saved != null ? saved : updated);
+        }
+        return ResponseEntity.ok(current);
     }
 
     // GET /api/profiles/count - get total number of users

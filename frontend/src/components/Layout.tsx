@@ -278,8 +278,12 @@ export default function Layout({
               <span className="text-[10px] font-bold uppercase">ಧ್ವನಿ</span>
             </Button>
 
-            {/* District Display (Read-Only) */}
-            <div className="hidden sm:flex items-center h-8 px-3 border border-earth-border/40 bg-[#1a1a14]/60 text-gold-100/90 text-[11px] font-bold tracking-widest uppercase rounded-xl">
+            {/* District Display (Clickable - Navigate to Weather) */}
+            <div 
+              onClick={() => navigate('/weather')}
+              className="hidden sm:flex items-center h-8 px-3 border border-earth-border/40 bg-[#1a1a14]/60 hover:bg-[#1a1a14]/90 hover:border-gold-400/50 text-gold-100/90 hover:text-gold-200 text-[11px] font-bold tracking-widest uppercase rounded-xl cursor-pointer transition-colors"
+              title="Click to view Weather & Advisory for this location"
+            >
               <MapPin className="w-3.5 h-3.5 mr-2 text-gold-400" />
               {selectedDistrict || 'NO DISTRICT'}
             </div>            {/* Messages Button (Instagram-style reactive red badge) */}

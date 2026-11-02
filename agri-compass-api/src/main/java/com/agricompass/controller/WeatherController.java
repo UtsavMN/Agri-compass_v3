@@ -1,10 +1,15 @@
 package com.agricompass.controller;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -122,19 +127,24 @@ public class WeatherController {
             // 1. Fetch Open-Meteo High-Resolution 7-Day Agricultural Forecast
             String openMeteoUrl = String.format(
                 Locale.US,
-                "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,et0_fao_evapotranspiration,uv_index_max&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&timezone=Asia%%2FKolkata",
+                "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,et0_fao_evapotranspiration,uv_index_max&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&timezone=auto",
                 targetCoords[0], targetCoords[1]
             );
 
             @SuppressWarnings("unchecked")
             Map<String, Object> omResponse = null;
             try {
-                omResponse = restTemplate.getForObject(openMeteoUrl, Map.class);
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("User-Agent", "AgriCompass/3.0 (weather@agricompass.local)");
+                headers.set("Accept", "application/json");
+                HttpEntity<Void> entity = new HttpEntity<>(headers);
+                var omResponseEntity = restTemplate.exchange(URI.create(openMeteoUrl), HttpMethod.GET, entity, Map.class);
+                omResponse = omResponseEntity.getBody();
             } catch (Exception e) {
                 log.warn("Open-Meteo fetch failed for {}: {}", targetDistrict, e.getMessage());
             }
 
-            // 2. Fetch WeatherAPI for alerts and live station text condition
+            // 2. Fetch WeatherAPI for alerts, live ground observations, and condition text
             @SuppressWarnings("unchecked")
             Map<String, Object> waResponse = null;
             List<Map<String, Object>> alertList = new ArrayList<>();
@@ -143,10 +153,15 @@ public class WeatherController {
                 try {
                     String forecastUrl = String.format(
                         Locale.US,
-                        "https://api.weatherapi.com/v1/forecast.json?key=%s&q=%.4f,%.4f&days=3&alerts=yes",
+                        "https://api.weatherapi.com/v1/forecast.json?key=%s&q=%.4f,%.4f&days=7&alerts=yes",
                         openWeatherApiKey, targetCoords[0], targetCoords[1]
                     );
-                    waResponse = restTemplate.getForObject(forecastUrl, Map.class);
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.set("User-Agent", "AgriCompass/3.0 (weather@agricompass.local)");
+                    headers.set("Accept", "application/json");
+                    HttpEntity<Void> entity = new HttpEntity<>(headers);
+                    var waResponseEntity = restTemplate.exchange(URI.create(forecastUrl), HttpMethod.GET, entity, Map.class);
+                    waResponse = waResponseEntity.getBody();
                     if (waResponse != null && waResponse.containsKey("alerts")) {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> alertsObj = (Map<String, Object>) waResponse.get("alerts");
@@ -165,7 +180,7 @@ public class WeatherController {
                 throw new RuntimeException("Both Open-Meteo and WeatherAPI failed to return meteorological data");
             }
 
-            // Extract current meteorological observations
+            // Meteorological variables initialized with sensible defaults
             double currentTemp = 25.0;
             int currentHumidity = 65;
             double currentWindSpeed = 10.0;
@@ -178,38 +193,75 @@ public class WeatherController {
             double currentUv = 5.0;
             double currentVisKm = 10.0;
             double todayEt0 = 3.5;
+            boolean omSuccess = false;
 
-            // Priority: Open-Meteo for physical metrics, WeatherAPI for text/visibility
+            // Priority: Open-Meteo physical model metrics
             if (omResponse != null && omResponse.containsKey("current")) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> omCur = (Map<String, Object>) omResponse.get("current");
                 if (omCur != null) {
-                    currentTemp = getDouble(omCur, "temperature_2m", 25.0);
-                    currentHumidity = (int) Math.round(getDouble(omCur, "relative_humidity_2m", 65.0));
-                    currentWindSpeed = getDouble(omCur, "wind_speed_10m", 10.0);
+                    currentTemp = getDouble(omCur, "temperature_2m", currentTemp);
+                    currentHumidity = (int) Math.round(getDouble(omCur, "relative_humidity_2m", (double) currentHumidity));
+                    currentWindSpeed = getDouble(omCur, "wind_speed_10m", currentWindSpeed);
                     int windDeg = (int) Math.round(getDouble(omCur, "wind_direction_10m", 0.0));
                     currentWindDir = degreesToCardinal(windDeg);
-                    currentPrecip = getDouble(omCur, "precipitation", 0.0);
-                    currentPressure = getDouble(omCur, "surface_pressure", 1013.0);
+                    currentPrecip = getDouble(omCur, "precipitation", currentPrecip);
+                    currentPressure = getDouble(omCur, "surface_pressure", currentPressure);
                     currentFeelsLike = getDouble(omCur, "apparent_temperature", currentTemp);
                     int wCode = (int) Math.round(getDouble(omCur, "weather_code", 0.0));
                     currentDescription = wmoCodeToDescription(wCode);
+                    omSuccess = true;
                 }
             }
 
+            // Complement with WeatherAPI ground observations & live station reading
             if (waResponse != null && waResponse.containsKey("current")) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> waCur = (Map<String, Object>) waResponse.get("current");
                 if (waCur != null) {
+                    if (!omSuccess) {
+                        // If Open-Meteo was not available, extract all metrics from WeatherAPI
+                        currentTemp = getDouble(waCur, "temp_c", currentTemp);
+                        currentHumidity = (int) Math.round(getDouble(waCur, "humidity", (double) currentHumidity));
+                        currentWindSpeed = getDouble(waCur, "wind_kph", currentWindSpeed);
+                        if (waCur.containsKey("wind_dir")) {
+                            currentWindDir = String.valueOf(waCur.get("wind_dir"));
+                        }
+                        currentPrecip = getDouble(waCur, "precip_mm", currentPrecip);
+                        currentPressure = getDouble(waCur, "pressure_mb", currentPressure);
+                        currentFeelsLike = getDouble(waCur, "feelslike_c", currentTemp);
+                    } else {
+                        // When Open-Meteo is present, prefer live station thermometer for temperature
+                        double waTemp = getDouble(waCur, "temp_c", -999.0);
+                        if (waTemp != -999.0) {
+                            currentTemp = waTemp;
+                        }
+                        double waFeels = getDouble(waCur, "feelslike_c", -999.0);
+                        if (waFeels != -999.0) {
+                            currentFeelsLike = waFeels;
+                        }
+                    }
+
+                    currentUv = getDouble(waCur, "uv", currentUv);
+                    currentVisKm = getDouble(waCur, "vis_km", currentVisKm);
+
                     if (waCur.containsKey("condition")) {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> cond = (Map<String, Object>) waCur.get("condition");
                         if (cond != null && cond.containsKey("text")) {
-                            currentDescription = (String) cond.get("text");
+                            String waText = ((String) cond.get("text")).trim();
+                            if (!omSuccess) {
+                                currentDescription = waText;
+                            } else {
+                                // Do not let radar artifact "Patchy rain nearby" override when precip is 0
+                                if (waText.toLowerCase().contains("rain") && currentPrecip == 0.0) {
+                                    // keep accurate sky cover from Open-Meteo
+                                } else if (!waText.isBlank()) {
+                                    currentDescription = waText;
+                                }
+                            }
                         }
                     }
-                    currentUv = getDouble(waCur, "uv", currentUv);
-                    currentVisKm = getDouble(waCur, "vis_km", 10.0);
                 }
             }
 
@@ -313,6 +365,11 @@ public class WeatherController {
                         double windSpeed = getDouble(dayInfo, "maxwind_kph", 10.0);
                         int rainProb = (int) Math.round(getDouble(dayInfo, "daily_chance_of_rain", 0.0));
                         String desc = dayCond != null && dayCond.containsKey("text") ? (String) dayCond.get("text") : "Clear";
+
+                        if (i == 0) {
+                            currentPrecipProb = rainProb;
+                            todayEt0 = Math.max(2.5, Math.min(6.5, Math.round((maxT * 0.12 + windSpeed * 0.05) * 100.0) / 100.0));
+                        }
 
                         Map<String, String> spray = evaluateSprayingSuitability(windSpeed, rainProb, precip);
 

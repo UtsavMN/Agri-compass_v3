@@ -26,13 +26,15 @@ export const RouteGuard = ({ children }: { children: React.ReactNode }) => {
 
             // ONLY seed from Clerk if backend profile is completely brand new with no existing profile info
             // Never overwrite user-customized profile pictures or names!
-            const isBrandNewProfile = (!backendName || backendName === 'New User' || backendName === 'Anonymous Farmer') && !backendImage;
+            const isBrandNewProfile = (!backendName || backendName === 'New User' || backendName === 'Anonymous Farmer' || backendName === 'Farmer') && !backendImage;
 
             if (isBrandNewProfile && (clerkName || clerkImage)) {
                try {
                   const updatedProfile = await apiPut('/api/profiles', {
                      fullName: clerkName || backendName || 'Farmer',
-                     avatarUrl: clerkImage || ''
+                     avatarUrl: clerkImage || '',
+                     userId: clerkUser.id,
+                     clerkUserId: clerkUser.id
                   });
                   setClerkUserAndProfile(clerkUser, updatedProfile);
                   return;

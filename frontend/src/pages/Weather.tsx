@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { ScrollReveal } from '@/components/ui/animations';
 import { WeatherAPI } from '@/lib/api/weather';
-import { WeatherData, WeatherAdvice } from '@/lib/ai/weatherAdvisor';
+import { WeatherData, WeatherAdvice, KARNATAKA_DISTRICT_COORDINATES } from '@/lib/ai/weatherAdvisor';
 import { formatTime, formatForecastDate, formatForecastDay } from '@/lib/dateUtils';
 import {
   findNearestTaluk,
@@ -91,7 +91,7 @@ function WeatherIcon({ condition, size = 24, className }: { condition: string; s
 export default function Weather() {
   const { profile } = useUser();
   const { toast } = useToast();
-  const { selectedDistrict: globalDistrict } = useDistrict();
+  const { selectedDistrict: globalDistrict, setSelectedDistrict } = useDistrict();
   const [localDistrict, setLocalDistrict] = useState<string>('');
   const [localTaluk, setLocalTaluk] = useState<string>('');
   const [localPlaceName, setLocalPlaceName] = useState<string>('');
@@ -108,39 +108,120 @@ export default function Weather() {
     loadDistricts();
   }, []);
 
-  useEffect(() => {
-    if (!localDistrict) {
-      // 1. Try to read detailed town/taluk preferences from settings
-      try {
-        const saved = localStorage.getItem('agri_compass_settings');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed.location?.district) {
-            setLocalDistrict(parsed.location.district);
-            if (parsed.location.taluk) setLocalTaluk(parsed.location.taluk);
-            if (parsed.location.placeName) setLocalPlaceName(parsed.location.placeName);
-            if (parsed.location.lat && parsed.location.lng) {
-              setLocalCoords({ lat: parsed.location.lat, lon: parsed.location.lng });
-            }
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn('Could not read settings in weather', e);
-      }
+  // Helper to reliably resolve district, matching taluk, and coordinates
+  const resolveLocationForDistrict = (
+    targetDistrict: string,
+    preferredTaluk?: string,
+    preferredCoords?: { lat: number; lon: number } | null
+  ) => {
+    if (!targetDistrict) return;
 
-      // 2. Fallbacks: store district -> onboarding profile -> default
-      if (globalDistrict) {
-        setLocalDistrict(globalDistrict);
-      } else if (profile?.district && profile.district !== 'Unknown') {
-        setLocalDistrict(profile.district);
+    // Match case-insensitively with available districts
+    const matchedDistrict = districts.find(d => d.toLowerCase() === targetDistrict.toLowerCase()) || targetDistrict;
+    const taluks = getTaluksByDistrict(matchedDistrict);
+
+    let chosenTaluk: KarnatakaTaluk | undefined;
+    if (preferredTaluk) {
+      chosenTaluk = taluks.find(t => t.name.toLowerCase() === preferredTaluk.toLowerCase());
+    }
+    if (!chosenTaluk) {
+      chosenTaluk = taluks.find(t => t.name.toLowerCase() === matchedDistrict.toLowerCase()) || taluks[0];
+    }
+
+    const placeName = chosenTaluk ? chosenTaluk.name : matchedDistrict;
+    const coords = preferredCoords && preferredCoords.lat && preferredCoords.lon
+      ? preferredCoords
+      : (chosenTaluk ? { lat: chosenTaluk.lat, lon: chosenTaluk.lon } : (KARNATAKA_DISTRICT_COORDINATES[matchedDistrict] || { lat: 12.9716, lon: 77.5946 }));
+
+    setLocalDistrict(matchedDistrict);
+    setLocalTaluk(placeName);
+    setLocalPlaceName(placeName);
+    setLocalCoords(coords);
+    setGpsActive(null);
+    setGpsAnomaly(null);
+  };
+
+  // Sync Weather location whenever global selectedDistrict or profile district/location changes
+  useEffect(() => {
+    let target = globalDistrict;
+    let targetTaluk: string | undefined;
+    let targetCoords: { lat: number; lon: number } | null = null;
+
+    if (!target || target === 'Unknown') {
+      if (profile?.district && profile.district !== 'Unknown') {
+        target = profile.district;
       } else if (profile?.location && profile.location !== 'Unknown') {
-        setLocalDistrict(profile.location);
-      } else if (districts.length > 0) {
-        setLocalDistrict('Bengaluru Urban');
+        target = profile.location;
       }
     }
-  }, [profile?.district, profile?.location, globalDistrict, localDistrict, districts]);
+
+    // Check if detailed town or coordinates are stored in settings
+    try {
+      const saved = localStorage.getItem('agri_compass_settings');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.location?.district) {
+          if (!target || target === 'Unknown') {
+            target = parsed.location.district;
+          }
+          if (parsed.location.district.toLowerCase() === (target || '').toLowerCase()) {
+            if (parsed.location.taluk) targetTaluk = parsed.location.taluk;
+            if (parsed.location.lat && parsed.location.lng) {
+              targetCoords = { lat: parsed.location.lat, lon: parsed.location.lng };
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not read settings in weather', e);
+    }
+
+    if (!target && districts.length > 0) {
+      target = 'Bengaluru Urban';
+    }
+
+    if (target && target !== 'Unknown') {
+      if (!localDistrict || localDistrict.toLowerCase() !== target.toLowerCase()) {
+        resolveLocationForDistrict(target, targetTaluk, targetCoords);
+      }
+    }
+  }, [globalDistrict, profile?.district, profile?.location, districts, localDistrict]);
+
+  // Reactive listener for profile, district, and settings updates across the app
+  useEffect(() => {
+    const handleProfileUpdate = (e: any) => {
+      const updated = e.detail;
+      const newDist = updated?.district || updated?.location;
+      if (newDist && newDist !== 'Unknown' && newDist.toLowerCase() !== localDistrict.toLowerCase()) {
+        resolveLocationForDistrict(newDist);
+      }
+    };
+
+    const handleLocationChange = (e: any) => {
+      const newDist = e.detail?.district;
+      if (newDist && newDist !== 'Unknown' && newDist.toLowerCase() !== localDistrict.toLowerCase()) {
+        resolveLocationForDistrict(newDist);
+      }
+    };
+
+    const handleSettingsUpdate = (e: any) => {
+      const loc = e.detail?.location;
+      if (loc?.district) {
+        const coords = (loc.lat && loc.lng) ? { lat: loc.lat, lon: loc.lng } : null;
+        resolveLocationForDistrict(loc.district, loc.taluk, coords);
+      }
+    };
+
+    window.addEventListener('agri_profile_updated', handleProfileUpdate);
+    window.addEventListener('agri_location_changed', handleLocationChange);
+    window.addEventListener('agri_compass_settings_updated', handleSettingsUpdate);
+
+    return () => {
+      window.removeEventListener('agri_profile_updated', handleProfileUpdate);
+      window.removeEventListener('agri_location_changed', handleLocationChange);
+      window.removeEventListener('agri_compass_settings_updated', handleSettingsUpdate);
+    };
+  }, [localDistrict, districts]);
 
   useEffect(() => {
     if (localDistrict && !gpsActive) {
@@ -152,14 +233,15 @@ export default function Weather() {
   const loadWeatherData = async (
     targetDistrict: string,
     coords?: { lat: number; lon: number } | null,
-    placeName?: string
+    placeName?: string,
+    forceRefresh: boolean = false
   ) => {
     if (!targetDistrict) return;
     setLoading(true);
     try {
       const result = coords
-        ? await WeatherAPI.getWeatherForCoordinates(coords.lat, coords.lon, targetDistrict, placeName)
-        : await WeatherAPI.getWeatherForDistrict(targetDistrict);
+        ? await WeatherAPI.getWeatherForCoordinates(coords.lat, coords.lon, targetDistrict, placeName, forceRefresh)
+        : await WeatherAPI.getWeatherForDistrict(targetDistrict, forceRefresh);
 
       if (result) {
         setWeatherInfo({
@@ -387,16 +469,8 @@ export default function Weather() {
                 <Select
                   value={localDistrict}
                   onValueChange={(val) => {
-                    const taluks = getTaluksByDistrict(val);
-                    const firstTaluk = taluks[0];
-                    setLocalDistrict(val);
-                    setLocalTaluk(firstTaluk?.name || val);
-                    setLocalPlaceName(firstTaluk?.name || val);
-                    if (firstTaluk) {
-                      setLocalCoords({ lat: firstTaluk.lat, lon: firstTaluk.lon });
-                    }
-                    setGpsActive(null);
-                    setGpsAnomaly(null);
+                    resolveLocationForDistrict(val);
+                    setSelectedDistrict(val);
                   }}
                 >
                   <SelectTrigger className="pl-10 bg-earth-elevated/80 border-earth-border !text-white font-medium focus:border-gold-400 h-12 rounded-xl text-xs sm:text-sm shadow-sm relative z-0">
@@ -423,6 +497,23 @@ export default function Weather() {
                       setLocalTaluk(selected.name);
                       setLocalPlaceName(selected.name);
                       setLocalCoords({ lat: selected.lat, lon: selected.lon });
+
+                      try {
+                        const saved = JSON.parse(localStorage.getItem('agri_compass_settings') || '{}');
+                        const updated = {
+                          ...saved,
+                          location: {
+                            ...(saved.location || {}),
+                            district: localDistrict,
+                            taluk: selected.name,
+                            placeName: selected.name,
+                            lat: selected.lat,
+                            lng: selected.lon,
+                          }
+                        };
+                        localStorage.setItem('agri_compass_settings', JSON.stringify(updated));
+                        window.dispatchEvent(new CustomEvent('agri_compass_settings_updated', { detail: updated }));
+                      } catch (e) {}
                     }
                     setGpsActive(null);
                     setGpsAnomaly(null);
@@ -453,13 +544,25 @@ export default function Weather() {
                 <span>{gpsLoading ? 'Detecting GPS...' : 'Use My Farm GPS'}</span>
               </button>
 
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-earth-elevated/40 border border-earth-border/50 text-xs text-gold-100/70 whitespace-nowrap">
+              <button
+                type="button"
+                onClick={() => {
+                  loadWeatherData(localDistrict, localCoords, localPlaceName || localTaluk, true);
+                  toast({
+                    title: "Live Meteorological Sync",
+                    description: `Refreshing real-time station data for ${localPlaceName || localTaluk || localDistrict}...`
+                  });
+                }}
+                disabled={loading}
+                title="Click to force re-sync with live meteorological stations"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-earth-elevated/40 hover:bg-earth-elevated/80 border border-earth-border/50 hover:border-gold-400/40 text-xs text-gold-100/80 hover:text-gold-100 whitespace-nowrap transition-all cursor-pointer disabled:opacity-60"
+              >
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                 </span>
-                <span className="font-semibold">{gpsActive ? 'GPS Microclimate' : 'Live Station Sync'}</span>
-              </div>
+                <span className="font-semibold">{loading ? 'Syncing...' : (gpsActive ? 'GPS Microclimate' : 'Live Station Sync')}</span>
+              </button>
             </div>
           </div>
         </ScrollReveal>
@@ -524,7 +627,7 @@ export default function Weather() {
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       <span className="text-[12px] font-bold text-gold-300 uppercase tracking-widest bg-gold-400/10 px-3 py-1 rounded-full border border-gold-400/30 flex items-center gap-1.5">
                         <MapPin className="w-3.5 h-3.5 text-gold-400" />
-                        {localPlaceName || localTaluk || localDistrict}{localPlaceName && localPlaceName !== localDistrict ? `, ${localDistrict} District` : ', Karnataka'}
+                        {localPlaceName || localTaluk || localDistrict}{localPlaceName && localDistrict && localPlaceName.toLowerCase() !== localDistrict.toLowerCase() ? `, ${localDistrict} District` : ', Karnataka'}
                       </span>
                       {localCoords && (
                         <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">

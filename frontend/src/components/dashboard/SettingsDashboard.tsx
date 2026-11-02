@@ -84,7 +84,7 @@ const DEFAULT_SETTINGS: SettingsData = {
 
 export function SettingsDashboard() {
   const { selectedDistrict, setSelectedDistrict } = useDistrict();
-  const { profile } = useUser();
+  const { profile, updateProfile } = useUser();
   const { language, setLanguage } = useLanguage();
   const { toast } = useToast();
 
@@ -294,6 +294,10 @@ export function SettingsDashboard() {
 
       if (settings.location.district) {
         setSelectedDistrict(settings.location.district);
+        updateProfile({
+          district: settings.location.district,
+          location: settings.location.district,
+        }).catch(() => {});
       }
 
       // 3. Sync to backend API if available
