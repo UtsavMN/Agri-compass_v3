@@ -274,7 +274,7 @@ public class AiController {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(geminiPayload, headers);
         
-        String[] models = {"gemini-1.5-flash", "gemini-2.0-flash"};
+        String[] models = {"gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"};
         Exception lastEx = null;
         
         for (String model : models) {
